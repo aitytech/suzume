@@ -223,10 +223,8 @@ void appendHiraganaPrefixedKanjiIAdjCandidates(std::vector<UnknownCandidate>& ca
     if (!is_renyokei && !is_attributive) {
       continue;
     }
-    std::string tail_surface = tail_observed_surface;
-    if (is_renyokei) {
-      tail_surface.replace(tail_surface.size() - core::kJapaneseCharBytes, core::kJapaneseCharBytes, "い");
-    }
+    const std::string tail_surface =
+        is_renyokei ? normalize::replaceFinalChar(tail_observed_surface, "い") : std::string(tail_observed_surface);
     const auto& tail_candidates = inflection.analyze(tail_surface);
     const bool tail_has_i_adjective = adj_detail::firstConfidenceAtLeast(tail_candidates, grammar::VerbType::IAdjective,
                                                                          candidate::kCompoundAdjConfMin) != float{};
@@ -237,10 +235,8 @@ void appendHiraganaPrefixedKanjiIAdjCandidates(std::vector<UnknownCandidate>& ca
     if (!tail_has_i_adjective || tail_has_verified_verb || observed_tail_has_verified_verb) {
       continue;
     }
-    std::string analysis_surface = surface;
-    if (is_renyokei) {
-      analysis_surface.replace(analysis_surface.size() - core::kJapaneseCharBytes, core::kJapaneseCharBytes, "い");
-    }
+    const std::string analysis_surface =
+        is_renyokei ? normalize::replaceFinalChar(surface, "い") : std::string(surface);
     const auto& inflection_candidates = inflection.analyze(analysis_surface);
     const bool has_verified_verb_reading = adj_detail::hasDictionaryVerbAnalysis(inflection_candidates, dict_manager);
     if (has_verified_verb_reading) {
@@ -355,7 +351,7 @@ void generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints
         if (dict_manager->lookupExact(aux_surface, core::PartOfSpeech::Auxiliary) != nullptr) {
           std::string full_surface = extractSubstring(codepoints, start_pos, max_hiragana_end);
           if (utf8::endsWith(full_surface, "く")) {
-            full_surface.replace(full_surface.size() - core::kJapaneseCharBytes, core::kJapaneseCharBytes, "い");
+            full_surface = normalize::replaceFinalChar(full_surface, "い");
           }
           const auto& full_candidates = inflection.analyze(full_surface);
           const bool has_full_i_adjective =
@@ -454,7 +450,7 @@ void generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints
 
       std::string analysis_surface = test_surface;
       if (utf8::endsWith(analysis_surface, "く")) {
-        analysis_surface.replace(analysis_surface.size() - core::kJapaneseCharBytes, core::kJapaneseCharBytes, "い");
+        analysis_surface = normalize::replaceFinalChar(analysis_surface, "い");
       }
       const auto& test_candidates = inflection.analyze(analysis_surface);
       for (const auto& cand : test_candidates) {
@@ -488,11 +484,9 @@ void generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints
         max_hiragana_end < codepoints.size() &&
         (normalize::isKanjiCodepoint(codepoints[max_hiragana_end]) ||
          normalize::classifyChar(codepoints[max_hiragana_end]) == normalize::CharType::Katakana);
-    std::string bounded_analysis_surface = full_hiragana_surface;
-    if (bounded_long_ku_form) {
-      bounded_analysis_surface.replace(bounded_analysis_surface.size() - core::kJapaneseCharBytes,
-                                       core::kJapaneseCharBytes, "い");
-    }
+    const std::string bounded_analysis_surface = bounded_long_ku_form
+                                                     ? normalize::replaceFinalChar(full_hiragana_surface, "い")
+                                                     : std::string(full_hiragana_surface);
     const auto& bounded_candidates = inflection.analyze(bounded_analysis_surface);
     const bool has_bounded_i_adjective =
         bounded_long_ku_form && adj_detail::firstConfidenceAtLeast(bounded_candidates, grammar::VerbType::IAdjective,

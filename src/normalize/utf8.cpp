@@ -135,6 +135,19 @@ std::string_view utf8Substr(std::string_view str, size_t start, size_t length) {
   return str.substr(start_byte, end_byte - start_byte);
 }
 
+std::string replaceFinalChar(std::string_view str, std::string_view replacement) {
+  size_t final_start = str.size();
+  while (final_start > 0 && (static_cast<unsigned char>(str[final_start - 1]) & 0xC0) == 0x80) {
+    --final_start;
+  }
+  if (final_start > 0) {
+    --final_start;
+  }
+  std::string result(str.substr(0, final_start));
+  result += replacement;
+  return result;
+}
+
 bool isValidUtf8(std::string_view str) {
   // decodeUtf8 already rejects truncated sequences, bad continuation bytes,
   // overlong forms, surrogate halves and code points above U+10FFFF, reporting

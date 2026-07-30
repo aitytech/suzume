@@ -251,7 +251,7 @@ void adj_detail::appendHiraganaIAdjSurfaceCandidates(const std::vector<char32_t>
     // only for the analysis, while the candidate retains the observed く-form
     // and therefore receives AdjRenyokei from detectIAdjEpos().
     if (utf8::endsWith(analysis_surface, "く")) {
-      analysis_surface.replace(analysis_surface.size() - core::kJapaneseCharBytes, core::kJapaneseCharBytes, "い");
+      analysis_surface = normalize::replaceFinalChar(analysis_surface, "い");
     }
 
     // Check all candidates for IAdjective, not just the best one

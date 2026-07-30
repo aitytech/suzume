@@ -72,6 +72,15 @@ size_t byteToCharOffset(std::string_view str, size_t byte_offset);
 std::string_view utf8Substr(std::string_view str, size_t start, size_t length);
 
 /**
+ * @brief Rebuild a string with its last character swapped for another one
+ * @param str UTF-8 string
+ * @param replacement UTF-8 text to put in place of the last character
+ * @return The string with its final character replaced, or just the
+ *         replacement when the input is empty
+ */
+std::string replaceFinalChar(std::string_view str, std::string_view replacement);
+
+/**
  * @brief Check if string is valid UTF-8
  * @param str String to check
  * @return true if valid UTF-8
