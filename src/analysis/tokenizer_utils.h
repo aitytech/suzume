@@ -21,6 +21,9 @@ namespace dictionary {
 class DictionaryManager;
 struct LookupResult;
 }  // namespace dictionary
+namespace grammar {
+class Inflection;
+}  // namespace grammar
 }  // namespace suzume
 
 namespace suzume::analysis {
@@ -160,6 +163,15 @@ bool hasNominalForcingParticleContinuation(const std::vector<char32_t>& codepoin
 /** Whether a position begins a multi-character non-particle dictionary entry. */
 bool startsLongerNonParticleEntry(const std::vector<char32_t>& codepoints, size_t start_pos,
                                   const dictionary::DictionaryManager* dict_manager);
+
+/**
+ * Find the earliest start of the longest productive verb continuative ending
+ * one or two hiragana morae after a kanji run.
+ */
+size_t longestNominalVerbContinuativeStart(const std::vector<char32_t>& codepoints,
+                                           const std::vector<normalize::CharType>& char_types, size_t kanji_start,
+                                           size_t kanji_end, const grammar::Inflection& inflection,
+                                           const dictionary::DictionaryManager* dict_manager);
 
 /** Whether an edge with one of the requested parts of speech ends at a boundary. */
 bool hasPrecedingPartOfSpeech(const core::Lattice& lattice, size_t end_pos, PartOfSpeechMask pos_mask);

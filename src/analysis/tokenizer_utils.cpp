@@ -5,10 +5,13 @@
 
 #include "tokenizer_utils.h"
 
+#include "candidate_constants.h"
 #include "core/utf8_constants.h"
 #include "dictionary/dictionary.h"
 #include "grammar/char_patterns.h"
+#include "grammar/inflection.h"
 #include "normalize/utf8.h"
+#include "verb_candidates_helpers.h"
 
 namespace suzume::analysis {
 
@@ -50,6 +53,140 @@ bool headsKanjiSuruPredicateAt(const dictionary::DictionaryManager& dict_manager
   // against the predicate reading rather than for it (五人組しか, 一番星しも).
   return !hasExactPartOfSpeech(dict_manager, extractSubstring(codepoints, predicate_end, predicate_end + 2),
                                partOfSpeechMask(core::PartOfSpeech::Particle));
+}
+
+size_t longestNominalVerbContinuativeStart(const std::vector<char32_t>& codepoints,
+                                           const std::vector<normalize::CharType>& char_types, size_t kanji_start,
+                                           size_t kanji_end, const grammar::Inflection& inflection,
+                                           const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || kanji_start >= kanji_end || kanji_end >= codepoints.size()) {
+    return kanji_end;
+  }
+
+  constexpr size_t kMaximumOkuriganaLength = 2;
+  size_t longest_start = kanji_end;
+  size_t continuative_end = kanji_end;
+  while (continuative_end < codepoints.size() && continuative_end - kanji_end < kMaximumOkuriganaLength &&
+         char_types[continuative_end] == normalize::CharType::Hiragana) {
+    ++continuative_end;
+    const char32_t ending = codepoints[continuative_end - 1];
+    const std::string_view godan_ending = grammar::godanBaseSuffixFromIRow(ending);
+    const size_t okurigana_length = continuative_end - kanji_end;
+    const bool is_single_mora_continuative = !godan_ending.empty() || grammar::isERowCodepoint(ending);
+    const bool is_supported_two_mora_continuative =
+        okurigana_length == 2 && (ending == U'げ' || ending == U'け' || ending == U'り' || ending == U'え' ||
+                                  ending == U'し' || ending == U'み');
+    if ((okurigana_length == 1 && !is_single_mora_continuative) ||
+        (okurigana_length == 2 && !is_supported_two_mora_continuative)) {
+      continue;
+    }
+    // The i-row spelling い is also the terminal of productive compound
+    // i-adjectives (間近い). Require a dictionary-backed final godan verb for
+    // this otherwise ambiguous nominalization (払い→払う, 洗い→洗う).
+    if (okurigana_length == 1 && ending == U'い' &&
+        !verb_helpers::isVerbInDictionary(
+            dict_manager, normalize::encodeUtf8(codepoints[kanji_end - 1]) + std::string(godan_ending))) {
+      continue;
+    }
+    const std::string continuation =
+        extractSubstring(codepoints, continuative_end, std::min(codepoints.size(), continuative_end + 3));
+    if (okurigana_length == 2) {
+      const std::string okurigana = extractSubstring(codepoints, kanji_end, continuative_end);
+      const bool is_auxiliary = dict_manager->lookupExact(okurigana, core::PartOfSpeech::Auxiliary) != nullptr;
+      const bool is_closed_grammar_surface =
+          dict_manager->lookupExact(okurigana, core::PartOfSpeech::Particle) != nullptr ||
+          (is_auxiliary && !grammar::startsPredicativeCopula(continuation)) ||
+          dict_manager->lookupExact(okurigana, core::PartOfSpeech::Adjective) != nullptr ||
+          dict_manager->lookupExact(okurigana, core::PartOfSpeech::Suffix) != nullptr;
+      if (is_closed_grammar_surface) {
+        continue;
+      }
+    }
+
+    // A continuative-derived noun can close only where a nominal is selected.
+    // This excludes finite predicates and auxiliary chains such as 到着します,
+    // 子供らしくない, while retaining 見直し, 見知りです and 暮らしだ.
+    const bool starts_light_verb =
+        continuative_end + 1 < codepoints.size() &&
+        (grammar::isSuruBaseForm(extractSubstring(codepoints, continuative_end, continuative_end + 2)) ||
+         (grammar::isSuruRenyokeiSurface(extractSubstring(codepoints, continuative_end, continuative_end + 1)) &&
+          verb_helpers::isSuruAuxiliaryStarter(codepoints[continuative_end + 1])));
+    const bool nominal_position = continuative_end >= codepoints.size() ||
+                                  char_types[continuative_end] == normalize::CharType::Symbol ||
+                                  startsNominalForcingParticle(codepoints, continuative_end) ||
+                                  grammar::startsPredicativeCopula(continuation) || starts_light_verb;
+    if (!nominal_position) {
+      continue;
+    }
+
+    // A closed suffix owns its own boundary even when the preceding noun plus
+    // suffix resembles a constructed Ichidan stem (家庭|向け, not 家|庭向け).
+    size_t closed_suffix_start = kanji_end;
+    const bool ends_in_dictionary_verb_continuative =
+        (!godan_ending.empty() && verb_helpers::isVerbInDictionary(
+                                      dict_manager, extractSubstring(codepoints, kanji_end - 1, continuative_end - 1) +
+                                                        std::string(godan_ending))) ||
+        (grammar::isERowCodepoint(ending) &&
+         verb_helpers::isVerbInDictionary(dict_manager, extractSubstring(codepoints, kanji_end - 1, continuative_end) +
+                                                            normalize::encodeUtf8(core::hiragana::kRu)));
+    for (size_t suffix_start = kanji_start + 1; suffix_start < kanji_end; ++suffix_start) {
+      if (dict_manager->lookupExact(extractSubstring(codepoints, suffix_start, continuative_end),
+                                    core::PartOfSpeech::Suffix) != nullptr) {
+        if (ends_in_dictionary_verb_continuative && suffix_start + 2 >= continuative_end) {
+          continue;
+        }
+        closed_suffix_start = suffix_start;
+        break;
+      }
+    }
+    if (closed_suffix_start < kanji_end) {
+      longest_start = std::min(longest_start, closed_suffix_start);
+      continue;
+    }
+
+    for (size_t verb_start = kanji_start; verb_start < kanji_end; ++verb_start) {
+      const std::string continuative = extractSubstring(codepoints, verb_start, continuative_end);
+      const auto& inflections = inflection.analyze(continuative);
+      const bool names_adjective = std::any_of(
+          inflections.begin(), inflections.end(), [](const grammar::InflectionCandidate& inflection_candidate) {
+            return inflection_candidate.verb_type == grammar::VerbType::IAdjective &&
+                   inflection_candidate.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence;
+          });
+      bool names_verb =
+          !names_adjective &&
+          std::any_of(inflections.begin(), inflections.end(),
+                      [](const grammar::InflectionCandidate& inflection_candidate) {
+                        return inflection_candidate.verb_type != grammar::VerbType::Unknown &&
+                               inflection_candidate.verb_type != grammar::VerbType::IAdjective &&
+                               inflection_candidate.verb_type != grammar::VerbType::Suru &&
+                               inflection_candidate.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence;
+                      });
+      // Adjacent-kanji compounds such as 見直す and 見知る have a low full-form
+      // inflection confidence because the productive V1/V2 boundary is not
+      // written. Verify the same closed single-kanji Ichidan V1 used by the
+      // compound-verb joiner, plus the dictionary-backed visible V2.
+      if (!names_verb && kanji_end - verb_start == 2) {
+        const bool left_ichidan = verb_helpers::isSingleKanjiIchidan(codepoints[verb_start]);
+        bool right_verb = false;
+        if (!godan_ending.empty()) {
+          right_verb = verb_helpers::isVerbInDictionary(
+              dict_manager,
+              extractSubstring(codepoints, verb_start + 1, continuative_end - 1) + std::string(godan_ending));
+        }
+        if (!right_verb && grammar::isERowCodepoint(ending)) {
+          right_verb = verb_helpers::isVerbInDictionary(dict_manager,
+                                                        extractSubstring(codepoints, verb_start + 1, continuative_end) +
+                                                            normalize::encodeUtf8(core::hiragana::kRu));
+        }
+        names_verb = left_ichidan && right_verb;
+      }
+      if (names_verb) {
+        longest_start = std::min(longest_start, verb_start);
+        break;
+      }
+    }
+  }
+  return longest_start;
 }
 
 ByteOffsets buildByteOffsets(const std::vector<char32_t>& codepoints) {

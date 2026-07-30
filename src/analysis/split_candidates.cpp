@@ -403,6 +403,8 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
   // Preserve an earlier lexical noun or adjective boundary so compounds such
   // as temporal expressions remain decomposable before their final verbal noun.
   size_t kanji_length = kanji_end - start_pos;
+  const size_t following_verb_start =
+      longestNominalVerbContinuativeStart(codepoints, char_types, start_pos, kanji_end, inflection, &dict_manager);
   const std::string final_kanji = normalize::encodeUtf8(codepoints[kanji_end - 1]);
   const bool ends_with_derivational_suffix =
       dict_manager.lookupExact(final_kanji, core::PartOfSpeech::Suffix) != nullptr;
@@ -416,7 +418,7 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
           ? kanji_end - 1
           : kanji_end;
   const bool ends_at_humble_subsidiary = humble_subsidiary_start < kanji_end;
-  if (hasSuruContinuation(codepoints, kanji_end) && !ends_at_humble_subsidiary &&
+  if (hasSuruContinuation(codepoints, kanji_end) && following_verb_start == kanji_end && !ends_at_humble_subsidiary &&
       !hasDictionaryLexicalPrefix(noun_results, kanji_length) &&
       !crossesModifierBoundaryForSuruNoun(text, byte_offsets, start_pos, kanji_end, dict_manager) &&
       !(start_pos > 0 && normalize::isIterationMark(codepoints[start_pos - 1])) &&
@@ -431,6 +433,13 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
 
   // Try different noun lengths
   for (size_t noun_len = 1; noun_len < kanji_end - start_pos; ++noun_len) {
+    const size_t verb_start = start_pos + noun_len;
+    // Once a productive continuative has been verified, no shorter V2 may
+    // move the boundary into it (顔見|知り, 総合見|直し). Boundaries before the
+    // verified start remain available to other grammatical evidence.
+    if (following_verb_start < kanji_end && verb_start > following_verb_start) {
+      continue;
+    }
     // A contiguous kanji run followed by an inflected する is either a
     // productive verbal noun (提出+し, 頻出+する) or a lexical verb stem
     // (見直し).  In both cases, fabricating a noun+verb boundary inside the
@@ -438,12 +447,11 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
     // the complete run; the ordinary noun/verb candidates decide its POS.
     // The exception is the humble subsidiary above: that boundary is a real
     // morpheme boundary rather than a fabricated one inside a verbal noun.
-    if (kanji_end < codepoints.size() && codepoints[kanji_end] == U'し' &&
-        start_pos + noun_len != humble_subsidiary_start) {
+    if (kanji_end < codepoints.size() && codepoints[kanji_end] == U'し' && verb_start != humble_subsidiary_start &&
+        (kanji_length < 3 || verb_start != following_verb_start)) {
       continue;
     }
 
-    size_t verb_start = start_pos + noun_len;
     size_t verb_start_byte = byteOffsetAt(byte_offsets, verb_start);
 
     // Check if noun part is in dictionary as NOUN

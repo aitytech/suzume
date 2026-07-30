@@ -201,7 +201,7 @@ void Tokenizer::addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_
                                             size_t start_pos,
                                             const std::vector<normalize::CharType>& char_types) const {
   analysis::addPrefixNounJoinCandidates(lattice, text, codepoints, byte_offsets, start_pos, char_types, dict_manager_,
-                                        scorer_);
+                                        scorer_, inflection_);
 }
 
 void Tokenizer::addPronounPluralJoinCandidates(core::Lattice& lattice, std::string_view text,

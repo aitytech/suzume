@@ -42,6 +42,17 @@ bool hasNominalPhraseSelectorAt(const dictionary::DictionaryManager* dict_manage
   return auxiliary != nullptr && auxiliary->extended_pos == core::ExtendedPOS::AuxCopulaDa;
 }
 
+// A particle-like kana may be the final mora of an open-class content noun. If
+// the mixed span stops immediately before it and a real nominal selector follows
+// it, treating the stranded mora as a particle creates an impossible particle
+// stack (組みひ|も|を). Reject that cut so the lattice can instead place the
+// content-word boundary to its left (組み|ひも|を).
+bool strandsParticleLikeMoraBeforeNominalSelector(const dictionary::DictionaryManager* dict_manager,
+                                                  const std::vector<char32_t>& codepoints, size_t candidate_end) {
+  return candidate_end + 1 < codepoints.size() && normalize::isParticleCodepoint(codepoints[candidate_end]) &&
+         hasNominalPhraseSelectorAt(dict_manager, codepoints, candidate_end + 1);
+}
+
 /**
  * @brief Whether the span boundary falls inside a dictionary particle.
  *
@@ -453,6 +464,14 @@ void generateSelectedNominalHeadCandidates(const std::vector<char32_t>& codepoin
     }
 
     const std::string head_surface = extractSubstring(codepoints, start_pos, head_end);
+    const auto* trailing_auxiliary =
+        dict_manager->lookupExact(extractSubstring(codepoints, head_end - 1, head_end), core::PartOfSpeech::Auxiliary);
+    // A selector licenses the nominal immediately after it, not a span that
+    // has swallowed the copula before a closing particle. In
+    // という話だが, the selected head is 話 and だ begins its predicate; treating
+    // 話だ as the head erases an inflectional boundary.
+    const bool absorbs_copula =
+        trailing_auxiliary != nullptr && trailing_auxiliary->extended_pos == core::ExtendedPOS::AuxCopulaDa;
     const bool mixed_head = char_types[start_pos] == normalize::CharType::Kanji;
     bool has_productive_adjective_nominalization = false;
     if (codepoints[head_end - 1] == U'さ') {
@@ -495,7 +514,7 @@ void generateSelectedNominalHeadCandidates(const std::vector<char32_t>& codepoin
     // asserting a phrase head, so for it a run that merely decomposes into
     // one-mora classical fragments (くるま as くる + ま) is still a noun.
     // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
-    if (has_exact_noun || has_blocking_exact_reading ||
+    if (has_exact_noun || has_blocking_exact_reading || absorbs_copula ||
         hasFunctionWordChainDecomposition(codepoints, start_pos, head_end, dict_manager) ||
         hasAuxiliaryChainDecomposition(codepoints, start_pos, head_end, dict_manager) ||
         (!has_attributive_selector &&
@@ -704,6 +723,29 @@ void generateKanjiHiraganaCompoundCandidates(const std::vector<char32_t>& codepo
             for (const auto& entry : dict_manager->lookup(suffix_portion, 0)) {
               if (entry.entry != nullptr && entry.entry->pos == core::PartOfSpeech::Adjective) {
                 const size_t ppoi_end = sokuon_pos + 2;
+                const bool ppoi_stem_before_inflection = entry.entry->lemma == "っぽい" &&
+                                                         entry.entry->extended_pos == core::ExtendedPOS::AdjStem &&
+                                                         ppoi_end < hira2_end && codepoints[ppoi_end] != U'さ';
+                if (ppoi_stem_before_inflection) {
+                  continue;
+                }
+                // A single-kanji nominal/adjectival host forms one search unit
+                // with the productive resemblance suffix (安っぽい, 水っぽい).
+                // Longer nominal hosts retain the noun + suffix boundary
+                // (子供 + っぽい), while verb continuatives are handled by the
+                // dedicated productive path below.
+                const bool precedes_nominalizer = ppoi_end < hira2_end && codepoints[ppoi_end] == U'さ';
+                if (kanji_len == 1 && entry.entry->lemma == "っぽい" && !precedes_nominalizer) {
+                  const size_t derived_end = sokuon_pos + entry.length;
+                  auto adjective =
+                      makeCandidate(extractSubstring(codepoints, start_pos, derived_end), start_pos, derived_end,
+                                    core::PartOfSpeech::Adjective, candidate::kProductivePpoiAdjCost, false,
+                                    CandidateOrigin::KanjiHiraganaCompound, entry.entry->extended_pos);
+                  adjective.lemma = extractSubstring(codepoints, start_pos, sokuon_pos) + "っぽい";
+                  adjective.conj_type = dictionary::ConjugationType::IAdjective;
+                  candidates.push_back(std::move(adjective));
+                  return;
+                }
                 const std::string base = extractSubstring(codepoints, start_pos, sokuon_pos);
                 // An i-adjective stem productively forms 〜っぽい.  Keep its
                 // stem before the following nominalizer (安っぽ+さ), while a
@@ -1031,6 +1073,10 @@ void generateKanjiHiraganaCompoundCandidates(const std::vector<char32_t>& codepo
   // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
   if (verb_helpers::endsWithFocusParticleTail(dict_manager, codepoints, start_pos, hiragana_end)) {
     return;  // Skip - noun + focus particle split should win
+  }
+
+  if (strandsParticleLikeMoraBeforeNominalSelector(dict_manager, codepoints, hiragana_end)) {
+    return;
   }
 
   // Skip when the span boundary cuts a dictionary particle in half

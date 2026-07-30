@@ -100,12 +100,15 @@ void generateWithSuffix(const std::vector<char32_t>& codepoints, size_t start_po
  * @param codepoints Text as codepoints
  * @param start_pos Start position (character index)
  * @param char_types Character types for each position
+ * @param inflection Inflection analyzer used to preserve the longest verified
+ *        continuative boundary
  * @param dict_manager Dictionary manager used to reject spans already owned by
  *        exact nouns or suffix decompositions (may be null)
  * @param candidates Output candidates, appended in generation order
  */
 void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                        const std::vector<normalize::CharType>& char_types,
+                                       const grammar::Inflection& inflection,
                                        const dictionary::DictionaryManager* dict_manager,
                                        std::vector<UnknownCandidate>& candidates);
 

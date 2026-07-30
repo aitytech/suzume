@@ -35,6 +35,51 @@ bool hasNominalizedNounParticleContinuation(const std::vector<char32_t>& codepoi
          !startsLongerNonParticleEntry(codepoints, end_pos, dict_manager);
 }
 
+// A clause-final particle selects a completed nominal host just as a case
+// particle does (重み|ね). Read the closed class from the dictionary so the
+// homographic classical auxiliary remains available after verbal forms.
+bool hasClauseFinalParticleContinuation(const std::vector<char32_t>& codepoints,
+                                        const std::vector<normalize::CharType>& char_types, size_t end_pos,
+                                        const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || end_pos >= codepoints.size()) {
+    return false;
+  }
+  constexpr size_t kParticleProbe = 3;
+  const size_t probe_end = std::min(codepoints.size(), end_pos + kParticleProbe);
+  for (const auto& match : dict_manager->lookup(extractSubstring(codepoints, end_pos, probe_end), 0)) {
+    if (match.entry == nullptr || match.entry->extended_pos != core::ExtendedPOS::ParticleFinal) {
+      continue;
+    }
+    const size_t after_particle = end_pos + match.length;
+    if (after_particle == codepoints.size() ||
+        (after_particle < char_types.size() && char_types[after_particle] == normalize::CharType::Symbol)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// A short hiragana noun can end in a kana that is homographic with a particle
+// (ひも, もの).  When a real nominal particle closes that run, the preceding
+// continuative is nominal too: 組み|ひも|を, not the finite 組み|ひも|を reading.
+// The whole-compound candidate remains available for lexical units such as
+// 食べもの; this only supplies the productive internal noun boundary.
+bool hasParticleFinalHiraganaNounContinuation(const std::vector<char32_t>& codepoints,
+                                              const std::vector<normalize::CharType>& char_types, size_t start_pos,
+                                              const dictionary::DictionaryManager* dict_manager) {
+  constexpr size_t kMaximumHiraganaNounLength = 4;
+  size_t end_pos = start_pos;
+  while (end_pos < char_types.size() && end_pos - start_pos < kMaximumHiraganaNounLength &&
+         char_types[end_pos] == normalize::CharType::Hiragana) {
+    ++end_pos;
+    if (end_pos - start_pos >= 2 && normalize::isParticleCodepoint(codepoints[end_pos - 1]) &&
+        hasNominalizedNounParticleContinuation(codepoints, end_pos, dict_manager)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // A genitive/adnominal の followed by a continuative-shaped word that closes
 // at a clause boundary forms a complete noun phrase (雨の匂い。). Requiring
 // both sides keeps attributive predicates such as 父の残した手紙 verbal.
@@ -108,11 +153,13 @@ bool selectsNominalHost(const dictionary::DictionaryManager* dict_manager, const
   return startsLightVerb(codepoints, pos);
 }
 
-// A closed suffix beginning inside a mixed kanji+hiragana span is a stronger
-// morpheme boundary than the generic one-hiragana nominalization candidate.
-// The host is deliberately unrestricted: audience and derivational suffixes
-// attach to an open class of nouns.  A lexical noun registered for the whole
-// span remains intact.
+// A closed suffix beginning inside a mixed kanji+hiragana span is normally a
+// stronger morpheme boundary than the generic nominalization candidate.  The
+// exception is a suffix spelling that overlaps the final dictionary-backed
+// verb continuative: 越し in 年越し and げ in 値上げ are part of 越す/上げる,
+// not suffixes attached to 年/値上.  Other suffixes inside the same span keep
+// their boundary.  A lexical noun registered for the whole span also remains
+// intact.
 bool hasClosedSuffixBoundary(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
                              const dictionary::DictionaryManager* dict_manager) {
   if (dict_manager == nullptr) {
@@ -122,9 +169,15 @@ bool hasClosedSuffixBoundary(const std::vector<char32_t>& codepoints, size_t sta
   if (dict_manager->lookupExact(whole, core::PartOfSpeech::Noun) != nullptr) {
     return false;
   }
+  const bool ends_in_verb_continuative =
+      end_pos > start_pos + 1 && namesDictionaryVerbContinuative(dict_manager, codepoints, end_pos - 1);
   for (size_t split = start_pos + 1; split < end_pos; ++split) {
     const std::string suffix = extractSubstring(codepoints, split, end_pos);
     if (dict_manager->lookupExact(suffix, core::PartOfSpeech::Suffix) != nullptr) {
+      const bool overlaps_final_verb_continuative = ends_in_verb_continuative && split + 2 >= end_pos;
+      if (overlaps_final_verb_continuative) {
+        continue;
+      }
       return true;
     }
   }
@@ -135,6 +188,7 @@ bool hasClosedSuffixBoundary(const std::vector<char32_t>& codepoints, size_t sta
 
 void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                        const std::vector<normalize::CharType>& char_types,
+                                       const grammar::Inflection& inflection,
                                        const dictionary::DictionaryManager* dict_manager,
                                        std::vector<UnknownCandidate>& candidates) {
   if (start_pos >= char_types.size() || char_types[start_pos] != normalize::CharType::Kanji) {
@@ -193,6 +247,17 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
   // Skip potential suru-verb patterns: 漢字2字+し followed by suru-auxiliary
   // e.g., 勉強しちゃった → 勉強 + し + ちゃっ + た (not 勉強し + ちゃった)
   size_t kanji_count = kanji_end - start_pos;
+  // When a multi-kanji nominal prefix precedes a longer verified verb
+  // continuative, this start position owns only the prefix. Do not emit a
+  // nominalized candidate spanning the right-hand verb (総合|見直し,
+  // 長期|借入れ). A one-kanji host remains a productive compound search unit
+  // (顔見知り), while candidate generation at the verified start still emits
+  // the standalone continuative.
+  const size_t following_verb_start =
+      longestNominalVerbContinuativeStart(codepoints, char_types, start_pos, kanji_end, inflection, dict_manager);
+  if (following_verb_start > start_pos + 1 && following_verb_start < kanji_end) {
+    return;
+  }
   // For sahen-compatible 2+ kanji nouns, せ is mizenkei (勉強せよ), not a
   // nominalization ending. Skip nominalized noun candidate here so the
   // 勉強+せよ dictionary path can win.
@@ -348,8 +413,9 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
   // is 確認 + 願い + ます, never a 確認願い noun. Copula だ and a non-hiragana or
   // final position leave the nominal reading intact (翌月払いだ). Two-kanji
   // deverbal compounds are handled by the verified compound path below.
-  if (kanji_count >= 3 && dict_manager != nullptr && kanji_end + 1 < codepoints.size() &&
-      char_types[kanji_end + 1] == normalize::CharType::Hiragana && codepoints[kanji_end + 1] != U'だ') {
+  if (kanji_count >= 3 && following_verb_start != start_pos + 1 && dict_manager != nullptr &&
+      kanji_end + 1 < codepoints.size() && char_types[kanji_end + 1] == normalize::CharType::Hiragana &&
+      codepoints[kanji_end + 1] != U'だ') {
     const std::string_view base_ending = grammar::godanBaseSuffixFromIRow(first_hiragana);
     if (!base_ending.empty()) {
       const std::string verb_base = normalize::encodeUtf8(codepoints[kanji_end - 1]) + std::string(base_ending);
@@ -373,22 +439,26 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
       // a finite-verb candidate whose continuation is grammatically absent.
       const bool has_particle_continuation =
           hasNominalizedNounParticleContinuation(codepoints, kanji_end + 1, dict_manager);
+      const bool has_final_particle_continuation =
+          first_hiragana == U'み' &&
+          hasClauseFinalParticleContinuation(codepoints, char_types, kanji_end + 1, dict_manager);
+      const bool has_hiragana_noun_continuation =
+          namesDictionaryVerbContinuative(dict_manager, codepoints, kanji_end) &&
+          hasParticleFinalHiraganaNounContinuation(codepoints, char_types, kanji_end + 1, dict_manager);
       const bool has_temporal_nominal_continuation =
           grammar::startsClosedTemporalNominal(extractSubstring(codepoints, kanji_end + 1, codepoints.size()));
-      if (has_particle_continuation || isGenitiveClauseFinalNominal(codepoints, char_types, start_pos, kanji_end + 1) ||
-          has_temporal_nominal_continuation) {
+      if (has_particle_continuation || has_final_particle_continuation ||
+          isGenitiveClauseFinalNominal(codepoints, char_types, start_pos, kanji_end + 1) ||
+          has_temporal_nominal_continuation || has_hiragana_noun_continuation) {
         nom1_cost += candidate::kNominalizedNounParticleBonus;
       }
-      // Deverbal compound noun (連用形転成名詞の複合):
-      // [N kanji]+[V kanji]+[renyokei okurigana] where the trailing kanji plus
-      // that okurigana names a dictionary verb (丸出し→出す, 恩返し→返す,
-      // 手書き→書く, 値上げ→上げる). The run has no verb reading of its own —
-      // 手書く is not a word — so its continuative belongs to a nominal
-      // compound rather than to a predicate, and the compound is the search
-      // unit. Restricted to exactly 2 kanji: longer runs usually contain a
-      // real word boundary inside the kanji sequence (翌月+払い, not 翌月払い).
+      // Deverbal compound noun (連用形転成名詞の複合). The longest verified
+      // continuative owns either the whole candidate (見直し, 借入れ) or all
+      // but one host kanji (顔見知り, 手書き). A longer nominal prefix keeps its
+      // boundary and returned above (総合|見直し, 翌月|払い).
       const bool is_deverbal_compound =
-          kanji_count == 2 && namesDictionaryVerbContinuative(dict_manager, codepoints, kanji_end);
+          (kanji_count == 2 && namesDictionaryVerbContinuative(dict_manager, codepoints, kanji_end)) ||
+          (kanji_count >= 3 && (following_verb_start == start_pos + 1 || following_verb_start == start_pos));
       // The compound and the [noun] + [continuative] split of the same run are
       // told apart by what selects them, so the reading holds wherever a
       // nominal is selected — before a particle, the copula, or the light verb
@@ -436,7 +506,9 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
         // noun loses to its own split while an unregistered one does not
         // (手書き against 下書き).
         auto cand = makeCandidate(surface, start_pos, kanji_end + 1, core::PartOfSpeech::Noun, nom1_cost,
-                                  has_particle_continuation || nominal_compound, CandidateOrigin::NominalizedNoun);
+                                  has_particle_continuation || has_final_particle_continuation || nominal_compound ||
+                                      has_hiragana_noun_continuation,
+                                  CandidateOrigin::NominalizedNoun);
 #ifdef SUZUME_DEBUG_INFO
         cand.confidence = kNominalizedNounReportedConfidence;
         cand.pattern = "nominalized_1hira";

@@ -657,7 +657,8 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
 
     // Generate nominalized noun candidates (kanji + short hiragana)
     // e.g., 手助け, 片付け, 引き上げ
-    analysis::generateNominalizedNounCandidates(codepoints, start_pos, char_types, dict_manager_, candidates);
+    analysis::generateNominalizedNounCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_,
+                                                candidates);
 
     // Generate kanji + hiragana compound noun candidates
     // e.g., 玉ねぎ, 水たまり

@@ -177,7 +177,8 @@ void addStandaloneHonorificPrefixInterjectionCandidate(core::Lattice& lattice, s
 void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
                                  const ByteOffsets& byte_offsets, size_t start_pos,
                                  const std::vector<normalize::CharType>& char_types,
-                                 const dictionary::DictionaryManager& dict_manager, const Scorer& scorer) {
+                                 const dictionary::DictionaryManager& dict_manager, const Scorer& scorer,
+                                 const grammar::Inflection& inflection) {
   if (start_pos >= codepoints.size()) {
     return;
   }
@@ -221,6 +222,13 @@ void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, 
   // Find the end of the noun part
   CharType noun_type = char_types[noun_start];
   size_t noun_end = findCharRegionEnd(char_types, noun_start, kMaxNounLenForPrefix, noun_type);
+  if (noun_type == CharType::Kanji) {
+    const size_t following_verb_start =
+        longestNominalVerbContinuativeStart(codepoints, char_types, start_pos, noun_end, inflection, &dict_manager);
+    if (following_verb_start > start_pos + 1 && following_verb_start < noun_end) {
+      noun_end = following_verb_start;
+    }
+  }
 
   if (noun_end <= noun_start) {
     return;
@@ -320,11 +328,14 @@ void addPrefixNounJoinCandidates(core::Lattice& lattice, std::string_view text, 
   // the whole productive prefix compound should be reclassified as an
   // adjective.
   bool is_nominal_capability_compound = utf8::endsWith(surface, "可能");
-  // A negation-prefix compound in a na-adjective continuation is productive
-  // even where its open-class base is absent from the compact dictionary
-  // (不十分だ, 不確かではない).  Keep the nominal path too: the lattice can
-  // still select it in non-adjectival contexts.
-  if (!is_nominal_capability_compound && (adjective_in_dict || is_predicative_negation_compound)) {
+  // A dictionary-backed adjective after a productive prefix remains the
+  // predicate head (超|簡単, 最|重要); the prefix+noun join must not turn that
+  // host into a larger adjective merely because the same surface can also be
+  // read nominally. Negation compounds are different: the prefix creates the
+  // productive adjectival unit itself (不十分, 不確か), even when that whole
+  // unit is absent from the compact dictionary. Keep the nominal path too so
+  // non-adjectival contexts can still select it.
+  if (!is_nominal_capability_compound && is_predicative_negation_compound) {
     float adjective_cost = scorer.posPrior(core::PartOfSpeech::Adjective) + matched_prefix->bonus;
     if (is_predicative_negation_compound) {
       adjective_cost += candidate::kPredicativeNegationPrefixAdjectiveBonus;

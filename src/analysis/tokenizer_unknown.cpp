@@ -330,6 +330,24 @@ bool reopensObservedVerbAuxiliaryBoundary(const core::Lattice& lattice,
   return false;
 }
 
+// A closed causative auxiliary following a nominal head starts the productive
+// サ変 chain (勉強+さ+せ+ない). Do not reinterpret the same kana span as an
+// unattested lexical verb merely because the nominal host has no dictionary
+// entry. Single-kanji verb stems remain safe: their lattice path uses the
+// closed causative edge itself (見+させ+ない), not this unknown verb edge.
+bool shadowsClosedCausativeAfterNominalHead(const core::Lattice& lattice,
+                                            const dictionary::DictionaryManager& dict_manager, std::string_view text,
+                                            const ByteOffsets& byte_offsets, const UnknownCandidate& candidate) {
+  if (candidate.pos != core::PartOfSpeech::Verb || candidate.lemma_verified ||
+      candidate.extended_pos != core::ExtendedPOS::VerbMizenkei || candidate.start == 0 ||
+      !hasNominalHeadEdgeEndingAt(lattice, candidate.start)) {
+    return false;
+  }
+  const auto* auxiliary = dict_manager.lookupExact(textRange(text, byte_offsets, candidate.start, candidate.end),
+                                                   core::PartOfSpeech::Auxiliary);
+  return auxiliary != nullptr && auxiliary->extended_pos == core::ExtendedPOS::AuxCausative;
+}
+
 // A head proven nominal by both a left selector and a right nominal particle
 // owns its complete span. Do not let an internal predicate plus a homographic
 // closed auxiliary reopen that head (谷の向こうに → 向こう, not 向こ+う).
@@ -574,8 +592,20 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
 
   // Generate unknown word candidates
   auto candidates = unknown_gen_.generate(text, codepoints, start_pos, char_types);
+  const size_t kanji_end =
+      start_pos < char_types.size() && char_types[start_pos] == normalize::CharType::Kanji
+          ? findCharRegionEnd(char_types, start_pos, char_types.size() - start_pos, normalize::CharType::Kanji)
+          : start_pos;
+  const size_t following_verb_start = kanji_end - start_pos >= 3
+                                          ? longestNominalVerbContinuativeStart(codepoints, char_types, start_pos,
+                                                                                kanji_end, inflection_, &dict_manager_)
+                                          : kanji_end;
 
   for (const auto& candidate : candidates) {
+    if (following_verb_start < kanji_end && candidate.pos == core::PartOfSpeech::Noun &&
+        candidate.end > following_verb_start && candidate.end <= kanji_end) {
+      continue;
+    }
     if (candidate.requires_left_content_edge &&
         (candidate.start == 0 || !hasNominalHeadEdgeEndingAt(lattice, candidate.start - 1))) {
       continue;
@@ -608,7 +638,11 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
         })) {
       continue;
     }
-    if (candidate.pos != core::PartOfSpeech::Particle &&
+    const bool selected_by_following_copula =
+        candidate.pos == core::PartOfSpeech::Noun && candidate.end - candidate.start == 2 &&
+        candidate.end < codepoints.size() &&
+        grammar::startsPredicativeCopula(text.substr(byteOffsetAt(byte_offsets, candidate.end)));
+    if (!selected_by_following_copula && candidate.pos != core::PartOfSpeech::Particle &&
         joinsParticleToDictionaryAdverb(lattice, dict_manager_, text, byte_offsets, candidate.start, candidate.end)) {
       continue;
     }
@@ -629,6 +663,9 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
       continue;
     }
     if (reopensObservedVerbAuxiliaryBoundary(lattice, dict_manager_, text, byte_offsets, candidate)) {
+      continue;
+    }
+    if (shadowsClosedCausativeAfterNominalHead(lattice, dict_manager_, text, byte_offsets, candidate)) {
       continue;
     }
     if (isInternalPredicateOfSelectedNominalHead(dict_manager_, text, byte_offsets, candidates, candidate)) {
@@ -1185,15 +1222,23 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
                    match.entry->pos != core::PartOfSpeech::Verb;
           });
       const bool is_complete_shii_adjective = isProductiveShiiAdjectiveTerminal(surface_str, inflection_);
+      // The one-mora と is case-particle-shaped in the dictionary, but after a
+      // complete predicate it marks quotation. In that position even a
+      // productive adjective whose lemma equals its terminal surface is enough
+      // to reject a fabricated deverbal-noun homograph. Other nominal particles
+      // retain the ambiguity needed by おもい+が/を.
+      const bool follows_predicate_quote =
+          nominal_particle && candidate.end < codepoints.size() && codepoints[candidate.end] == core::hiragana::kTo;
       // A finished adjective reading of the same span is a complete inflectional
       // analysis, so a deverbal re-reading built on a fabricated verb must stand
       // down: 高かれ+と is the カリ 命令形 of 高い, not a noun from 高かれる. The
-      // lemma has to differ from the surface, or the "adjective" is itself an
-      // unanalyzed guess and settles nothing.
+      // lemma normally has to differ from the surface, unless the following
+      // quotation particle supplies the predicate-position evidence.
       const bool same_span_adjective_analysis =
           std::any_of(candidates.begin(), candidates.end(), [&](const UnknownCandidate& other) {
             return other.pos == core::PartOfSpeech::Adjective && other.extended_pos == core::ExtendedPOS::AdjBasic &&
-                   other.start == candidate.start && other.end == candidate.end && other.lemma != other.surface;
+                   other.start == candidate.start && other.end == candidate.end &&
+                   (other.lemma != other.surface || follows_predicate_quote);
           });
       const bool crosses_complete_internal_boundary =
           hasCompleteInternalConstituentBoundary(lattice, dict_manager_, text, byte_offsets, candidates, candidate);
