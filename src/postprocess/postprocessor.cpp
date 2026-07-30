@@ -1,7 +1,6 @@
 #include "postprocess/postprocessor.h"
 
 #include <algorithm>
-#include <map>
 #include <string_view>
 #include <utility>
 
@@ -83,10 +82,18 @@ Postprocessor::Postprocessor(const dictionary::DictionaryManager* dict_manager, 
 
 std::vector<core::Morpheme> Postprocessor::process(std::vector<core::Morpheme> result) const {
   [[maybe_unused]] size_t before_count = 0;
-  std::map<std::pair<size_t, size_t>, std::string> source_lemmas;
+  // Input spans are few and already ordered, so a flat list beats an ordered
+  // container here and keeps its node machinery out of the build.
+  struct SourceLemma {
+    size_t start;
+    size_t end;
+    std::string lemma;
+  };
+  std::vector<SourceLemma> source_lemmas;
   if (!options_.lemmatize) {
+    source_lemmas.reserve(result.size());
     for (const auto& morpheme : result) {
-      source_lemmas.emplace(std::make_pair(morpheme.start, morpheme.end), morpheme.lemma);
+      source_lemmas.push_back({morpheme.start, morpheme.end, morpheme.lemma});
     }
   }
 
@@ -172,9 +179,12 @@ std::vector<core::Morpheme> Postprocessor::process(std::vector<core::Morpheme> r
     // lattice lemma. Merged tokens have a new source span and retain their
     // structural lemma instead.
     for (auto& morpheme : result) {
-      const auto original = source_lemmas.find(std::make_pair(morpheme.start, morpheme.end));
+      const auto original =
+          std::find_if(source_lemmas.begin(), source_lemmas.end(), [&morpheme](const SourceLemma& candidate) {
+            return candidate.start == morpheme.start && candidate.end == morpheme.end;
+          });
       if (original != source_lemmas.end()) {
-        morpheme.lemma = original->second;
+        morpheme.lemma = original->lemma;
       }
     }
   }

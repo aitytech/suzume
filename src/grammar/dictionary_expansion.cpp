@@ -1,6 +1,5 @@
 #include "grammar/dictionary_expansion.h"
 
-#include <map>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -237,7 +236,15 @@ DictionaryExpansionResult expandDictionarySourceEntries(const std::vector<dictio
     bool explicit_surface;
   };
   std::unordered_map<std::string, SeenSurface> seen_surfaces;
-  std::map<std::pair<std::string, core::PartOfSpeech>, SeenSurface> seen_surface_pos;
+  // The same-POS index reuses the surface index's container by prefixing the
+  // key with a fixed-width part of speech, so only one keyed container type is
+  // instantiated. The prefix is fixed width, so no surface can straddle it.
+  auto surface_pos_key = [](std::string_view surface, core::PartOfSpeech pos) {
+    std::string key(1, static_cast<char>(pos));
+    key.append(surface);
+    return key;
+  };
+  std::unordered_map<std::string, SeenSurface> seen_surface_pos;
 
   auto append_source = [&](const dictionary::SourceEntry& source_entry) {
     auto base_entry = makeBaseEntry(source_entry);
@@ -271,7 +278,7 @@ DictionaryExpansionResult expandDictionarySourceEntries(const std::vector<dictio
                 seen_entries.insert(
                     EntryIdentity{replacement.surface, replacement.pos, replacement.extended_pos, replacement.lemma});
                 if (!options.preserve_same_pos_homographs) {
-                  seen_surface_pos.at(std::make_pair(replacement.surface, replacement.pos)) = found->second;
+                  seen_surface_pos.at(surface_pos_key(replacement.surface, replacement.pos)) = found->second;
                 }
               }
               ++result.duplicates_skipped;
@@ -281,7 +288,7 @@ DictionaryExpansionResult expandDictionarySourceEntries(const std::vector<dictio
               const auto& previous = result.entries[found->second.index];
               seen_entries.erase(EntryIdentity{previous.surface, previous.pos, previous.extended_pos, previous.lemma});
               if (!options.preserve_same_pos_homographs) {
-                seen_surface_pos.erase(std::make_pair(previous.surface, previous.pos));
+                seen_surface_pos.erase(surface_pos_key(previous.surface, previous.pos));
               }
               result.entries[found->second.index] = std::move(entry);
               const auto& replacement = result.entries[found->second.index];
@@ -289,7 +296,7 @@ DictionaryExpansionResult expandDictionarySourceEntries(const std::vector<dictio
               seen_entries.insert(
                   EntryIdentity{replacement.surface, replacement.pos, replacement.extended_pos, replacement.lemma});
               if (!options.preserve_same_pos_homographs) {
-                seen_surface_pos.emplace(std::make_pair(replacement.surface, replacement.pos), found->second);
+                seen_surface_pos.emplace(surface_pos_key(replacement.surface, replacement.pos), found->second);
               }
               ++result.duplicates_skipped;
               continue;
@@ -302,7 +309,7 @@ DictionaryExpansionResult expandDictionarySourceEntries(const std::vector<dictio
           continue;
         }
         if (!options.preserve_same_pos_homographs) {
-          const auto key = std::make_pair(entry.surface, entry.pos);
+          const auto key = surface_pos_key(entry.surface, entry.pos);
           auto found = seen_surface_pos.find(key);
           if (found != seen_surface_pos.end()) {
             if (entry.lemma.size() > found->second.lemma_length) {
