@@ -426,6 +426,32 @@ class TestProductiveTateSuffixMerge:
         assert rule is None
 
 
+class TestTeAruSplit:
+    def test_keeps_lexical_adverb_before_aru(self):
+        tokens = [_tok("初めて", pos="副詞", lemma="初めて"), _tok("ある", pos="動詞", lemma="ある")]
+        result, rule = apply_suzume_merge(tokens, "初めてある")
+        assert [token["surface"] for token in result] == ["初めて", "ある"]
+        assert rule == "fixed-te-search-unit-before-aru"
+
+    def test_keeps_split_compound_particle_before_inflected_aru(self):
+        tokens = [
+            _tok("に", pos="助詞", lemma="に"),
+            _tok("つい", pos="動詞", lemma="つく"),
+            _tok("て", pos="助詞", lemma="て"),
+            _tok("あっ", pos="動詞", lemma="ある"),
+        ]
+        result, rule = apply_suzume_merge(tokens, "についてあっ")
+        assert [token["surface"] for token in result] == ["について", "あっ"]
+        assert result[0]["pos"] == "助詞"
+        assert rule == "fixed-te-search-unit-before-aru"
+
+    def test_keeps_productive_te_form_split(self):
+        tokens = [_tok("並べて", pos="動詞", lemma="並べる"), _tok("あれ", pos="動詞", lemma="ある")]
+        result, rule = apply_suzume_merge(tokens, "並べてあれ")
+        assert [token["surface"] for token in result] == ["並べ", "て", "あれ"]
+        assert rule == "te-aru-split"
+
+
 class TestMechaMerge:
     def test_mecha(self):
         tokens = [_tok("め", pos="名詞"), _tok("ちゃ", pos="助詞")]

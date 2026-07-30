@@ -68,6 +68,25 @@ def _reads_as_one_verb(lemma: str) -> bool:
     return len(tokens) == 1 and tokens[0].get("pos") == "動詞"
 
 
+def _fixed_te_search_unit(surface: str) -> dict | None:
+    """Return a closed lexical て-unit that must not be read as a te-form."""
+    if not surface.endswith("て"):
+        return None
+    tokens = mecab_analyze(surface)
+    if len(tokens) != 1 or tokens[0].get("pos") not in ("助詞", "副詞"):
+        return None
+    token = tokens[0]
+    return {
+        "surface": surface,
+        "pos": token["pos"],
+        "pos_sub1": token.get("pos_sub1"),
+        "pos_sub2": token.get("pos_sub2"),
+        "conj_type": token.get("conj_type"),
+        "conj_form": token.get("conj_form"),
+        "lemma": token.get("lemma") or surface,
+    }
+
+
 # Numeric-approximation/aggregation prefixes that modify a whole quantity and split
 # off the following number+counter (約|二時間, 計|五名), unlike ordinal 第 which binds
 # to its number (第三十四|回). Mirrors normalize::isNumericApproxPrefixKanji in the core.
@@ -1108,6 +1127,29 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
             if applied_rule is None:
                 applied_rule = "productive-tate-suffix"
 
+        # Closed lexical units ending in て remain intact before every
+        # inflectional cell of ある.  The reference analyzer can expose the
+        # same compound particle as one token before ある but as several tokens
+        # before あった, so inspect the complete source span rather than the
+        # current tokenization.
+        if not merged:
+            span = ""
+            follower_idx = i
+            while follower_idx < len(tokens):
+                follower_surface = tokens[follower_idx].get("surface", "")
+                if follower_surface in ("ある", "あっ", "あり", "あれ"):
+                    break
+                span += follower_surface
+                follower_idx += 1
+            if follower_idx < len(tokens):
+                fixed_te_unit = _fixed_te_search_unit(span)
+                if fixed_te_unit is not None:
+                    result.append(fixed_te_unit)
+                    i = follower_idx
+                    merged = True
+                    if applied_rule is None:
+                        applied_rule = "fixed-te-search-unit-before-aru"
+
         # 11c. Resultative 〜てある retains the te-particle boundary.  MeCab
         # may emit an ichidan te-form as one token (並べて), while Suzume keeps
         # the productive verb stem + て + ある chain for its grammar model.
@@ -1123,7 +1165,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
             and t.get("surface", "").endswith("て")
             and len(t.get("surface", "")) > 1
             and i + 1 < len(tokens)
-            and tokens[i + 1].get("surface") in ("ある", "あっ", "あり")
+            and tokens[i + 1].get("surface") in ("ある", "あっ", "あり", "あれ")
         ):
             stem = t["surface"][:-1]
             lemma = t.get("lemma") or stem
