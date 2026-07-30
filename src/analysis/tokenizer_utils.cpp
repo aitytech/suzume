@@ -85,7 +85,7 @@ size_t longestNominalVerbContinuativeStart(const std::vector<char32_t>& codepoin
     // this otherwise ambiguous nominalization (払い→払う, 洗い→洗う).
     if (okurigana_length == 1 && ending == U'い' &&
         !verb_helpers::isVerbInDictionary(
-            dict_manager, normalize::encodeUtf8(codepoints[kanji_end - 1]) + std::string(godan_ending))) {
+            dict_manager, normalize::concat(normalize::encodeUtf8(codepoints[kanji_end - 1]), godan_ending))) {
       continue;
     }
     const std::string continuation =
@@ -171,7 +171,7 @@ size_t longestNominalVerbContinuativeStart(const std::vector<char32_t>& codepoin
         if (!godan_ending.empty()) {
           right_verb = verb_helpers::isVerbInDictionary(
               dict_manager,
-              extractSubstring(codepoints, verb_start + 1, continuative_end - 1) + std::string(godan_ending));
+              normalize::concat(extractSubstring(codepoints, verb_start + 1, continuative_end - 1), godan_ending));
         }
         if (!right_verb && grammar::isERowCodepoint(ending)) {
           right_verb = verb_helpers::isVerbInDictionary(dict_manager,

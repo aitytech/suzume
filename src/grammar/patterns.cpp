@@ -9,6 +9,7 @@
 
 #include "core/kana_constants.h"
 #include "core/utf8_constants.h"
+#include "normalize/utf8.h"
 
 namespace suzume::grammar {
 
@@ -74,7 +75,7 @@ bool endsWithNegativeBecomePattern(std::string_view surface) {
 
 bool endsWithGodanNegativeRenyokei(std::string_view surface) {
   for (std::string_view ending : kana::kMizenkeiEndings) {
-    const std::string suffix = std::string(ending) + "なく";
+    const std::string suffix = normalize::concat(ending, "なく");
     if (surface.size() > suffix.size() && utf8::endsWith(surface, suffix)) {
       return true;
     }

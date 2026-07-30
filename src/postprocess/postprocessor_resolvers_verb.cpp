@@ -94,7 +94,7 @@ void resolveAmbiguousInflections(std::vector<core::Morpheme>& result) {
     if (morpheme.pos == core::PartOfSpeech::Verb && morpheme.lemma == morpheme.surface &&
         utf8::endsWith(morpheme.surface, "く") && next.extended_pos == core::ExtendedPOS::VerbRenyokei) {
       retag(morpheme, core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjRenyokei,
-            std::string(utf8::dropLastChar(morpheme.surface)) + "い", dictionary::ConjugationType::IAdjective,
+            normalize::concat(utf8::dropLastChar(morpheme.surface), "い"), dictionary::ConjugationType::IAdjective,
             grammar::ConjForm::Renyokei);
       continue;
     }
@@ -107,7 +107,7 @@ void resolveAmbiguousInflections(std::vector<core::Morpheme>& result) {
     if (morpheme.pos == core::PartOfSpeech::Adjective && utf8::endsWith(morpheme.surface, "さ") &&
         next.extended_pos == core::ExtendedPOS::AuxPassive) {
       retag(morpheme, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbMizenkei,
-            std::string(utf8::dropLastChar(morpheme.surface)) + "す", dictionary::ConjugationType::GodanSa,
+            normalize::concat(utf8::dropLastChar(morpheme.surface), "す"), dictionary::ConjugationType::GodanSa,
             grammar::ConjForm::Mizenkei);
     }
   }
@@ -135,8 +135,8 @@ void resolveAmbiguousInflections(std::vector<core::Morpheme>& result) {
       continue;
     }
     retag(stem, core::PartOfSpeech::Verb, core::ExtendedPOS::VerbMizenkei,
-          std::string(utf8::dropLastChar(stem.surface)) + std::string(base_suffix),
-          grammar::verbTypeToConjType(verb_type), grammar::ConjForm::Mizenkei);
+          normalize::concat(utf8::dropLastChar(stem.surface), base_suffix), grammar::verbTypeToConjType(verb_type),
+          grammar::ConjForm::Mizenkei);
     retag(causative, core::PartOfSpeech::Auxiliary, core::ExtendedPOS::AuxCausative, "せる",
           dictionary::ConjugationType::Ichidan, grammar::ConjForm::Mizenkei);
   }

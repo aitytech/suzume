@@ -566,7 +566,7 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
     // kanji stem has the same shape (望まし+い方 out of 望ましい+方向). Require
     // the reconstructed base to be attested before joining.
     const std::string continuative_base =
-        extractSubstring(codepoints, start_pos, start_pos + 1) + std::string(grammar::godanBaseSuffixFromIRow(c1));
+        normalize::concat(extractSubstring(codepoints, start_pos, start_pos + 1), grammar::godanBaseSuffixFromIRow(c1));
     if (!verb_helpers::isVerbInDictionary(&dict_manager, continuative_base)) {
       return;
     }
@@ -731,7 +731,7 @@ void addVerbSuffixNounJoinCandidates(core::Lattice& lattice, std::string_view te
     const std::string_view godan_ending = grammar::godanBaseSuffixFromIRow(final_kana);
     if (!godan_ending.empty()) {
       const std::string base_form =
-          renyokei.substr(0, renyokei.size() - core::kJapaneseCharBytes) + std::string(godan_ending);
+          normalize::concat(renyokei.substr(0, renyokei.size() - core::kJapaneseCharBytes), godan_ending);
       if (dict_manager.lookupExact(base_form, core::PartOfSpeech::Verb) == nullptr) {
         return;
       }

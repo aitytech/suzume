@@ -323,7 +323,7 @@ void appendHiraganaRenyokeiBeforeAspect(const std::vector<char32_t>& codepoints,
   if (grammar::isERowCodepoint(final_cp) || final_cp == U'じ') {
     lemma = extractSubstring(codepoints, start_pos, stem_end) + "る";
   } else if (!suffix.empty()) {
-    lemma = extractSubstring(codepoints, start_pos, stem_end - 1) + std::string(suffix);
+    lemma = normalize::concat(extractSubstring(codepoints, start_pos, stem_end - 1), suffix);
   }
   if (lemma.empty()) {
     return;

@@ -34,7 +34,7 @@ bool hasDictionaryGodanBaseFromIRow(const core::Morpheme& noun, const dictionary
   if (base_suffix.empty()) {
     return false;
   }
-  const std::string base_form = std::string(utf8::dropLastChar(noun.surface)) + std::string(base_suffix);
+  const std::string base_form = normalize::concat(utf8::dropLastChar(noun.surface), base_suffix);
   return dict_manager->lookupExact(base_form, core::PartOfSpeech::Verb) != nullptr;
 }
 

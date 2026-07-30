@@ -545,7 +545,7 @@ void appendGodanPassiveRenyokeiCandidates(const std::vector<char32_t>& codepoint
           // e.g., 言われる: 言 + わ + れる → 言 + う = 言う
           std::string kanji_part = extractSubstring(codepoints, start_pos, kanji_end);
           std::string_view u_row_suffix = grammar::godanBaseSuffixFromARow(first_hira);
-          std::string base_lemma = kanji_part + std::string(u_row_suffix);
+          std::string base_lemma = normalize::concat(kanji_part, u_row_suffix);
 
           // Use analyze() to get all interpretations, not just the best one
           // The best overall interpretation might be Godan (言う + れる), but

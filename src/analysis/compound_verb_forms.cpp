@@ -128,7 +128,7 @@ std::string generateKateikei(std::string_view surface, std::string_view reading,
   }
 
   if (verb_type == V2VerbType::Ichidan) {
-    return std::string(base.substr(0, base.size() - core::kJapaneseCharBytes)) + "れ";
+    return normalize::concat(base.substr(0, base.size() - core::kJapaneseCharBytes), "れ");
   }
 
   return replaceGodanEnding(base, false);

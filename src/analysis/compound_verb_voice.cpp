@@ -52,7 +52,7 @@ bool addPassiveContinuativeTailCandidates(core::Lattice& lattice, const std::vec
       const std::string_view underlying_suffix = grammar::godanBaseSuffixFromARow(underlying_a_row);
       if (!underlying_suffix.empty()) {
         const std::string underlying_base =
-            extractSubstring(codepoints, start_pos, passive_pos - 2) + std::string(underlying_suffix);
+            normalize::concat(extractSubstring(codepoints, start_pos, passive_pos - 2), underlying_suffix);
         if (dict_manager.lookupExact(underlying_base, core::PartOfSpeech::Verb) != nullptr) {
           const std::string causative_stem = extractSubstring(codepoints, start_pos, passive_pos);
           const std::string causative_lemma = extractSubstring(codepoints, start_pos, passive_pos - 1) + "す";

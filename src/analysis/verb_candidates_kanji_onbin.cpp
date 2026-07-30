@@ -90,7 +90,7 @@ OnbinInflMatch bestOnbinInflMatch(const grammar::Inflection& inflection, const s
   for (const auto& result : inflection.analyze(full_surface)) {
     if (result.confidence >= 0.5F && result.confidence > best_conf) {
       for (const auto& [verb_type, base_suffix] : onbin_types) {
-        std::string base_form = kanji_stem + std::string(base_suffix);
+        std::string base_form = normalize::concat(kanji_stem, base_suffix);
         if (result.base_form == base_form && result.verb_type == verb_type) {
           match.type = verb_type;
           match.base_form = base_form;
@@ -222,7 +222,7 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
         std::string matched_base_form;
         bool matched_via_dict = false;
         for (const auto& [verb_type, base_suffix] : sokuonbin_types) {
-          std::string base_form = kanji_stem + std::string(base_suffix);
+          std::string base_form = normalize::concat(kanji_stem, base_suffix);
           bool dict_match = vh::isVerbInDictionary(dict_manager, base_form);
 #ifdef SUZUME_DEBUG
           all_sokuonbin_candidates.push_back({verb_type, base_form, dict_match});
@@ -268,7 +268,7 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
             // Get the second kanji + verb ending
             std::string remainder_stem = extractSubstring(codepoints, start_pos + 1, kanji_end);
             for (const auto& [verb_type, base_suffix] : sokuonbin_types) {
-              std::string remainder_base = remainder_stem + std::string(base_suffix);
+              std::string remainder_base = normalize::concat(remainder_stem, base_suffix);
               if (vh::isVerbInDictionary(dict_manager, remainder_base)) {
                 remainder_is_dict_verb = true;
                 SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << kanji_stem << "\" remainder \"" << remainder_base
@@ -293,7 +293,7 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
                   for (const auto& [verb_type, base_suffix] : sokuonbin_types) {
                     if (best.verb_type == verb_type) {
                       matched_verb_type = verb_type;
-                      matched_base_form = kanji_stem + std::string(base_suffix);
+                      matched_base_form = normalize::concat(kanji_stem, base_suffix);
                       SUZUME_DEBUG_LOG_VERBOSE("[VERB_CAND] \"" << kanji_stem << "\" single-kanji sokuonbin → "
                                                                 << matched_base_form
                                                                 << " (infl, conf=" << best.confidence << ")\n");

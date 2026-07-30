@@ -493,7 +493,7 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result, const dictio
     auto& current = result[idx];
     if (current.pos == core::PartOfSpeech::Adjective && utf8::endsWith(current.surface, "く") &&
         result[idx + 1].surface == "なかっ") {
-      current.lemma = std::string(utf8::dropLastChar(current.surface)) + "い";
+      current.lemma = normalize::concat(utf8::dropLastChar(current.surface), "い");
       current.extended_pos = core::ExtendedPOS::AdjRenyokei;
       current.conj_type = dictionary::ConjugationType::IAdjective;
       current.conj_form = grammar::ConjForm::Renyokei;
@@ -605,7 +605,7 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result, const dictio
         result.size() >= 2 && result[result.size() - 2].pos == core::PartOfSpeech::Particle) {
       const std::string stem(utf8::dropLastChar(final.surface));
       const std::string ichidan_base = final.surface + "る";
-      const std::string godan_base = stem + std::string(base_suffix);
+      const std::string godan_base = normalize::concat(stem, base_suffix);
       [[maybe_unused]] const bool has_ichidan =
           dict_manager->lookupExact(ichidan_base, core::PartOfSpeech::Verb) != nullptr;
       const bool has_godan = dict_manager->lookupExact(godan_base, core::PartOfSpeech::Verb) != nullptr;

@@ -366,7 +366,7 @@ std::string fixSpecialRaRowLemma(std::string_view lemma, const dictionary::Dicti
   if (!utf8::endsWith(lemma, "いる") || lemma.size() < core::kThreeJapaneseCharBytes || dict == nullptr) {
     return "";
   }
-  std::string ru_form = std::string(utf8::dropLast2Chars(lemma)) + "る";
+  std::string ru_form = normalize::concat(utf8::dropLast2Chars(lemma), "る");
   if (dict->lookupExact(ru_form, core::PartOfSpeech::Verb) != nullptr) {
     return ru_form;
   }
@@ -387,7 +387,7 @@ std::string fixSpecialRaRowLemma(std::string_view lemma, const dictionary::Dicti
 std::string fixGodanRenyokeiBeforeLiteraryTe(std::string_view surface, std::string_view lemma,
                                              std::string_view next_surface,
                                              const dictionary::DictionaryManager* dict_manager) {
-  if (dict_manager == nullptr || next_surface != "て" || lemma != std::string(surface) + "る") {
+  if (dict_manager == nullptr || next_surface != "て" || lemma != normalize::concat(surface, "る")) {
     return "";
   }
   // The same surface can be an ordinary modern Ichidan continuative and a
@@ -402,7 +402,7 @@ std::string fixGodanRenyokeiBeforeLiteraryTe(std::string_view surface, std::stri
   if (godan_ending.empty()) {
     return "";
   }
-  std::string candidate = std::string(utf8::dropLastChar(surface)) + std::string(godan_ending);
+  std::string candidate = normalize::concat(utf8::dropLastChar(surface), godan_ending);
   return hasExactVerbEntry(dict_manager, candidate) ? candidate : "";
 }
 
@@ -430,7 +430,7 @@ std::string fixIchidanRenyokeiBeforeTe(std::string_view surface, std::string_vie
     return "";
   }
 
-  std::string godan_base = std::string(utf8::dropLastChar(surface)) + std::string(godan_ending);
+  std::string godan_base = normalize::concat(utf8::dropLastChar(surface), godan_ending);
   if (lemma != godan_base) {
     return "";
   }
@@ -440,7 +440,7 @@ std::string fixIchidanRenyokeiBeforeTe(std::string_view surface, std::string_vie
   if (hasExactVerbEntry(dict_manager, godan_base)) {
     return "";
   }
-  return std::string(surface) + "る";
+  return normalize::concat(surface, "る");
 }
 
 // Potential verb (可能動詞): single-token 五段あ段+れる keeps lemma = surface.
@@ -482,7 +482,7 @@ std::string fixHatsuonbin(std::string_view stem, const dictionary::DictionaryMan
   if (dict_manager != nullptr) {
     for (const auto& [verb_type, ending] : grammar::Conjugation::getGodanTypesByOnbin("ん")) {
       (void)verb_type;
-      std::string base = std::string(stem) + std::string(ending);
+      std::string base = normalize::concat(stem, ending);
       if (hasExactVerbEntry(dict_manager, base)) {
         return base;
       }
@@ -490,7 +490,7 @@ std::string fixHatsuonbin(std::string_view stem, const dictionary::DictionaryMan
   }
   // Kanji-fallback guard: assume む for kanji stems when no dictionary match is found.
   if (grammar::isAllKanji(stem)) {
-    return std::string(stem) + "む";
+    return normalize::concat(stem, "む");
   }
   return "";
 }
@@ -511,11 +511,11 @@ std::string lemmatizeGodanEnding(std::string_view surface, const VerbEnding& end
     // attempted this fallback after a failed Godan reversal, but identical
     // suffixes made that decision order-dependent.
     if (ending.suffix == "ない" || ending.suffix == "ます") {
-      return std::string(stem) + "る";
+      return normalize::concat(stem, "る");
     }
     return "";
   }
-  return std::string(utf8::dropLastChar(stem)) + std::string(base);
+  return normalize::concat(utf8::dropLastChar(stem), base);
 }
 
 std::string lemmatizeVerbFallback(std::string_view surface) {
@@ -644,7 +644,7 @@ std::string lemmatizeContractedVerbWithDictionary(std::string_view surface,
     const std::string_view onbin = kOnbinSurfaces[static_cast<size_t>(ending.onbin)];
     for (const auto& [verb_type, base_suffix] : grammar::Conjugation::getGodanTypesByOnbin(onbin)) {
       (void)verb_type;
-      std::string base_form = stem + std::string(base_suffix);
+      std::string base_form = normalize::concat(stem, base_suffix);
       if (hasExactVerbEntry(dict_manager, base_form)) {
         return base_form;
       }

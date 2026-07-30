@@ -113,8 +113,8 @@ bool endsInsideVerifiedCompoundVerb(const suzume::analysis::UnknownCandidate& ca
   if (base_suffix.empty()) {
     return false;
   }
-  const std::string verb_base =
-      suzume::analysis::extractSubstring(codepoints, candidate.end - 1, candidate.end) + std::string(base_suffix);
+  const std::string verb_base = suzume::normalize::concat(
+      suzume::analysis::extractSubstring(codepoints, candidate.end - 1, candidate.end), base_suffix);
   return dict_manager->lookupExact(verb_base, suzume::core::PartOfSpeech::Verb) != nullptr;
 }
 

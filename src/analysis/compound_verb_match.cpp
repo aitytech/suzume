@@ -85,7 +85,7 @@ CompoundVerbMatch findCompoundVerbMatch(
     if (grammar::isSuruRenyokeiSurface(v1_surface)) {
       v1_base = "する";
     } else if (is_ichidan) {
-      v1_base = std::string(v1_surface) + "る";
+      v1_base = normalize::concat(v1_surface, "る");
     } else {
       v1_base = std::string(v1_surface.substr(0, v1_surface.size() - core::kJapaneseCharBytes));
       v1_base += normalize::encodeUtf8(base_ending);
@@ -214,7 +214,7 @@ CompoundVerbMatch findCompoundVerbMatch(
     // candidate over the productive auxiliary sequence (食べとった).
     if (!matched_kanji && char_types[v2_start] == CharType::Hiragana &&
         (v2_reading == "とる" || v2_reading == "どる")) {
-      const std::string full_compound = std::string(v1_surface) + std::string(v2_reading);
+      const std::string full_compound = normalize::concat(v1_surface, v2_reading);
       if (dict_manager.lookupExact(full_compound, core::PartOfSpeech::Verb) == nullptr) {
         continue;
       }

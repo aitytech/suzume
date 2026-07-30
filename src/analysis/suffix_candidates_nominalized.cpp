@@ -105,7 +105,7 @@ bool namesDictionaryVerbContinuative(const dictionary::DictionaryManager* dict_m
   }
   const std::string stem = extractSubstring(codepoints, okurigana_pos - 1, okurigana_pos);
   const std::string_view godan_ending = grammar::godanBaseSuffixFromIRow(codepoints[okurigana_pos]);
-  if (!godan_ending.empty() && verb_helpers::isVerbInDictionary(dict_manager, stem + std::string(godan_ending))) {
+  if (!godan_ending.empty() && verb_helpers::isVerbInDictionary(dict_manager, normalize::concat(stem, godan_ending))) {
     return true;
   }
   return verb_helpers::isVerbInDictionary(dict_manager, stem + normalize::encodeUtf8(codepoints[okurigana_pos]) +
@@ -311,7 +311,7 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
   const bool preceded_by_kanji = start_pos > 0 && char_types[start_pos - 1] == normalize::CharType::Kanji;
   if (first_hiragana == U'し' && dict_manager != nullptr && (kanji_count >= 2 || preceded_by_kanji)) {
     std::string_view base_ending = grammar::godanBaseSuffixFromIRow(first_hiragana);
-    std::string verb_base = normalize::encodeUtf8(codepoints[kanji_end - 1]) + std::string(base_ending);
+    std::string verb_base = normalize::concat(normalize::encodeUtf8(codepoints[kanji_end - 1]), base_ending);
     if (!verb_helpers::isVerbInDictionary(dict_manager, verb_base)) {
       return;
     }
@@ -440,7 +440,7 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
       codepoints[kanji_end + 1] != U'だ') {
     const std::string_view base_ending = grammar::godanBaseSuffixFromIRow(first_hiragana);
     if (!base_ending.empty()) {
-      const std::string verb_base = normalize::encodeUtf8(codepoints[kanji_end - 1]) + std::string(base_ending);
+      const std::string verb_base = normalize::concat(normalize::encodeUtf8(codepoints[kanji_end - 1]), base_ending);
       if (verb_helpers::isVerbInDictionary(dict_manager, verb_base)) {
         skip_single_char = true;
       }
@@ -559,7 +559,7 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
     const bool is_verb_continuative =
         (!base_ending.empty() &&
          verb_helpers::isVerbInDictionary(
-             dict_manager, normalize::encodeUtf8(codepoints[kanji_end - 1]) + std::string(base_ending))) ||
+             dict_manager, normalize::concat(normalize::encodeUtf8(codepoints[kanji_end - 1]), base_ending))) ||
         (grammar::isERowCodepoint(first_hiragana) && verb_helpers::isVerbInDictionary(dict_manager, stem + "る"));
     // A closed suffix on the right is its own morpheme (書き|先, 崩し|的), so it
     // never becomes the second half of a lexical compound.

@@ -220,7 +220,7 @@ float productiveIAdjectiveStemConfidence(const std::string& stem, const std::str
   const char32_t final_codepoint = utf8::decodeFirstChar(utf8::lastChar(stem));
   const std::string_view godan_suffix = grammar::godanBaseSuffixFromIRow(final_codepoint);
   if (!godan_suffix.empty()) {
-    const std::string verb_base = std::string(utf8::dropLastChar(stem)) + std::string(godan_suffix);
+    const std::string verb_base = normalize::concat(utf8::dropLastChar(stem), godan_suffix);
     if (isVerbInDictionary(dict_manager, verb_base)) {
       return candidate::kNoOriginConfidence;
     }
@@ -238,7 +238,7 @@ float productiveIAdjectiveStemConfidence(const std::string& stem, const std::str
     // An all-kanji compound adjective can inherit a productive adjectival head
     // (心+細い).  Requiring the final head prevents arbitrary nouns such as
     // 子供 from becoming fictitious 子供い adjectives before げ/さ.
-    const std::string head_base = std::string(utf8::lastChar(stem)) + "い";
+    const std::string head_base = normalize::concat(utf8::lastChar(stem), "い");
     return isAdjectiveInDictionary(dict_manager, head_base) ? confidence : candidate::kNoOriginConfidence;
   }
 

@@ -59,7 +59,7 @@ void appendSelectedKanjiVerbCandidate(const std::vector<char32_t>& codepoints, s
   bool is_unregistered_godan_sa =
       best.verb_type == grammar::VerbType::GodanSa && !vh::isVerbInDictionary(dict_manager, best.base_form);
   if (is_unregistered_godan_sa && utf8::endsWith(best.stem, "く")) {
-    const std::string adjective_base = std::string(utf8::dropLastChar(best.stem)) + "い";
+    const std::string adjective_base = normalize::concat(utf8::dropLastChar(best.stem), "い");
     if (vh::isAdjectiveInDictionary(dict_manager, adjective_base)) {
       return;
     }

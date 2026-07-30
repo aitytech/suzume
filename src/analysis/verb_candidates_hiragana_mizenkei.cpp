@@ -95,7 +95,7 @@ bool deriveGodanMizenkeiForms(const std::vector<char32_t>& codepoints, size_t st
   }
   out.mizenkei_surface = extractSubstring(codepoints, start_pos, mizenkei_end);
   out.stem = extractSubstring(codepoints, start_pos, mizenkei_end - 1);
-  out.base_form = out.stem + std::string(out.base_suffix);
+  out.base_form = normalize::concat(out.stem, out.base_suffix);
   return true;
 }
 
@@ -169,7 +169,7 @@ void appendPassiveMizenkeiCandidates(const std::vector<char32_t>& codepoints, si
       auto inner_suffix = grammar::godanBaseSuffixFromARow(stem_last);
       if (!inner_suffix.empty()) {
         std::string inner_stem = extractSubstring(codepoints, start_pos, mizenkei_end - 2);
-        std::string inner_base = inner_stem + std::string(inner_suffix);
+        std::string inner_base = normalize::concat(inner_stem, inner_suffix);
         if (vh::isVerbInDictionary(dict_manager, inner_base)) {
           causative_passive_penalty = bigram_cost::kStrong;
         }

@@ -170,7 +170,7 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
         best_match.compound_base.size() > matched_v2_reading.size()) {
       // The input range up to v2_start is the V1 renyokei for both V1 paths.
       std::string v1_renyokei_text(text.substr(start_byte, v2_start_byte - start_byte));
-      std::string hira_v2_compound = v1_renyokei_text + std::string(matched_v2_reading);
+      std::string hira_v2_compound = normalize::concat(v1_renyokei_text, matched_v2_reading);
       if (hira_v2_compound != best_match.compound_base) {
         const char32_t input_v2_initial = v2_start < codepoints.size() ? codepoints[v2_start] : 0;
         const char32_t reading_initial = utf8::decodeFirstChar(matched_v2_reading);

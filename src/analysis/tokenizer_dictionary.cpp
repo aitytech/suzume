@@ -1341,7 +1341,7 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
 
     if (result.entry->pos == core::PartOfSpeech::Noun && end_pos < codepoints.size() &&
         codepoints[end_pos - 1] == U'し' && codepoints[end_pos] == U'て') {
-      const std::string verb_base = std::string(utf8::dropLastChar(result.entry->surface)) + "す";
+      const std::string verb_base = normalize::concat(utf8::dropLastChar(result.entry->surface), "す");
       const auto* verb = dict_manager_.lookupExact(verb_base, core::PartOfSpeech::Verb);
       if (verb != nullptr) {
         lattice.addEdge(result.entry->surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(end_pos),
@@ -1358,7 +1358,7 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
         normalize::isKanjiCodepoint(codepoints[end_pos]) && grammar::isIRowCodepoint(codepoints[end_pos - 1])) {
       const std::string_view base_suffix = grammar::godanBaseSuffixFromIRow(codepoints[end_pos - 1]);
       if (!base_suffix.empty()) {
-        const std::string verb_base = std::string(utf8::dropLastChar(result.entry->surface)) + std::string(base_suffix);
+        const std::string verb_base = normalize::concat(utf8::dropLastChar(result.entry->surface), base_suffix);
         const auto* verb = dict_manager_.lookupExact(verb_base, core::PartOfSpeech::Verb);
         if (verb != nullptr) {
           const auto conj_type = grammar::verbTypeToConjType(
@@ -1437,8 +1437,9 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
         end_pos > start_pos + 1 && normalize::classifyChar(codepoints[end_pos]) == normalize::CharType::Hiragana) {
       const std::string_view base_suffix = grammar::godanBaseSuffixFromARow(codepoints[end_pos - 1]);
       if (!base_suffix.empty() &&
-          dict_manager_.lookupExact(extractSubstring(codepoints, start_pos, end_pos - 1) + std::string(base_suffix),
-                                    core::PartOfSpeech::Verb) != nullptr) {
+          dict_manager_.lookupExact(
+              normalize::concat(extractSubstring(codepoints, start_pos, end_pos - 1), base_suffix),
+              core::PartOfSpeech::Verb) != nullptr) {
         continue;
       }
     }
@@ -1683,7 +1684,7 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
         codepoints[end_pos] == U'た' && grammar::endsWithERow(result.entry->surface)) {
       lattice.addEdge(result.entry->surface, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(end_pos),
                       core::PartOfSpeech::Verb, getCategoryCost(core::ExtendedPOS::VerbRenyokei),
-                      core::LatticeEdge::kFromDictionary, std::string(result.entry->surface) + "る",
+                      core::LatticeEdge::kFromDictionary, normalize::concat(result.entry->surface, "る"),
                       dictionary::ConjugationType::Ichidan, core::CandidateOrigin::Dictionary,
                       candidate::kDictionaryOriginConfidence, {}, core::ExtendedPOS::VerbRenyokei,
                       "dictionary_potential_renyokei_before_past");

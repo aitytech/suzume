@@ -62,7 +62,7 @@ CompoundV1Verification verifyCompoundVerbV1(const CompoundV1VerificationRequest&
       v1_base = std::string(v1_surface.substr(0, v1_surface.size() - core::kJapaneseCharBytes));
       v1_base += normalize::encodeUtf8(base_ending);
     } else {
-      v1_base = std::string(v1_surface) + "る";
+      v1_base = normalize::concat(v1_surface, "る");
     }
 
     const auto* verb_entry = dict_manager.lookupExact(v1_base, core::PartOfSpeech::Verb);

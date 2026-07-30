@@ -53,7 +53,7 @@ size_t findParticleInitialClosedOnbinSplit(std::string_view text, const std::vec
     if (verb_helpers::hasNonVerbDictionaryEntry(&dict_manager, v1_surface)) {
       continue;
     }
-    const std::string v1_base = std::string(v1_surface) + "る";
+    const std::string v1_base = normalize::concat(v1_surface, "る");
     bool has_exact_ichidan = false;
     for (const auto& analysis : inflection.analyze(v1_surface)) {
       if (analysis.verb_type == grammar::VerbType::Ichidan && analysis.base_form == v1_base &&

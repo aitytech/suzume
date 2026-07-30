@@ -563,7 +563,7 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
         if (noun_surface.size() >= 6) {  // Noun has at least 2 kanji (6 bytes UTF-8)
           const std::string last_kanji = normalize::encodeUtf8(codepoints[verb_start - 1]);
           // Check last_kanji + verb_part (e.g., 除+する = 掃除する? no, but 除する? no)
-          std::string alt_word = last_kanji + std::string(verb_part);
+          std::string alt_word = normalize::concat(last_kanji, verb_part);
           if (dict_manager.lookupExact(alt_word) != nullptr) {
             SUZUME_DEBUG_LOG_VERBOSE("[SPLIT_NV] skip \"" << noun_surface << "\" + \"" << verb_part
                                                           << "\": alt dict word \"" << alt_word << "\" exists\n");

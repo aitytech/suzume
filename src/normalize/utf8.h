@@ -81,6 +81,26 @@ std::string_view utf8Substr(std::string_view str, size_t start, size_t length);
 std::string replaceFinalChar(std::string_view str, std::string_view replacement);
 
 /**
+ * @brief Join two text fragments into one string
+ * @param head Leading fragment
+ * @param tail Trailing fragment
+ * @return head followed by tail, in a single exact-size allocation
+ *
+ * @note This is the single owner of "rebuild a surface from a stem and an
+ *       ending". Callers holding views must not write
+ *       `std::string(head) + std::string(tail)`: that materializes two
+ *       temporaries and pulls the string concatenation machinery into every
+ *       call site.
+ */
+std::string concat(std::string_view head, std::string_view tail);
+
+/**
+ * @brief Join three text fragments into one string
+ * @see concat(std::string_view, std::string_view)
+ */
+std::string concat(std::string_view head, std::string_view middle, std::string_view tail);
+
+/**
  * @brief Check if string is valid UTF-8
  * @param str String to check
  * @return true if valid UTF-8

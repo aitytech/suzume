@@ -98,7 +98,7 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
 
     // Try each verb type and check dictionary or inflection analysis
     for (const auto& [verb_type, base_suffix] : candidates_to_try) {
-      std::string base_form = stem + std::string(base_suffix);
+      std::string base_form = normalize::concat(stem, base_suffix);
 
       // Check if base form exists in dictionary as this verb type
       bool is_valid_verb = !grammar::isSuruBaseForm(base_form) && vh::isVerbInDictionary(dict_manager, base_form) &&
@@ -133,7 +133,7 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
         std::string_view suffix = is_contraction_pattern                       ? "て"
                                   : (next_char == U'た' || next_char == U'だ') ? "た"
                                                                                : "て";
-        std::string full_form = stem + "っ" + std::string(suffix);
+        std::string full_form = normalize::concat(stem, "っ", suffix);
         const auto& analysis = inflection.analyze(full_form);
         for (const auto& cand : analysis) {
           // Lower threshold (0.25) for short stems like かっ, やっ

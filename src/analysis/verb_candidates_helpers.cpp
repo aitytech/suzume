@@ -246,7 +246,7 @@ bool hasInternalVerbChainBoundary(const std::vector<char32_t>& codepoints, size_
       const std::string_view base_suffix = grammar::godanBaseSuffixFromARow(codepoints[form_end - 1]);
       if (!base_suffix.empty()) {
         const std::string stem = extractSubstring(codepoints, form_start, form_end - 1);
-        if (isVerbInDictionary(dict_manager, stem + std::string(base_suffix))) {
+        if (isVerbInDictionary(dict_manager, normalize::concat(stem, base_suffix))) {
           return true;
         }
       }
@@ -396,7 +396,7 @@ grammar::GodanOnbinRange getGodanTypesByOnbin(std::string_view onbin) {
 GodanOnbinDictMatch firstGodanOnbinDictBase(const dictionary::DictionaryManager* dict_manager, std::string_view stem,
                                             std::string_view onbin) {
   for (const auto& [verb_type, base_suffix] : getGodanTypesByOnbin(onbin)) {
-    std::string base_form = std::string(stem) + std::string(base_suffix);
+    std::string base_form = normalize::concat(stem, base_suffix);
     if (isVerbInDictionary(dict_manager, base_form)) {
       return GodanOnbinDictMatch{verb_type, std::move(base_form), base_suffix, true};
     }

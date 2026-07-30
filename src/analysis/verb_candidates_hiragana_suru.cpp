@@ -68,7 +68,7 @@ void appendSuruSubsidiaryCandidates(const std::vector<char32_t>& codepoints, siz
       candidates.push_back(makeVerbCandidate(
           surface, start_pos, end_pos,
           candidate::verb_cost::kStrongBonus + bigram_cost::kVeryStrongBonus + restricted_auxiliary_bonus,
-          "し" + std::string(lemma_base), conjugation, true, CandidateOrigin::VerbHiragana,
+          normalize::concat("し", lemma_base), conjugation, true, CandidateOrigin::VerbHiragana,
           candidate::kHighOriginConfidence, origin, epos));
     };
 

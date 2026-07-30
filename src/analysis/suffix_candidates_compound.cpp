@@ -662,7 +662,7 @@ void generateKanjiHiraganaCompoundCandidates(const std::vector<char32_t>& codepo
                                       false, CandidateOrigin::KanjiHiraganaCompound);
             // Full base form includes the first kanji + っ
             std::string full_kanji = extractSubstring(codepoints, start_pos, kanji2_end);
-            cand.lemma = full_kanji + std::string(hatsuonbin_match.base_suffix);
+            cand.lemma = normalize::concat(full_kanji, hatsuonbin_match.base_suffix);
             cand.conj_type = grammar::verbTypeToConjType(hatsuonbin_match.verb_type);
             cand.extended_pos = core::ExtendedPOS::VerbOnbinkei;
 #ifdef SUZUME_DEBUG_INFO

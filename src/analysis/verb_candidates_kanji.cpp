@@ -96,7 +96,7 @@ bool hasAdjectiveRenyokeiPredicateBoundary(const std::vector<char32_t>& codepoin
     const char32_t predicate_ending = codepoints[end_pos - 1];
     if (grammar::isIRowCodepoint(predicate_ending)) {
       const std::string_view base_suffix = grammar::godanBaseSuffixFromIRow(predicate_ending);
-      const std::string predicate_base = std::string(utf8::dropLastChar(predicate_surface)) + std::string(base_suffix);
+      const std::string predicate_base = normalize::concat(utf8::dropLastChar(predicate_surface), base_suffix);
       if (vh::isVerifiedVerbBase(dict_manager, inflection, predicate_base,
                                  candidate::verb_cost::kConstructedVerbMinConfidence, true)) {
         return true;
@@ -563,7 +563,7 @@ void generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t star
     if (grammar::isIRowCodepoint(ending)) {
       const std::string_view base_suffix = grammar::godanBaseSuffixFromIRow(ending);
       if (!base_suffix.empty()) {
-        const std::string base_form = std::string(utf8::dropLastChar(surface)) + std::string(base_suffix);
+        const std::string base_form = normalize::concat(utf8::dropLastChar(surface), base_suffix);
         const grammar::VerbType verb_type = grammar::verbTypeFromIRowCodepoint(ending);
         candidates.push_back(makeVerbCandidate(surface, start_pos, hiragana_end, candidate::verb_cost::kStrongBonus,
                                                base_form, grammar::verbTypeToConjType(verb_type), true,
@@ -602,7 +602,7 @@ void generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t star
             // merely the first okurigana after the kanji run.  This covers
             // arbitrary-length okurigana (積もり+すぎる) as well as 書き.
             std::string surface = extractSubstring(codepoints, start_pos, sugi_pos);
-            std::string base_form = std::string(utf8::dropLastChar(surface)) + std::string(base_suffix);
+            std::string base_form = normalize::concat(utf8::dropLastChar(surface), base_suffix);
 
             // Verify the base form is a valid verb
             // The closed excessive follower is itself inflectional evidence.

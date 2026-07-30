@@ -64,7 +64,7 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes, bool updat
       if (grammar::endsWithERow(morpheme.surface) || final_cp == U'じ') {
         reconstructed = morpheme.surface + "る";
       } else if (const std::string_view suffix = grammar::godanBaseSuffixFromIRow(final_cp); !suffix.empty()) {
-        reconstructed = std::string(utf8::dropLastChar(morpheme.surface)) + std::string(suffix);
+        reconstructed = normalize::concat(utf8::dropLastChar(morpheme.surface), suffix);
       }
       if (!reconstructed.empty()) {
         morpheme.pos = core::PartOfSpeech::Verb;
@@ -87,7 +87,7 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes, bool updat
       if (grammar::inflection::isValidKanjiIStemException(morpheme.surface)) {
         reconstructed = morpheme.surface + "る";
       } else if (const std::string_view suffix = grammar::godanBaseSuffixFromIRow(final_cp); !suffix.empty()) {
-        reconstructed = std::string(utf8::dropLastChar(morpheme.surface)) + std::string(suffix);
+        reconstructed = normalize::concat(utf8::dropLastChar(morpheme.surface), suffix);
       }
       if (!reconstructed.empty()) {
         morpheme.pos = core::PartOfSpeech::Verb;

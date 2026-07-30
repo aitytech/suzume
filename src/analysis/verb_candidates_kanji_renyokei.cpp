@@ -530,7 +530,7 @@ void appendGodanSaRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         continue;
 
       if (utf8::endsWith(surface, "くし")) {
-        const std::string adjective_base = std::string(utf8::dropLast2Chars(surface)) + "い";
+        const std::string adjective_base = normalize::concat(utf8::dropLast2Chars(surface), "い");
         if (vh::isAdjectiveInDictionary(dict_manager, adjective_base)) {
           continue;
         }

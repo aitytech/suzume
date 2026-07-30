@@ -255,7 +255,7 @@ bool startsAtDictionaryVerbContinuative(const std::vector<char32_t>& codepoints,
   }
   const std::string kanji = extractSubstring(codepoints, start_pos - 1, start_pos);
   const std::string_view godan_ending = grammar::godanBaseSuffixFromIRow(codepoints[start_pos]);
-  if (!godan_ending.empty() && verb_helpers::isVerbInDictionary(dict_manager, kanji + std::string(godan_ending))) {
+  if (!godan_ending.empty() && verb_helpers::isVerbInDictionary(dict_manager, normalize::concat(kanji, godan_ending))) {
     return true;
   }
   return grammar::isERowCodepoint(codepoints[start_pos]) &&

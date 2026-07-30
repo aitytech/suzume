@@ -114,7 +114,7 @@ bool retagGodanRenyokeiFromIRow(core::Morpheme& stem, bool set_conj_form) {
   }
   stem.pos = core::PartOfSpeech::Verb;
   stem.extended_pos = core::ExtendedPOS::VerbRenyokei;
-  stem.lemma = std::string(utf8::dropLastChar(stem.surface)) + std::string(base_suffix);
+  stem.lemma = normalize::concat(utf8::dropLastChar(stem.surface), base_suffix);
   stem.conj_type = grammar::verbTypeToConjType(verb_type);
   if (set_conj_form) {
     stem.conj_form = grammar::ConjForm::Renyokei;

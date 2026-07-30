@@ -42,7 +42,7 @@ void appendGodanMizenkeiPassiveCausativeCandidates(const std::vector<char32_t>& 
         std::string_view base_suffix = grammar::godanBaseSuffixFromARow(a_row);
         if (verb_type != grammar::VerbType::Unknown && !base_suffix.empty()) {
           std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
-          std::string base_form = kanji_stem + std::string(base_suffix);
+          std::string base_form = normalize::concat(kanji_stem, base_suffix);
           std::string surface = extractSubstring(codepoints, start_pos, kanji_end + 1);
 
           // A closed-class irregular form in L1 is authoritative over this
@@ -300,7 +300,7 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
         }
         const std::string_view underlying_suffix = grammar::godanBaseSuffixFromARow(codepoints[underlying_a_row_pos]);
         const std::string underlying_base =
-            extractSubstring(codepoints, start_pos, underlying_a_row_pos) + std::string(underlying_suffix);
+            normalize::concat(extractSubstring(codepoints, start_pos, underlying_a_row_pos), underlying_suffix);
         if (!underlying_suffix.empty() && vh::isVerbInDictionary(dict_manager, underlying_base)) {
           continue;
         }
@@ -308,7 +308,7 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
 
       const std::string surface = extractSubstring(codepoints, start_pos, mizenkei_end);
       const std::string stem = extractSubstring(codepoints, start_pos, mizenkei_end - 1);
-      const std::string base_form = stem + std::string(base_suffix);
+      const std::string base_form = normalize::concat(stem, base_suffix);
       bool is_valid_verb = vh::isVerbInDictionary(dict_manager, base_form);
       if (!is_valid_verb) {
         // Validate exactly one closed auxiliary inflection after れ.  Cutting
@@ -355,7 +355,7 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
     const std::string_view base_suffix = grammar::godanBaseSuffixFromERow(codepoints[kanji_end]);
     if (!base_suffix.empty()) {
       const std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
-      const std::string base_form = kanji_stem + std::string(base_suffix);
+      const std::string base_form = normalize::concat(kanji_stem, base_suffix);
       if (vh::isVerifiedVerbBase(dict_manager, inflection, base_form,
                                  candidate::verb_cost::kConstructedVerbMinConfidence, true)) {
         const std::string surface = extractSubstring(codepoints, start_pos, kanji_end + 1);
@@ -534,7 +534,7 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
               if (!base_suffix.empty()) {
                 // Construct base form: stem + base_suffix (e.g., 書 + く = 書く)
                 std::string kanji_stem = extractSubstring(codepoints, start_pos, kanji_end);
-                std::string base_form = kanji_stem + std::string(base_suffix);
+                std::string base_form = normalize::concat(kanji_stem, base_suffix);
 
                 // Verify the base form is a valid verb
                 // First check dictionary, then fall back to inflection analysis
@@ -697,7 +697,7 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
           std::string_view base_suffix = grammar::godanBaseSuffixFromARow(cur_char);
           if (!base_suffix.empty()) {
             std::string stem = extractSubstring(codepoints, start_pos, scan_pos);
-            std::string base_form = stem + std::string(base_suffix);
+            std::string base_form = normalize::concat(stem, base_suffix);
             std::string surface = extractSubstring(codepoints, start_pos, multi_miz_end);
             // An internal te-form followed by a subsidiary/aspect verb is a
             // grammatical boundary, not the irrealis of one lexical verb

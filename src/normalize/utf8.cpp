@@ -143,9 +143,24 @@ std::string replaceFinalChar(std::string_view str, std::string_view replacement)
   if (final_start > 0) {
     --final_start;
   }
-  std::string result(str.substr(0, final_start));
-  result += replacement;
-  return result;
+  return concat(str.substr(0, final_start), replacement);
+}
+
+std::string concat(std::string_view head, std::string_view tail) {
+  std::string joined;
+  joined.reserve(head.size() + tail.size());
+  joined.append(head);
+  joined.append(tail);
+  return joined;
+}
+
+std::string concat(std::string_view head, std::string_view middle, std::string_view tail) {
+  std::string joined;
+  joined.reserve(head.size() + middle.size() + tail.size());
+  joined.append(head);
+  joined.append(middle);
+  joined.append(tail);
+  return joined;
 }
 
 bool isValidUtf8(std::string_view str) {

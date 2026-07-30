@@ -453,8 +453,8 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
     {
       std::string_view last_char = utf8::lastChar(surface);
       if (utf8::equalsAny(last_char, {"っ", "し", "つ", "い"})) {
-        std::string te_form = std::string(surface) + "て";
-        std::string de_form = std::string(surface) + "で";
+        std::string te_form = normalize::concat(surface, "て");
+        std::string de_form = normalize::concat(surface, "で");
         if (vh::hasParticleDictionaryEntry(dict_manager, te_form) ||
             vh::hasParticleDictionaryEntry(dict_manager, de_form)) {
           continue;  // Skip - would split a compound particle

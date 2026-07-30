@@ -377,7 +377,7 @@ bool startsClosedTemporalNominal(std::string_view surface) {
 std::string_view longFinalParticleBeforeQuote(std::string_view surface) {
   constexpr std::string_view kParticles[] = {"なあ", "ねえ"};
   for (const auto particle : kParticles) {
-    if (utf8::startsWith(surface, std::string(particle) + "と")) {
+    if (utf8::startsWith(surface, normalize::concat(particle, "と"))) {
       return particle;
     }
   }

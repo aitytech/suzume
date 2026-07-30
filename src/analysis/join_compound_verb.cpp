@@ -81,7 +81,7 @@ void addDictionaryVerifiedGodanCompoundNominalCandidate(core::Lattice& lattice, 
   if (v1_base_ending.empty()) {
     return;
   }
-  const std::string v1_base = extractSubstring(codepoints, start_pos, v1_kanji_end) + std::string(v1_base_ending);
+  const std::string v1_base = normalize::concat(extractSubstring(codepoints, start_pos, v1_kanji_end), v1_base_ending);
   if (dict_manager.lookupExact(v1_base, core::PartOfSpeech::Verb) == nullptr) {
     return;
   }

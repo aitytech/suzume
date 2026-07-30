@@ -276,7 +276,7 @@ std::string Lemmatizer::lemmatize(const core::Morpheme& morpheme) const {
         std::string stem(utf8::dropLastChar(grammar_result));
         for (const auto& [verb_type, base_suffix] : grammar::Conjugation::getGodanTypesByOnbin("い")) {
           (void)verb_type;
-          std::string base_form = stem + std::string(base_suffix);
+          std::string base_form = normalize::concat(stem, base_suffix);
           if (hasExactVerbEntry(dict_manager_, base_form)) {
             return base_form;
           }

@@ -374,7 +374,7 @@ void generateProductiveSuffixVerbCandidates(const std::vector<char32_t>& codepoi
     for (const auto& form : kGodanKaForms) {
       constexpr size_t kSuffixVerbFormLength = 2;
       const size_t candidate_end = base_end + kSuffixVerbFormLength;
-      const std::string form_surface = std::string(suffix_stem) + std::string(form.inflection);
+      const std::string form_surface = normalize::concat(suffix_stem, form.inflection);
       if (candidate_end > codepoints.size() || extractSubstring(codepoints, base_end, candidate_end) != form_surface) {
         continue;
       }
@@ -392,7 +392,7 @@ void generateProductiveSuffixVerbCandidates(const std::vector<char32_t>& codepoi
       }
 
       const std::string surface = extractSubstring(codepoints, start_pos, candidate_end);
-      const std::string lemma = extractSubstring(codepoints, start_pos, base_end) + std::string(suffix_stem) + "く";
+      const std::string lemma = normalize::concat(extractSubstring(codepoints, start_pos, base_end), suffix_stem, "く");
       auto candidate =
           makeVerbCandidate(surface, start_pos, candidate_end, candidate::kProductiveSuffixVerbCost, lemma,
                             dictionary::ConjugationType::GodanKa, true, CandidateOrigin::SuffixPattern,
@@ -506,7 +506,7 @@ void generateWithSuffix(const std::vector<char32_t>& codepoints, size_t start_po
 #ifdef SUZUME_DEBUG_INFO
         stem.origin = CandidateOrigin::SuffixPattern;
         stem.confidence = 1.0F;
-        stem.pattern = "stem_before_" + std::string(suffix);
+        stem.pattern = normalize::concat("stem_before_", suffix);
 #endif
         candidates.push_back(stem);
 
@@ -522,7 +522,7 @@ void generateWithSuffix(const std::vector<char32_t>& codepoints, size_t start_po
 #ifdef SUZUME_DEBUG_INFO
         whole.origin = CandidateOrigin::SuffixPattern;
         whole.confidence = 1.0F;
-        whole.pattern = "with_suffix_" + std::string(suffix);
+        whole.pattern = normalize::concat("with_suffix_", suffix);
 #endif
         candidates.push_back(whole);
 

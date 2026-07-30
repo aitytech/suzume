@@ -83,7 +83,7 @@ bool hasLeadingParticleVerbBoundary(const dictionary::DictionaryManager* dict_ma
       continue;
     }
     const std::string remainder_stem = extractSubstring(codepoints, split_pos, mizenkei_end - 1);
-    const std::string remainder_base = remainder_stem + std::string(base_suffix);
+    const std::string remainder_base = normalize::concat(remainder_stem, base_suffix);
     if (vh::isVerbInDictionary(dict_manager, remainder_base)) {
       return true;
     }
