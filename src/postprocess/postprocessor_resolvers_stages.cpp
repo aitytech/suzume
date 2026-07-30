@@ -332,11 +332,13 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result, const dictio
       resolver::retag(current, core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjNaAdj, current.surface,
                       dictionary::ConjugationType::NaAdjective, grammar::ConjForm::Base);
     }
-    if (!current.is_from_dictionary && current.pos == core::PartOfSpeech::Adverb &&
-        utf8::endsWith(current.surface, "く") && next.pos == core::PartOfSpeech::Adjective) {
-      resolver::retag(current, core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjRenyokei,
-                      std::string(utf8::dropLastChar(current.surface)) + "い", dictionary::ConjugationType::IAdjective,
-                      grammar::ConjForm::Renyokei);
+    // A く-continuative directly modifying another adjective has an
+    // adverbial syntactic role. The independent negative adjective remains a
+    // conjugational continuation (高く+なくて), not a degree predicate.
+    if (current.pos == core::PartOfSpeech::Adjective && current.extended_pos == core::ExtendedPOS::AdjRenyokei &&
+        utf8::endsWith(current.surface, "く") && next.pos == core::PartOfSpeech::Adjective && next.lemma != "ない") {
+      resolver::retag(current, core::PartOfSpeech::Adverb, core::ExtendedPOS::Adverb, current.surface,
+                      dictionary::ConjugationType::None, grammar::ConjForm::Base);
     }
   }
 
