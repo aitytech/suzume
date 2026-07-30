@@ -279,19 +279,22 @@ if(SUZUME_INSTALL AND NOT BUILD_WASM)
     DESTINATION ${SUZUME_INSTALL_CMAKEDIR}
   )
 
+  # find_package(suzume) searches for suzumeConfig.cmake or suzume-config.cmake,
+  # spelled exactly as the package is named. A capitalized file only resolves on
+  # a case-insensitive filesystem, so the name must match the package here.
   configure_package_config_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/SuzumeConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/SuzumeConfig.cmake
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/suzumeConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/suzumeConfig.cmake
     INSTALL_DESTINATION ${SUZUME_INSTALL_CMAKEDIR}
   )
   write_basic_package_version_file(
-    ${CMAKE_CURRENT_BINARY_DIR}/SuzumeConfigVersion.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/suzumeConfigVersion.cmake
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY SameMajorVersion
   )
   install(FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/SuzumeConfig.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/SuzumeConfigVersion.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/suzumeConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/suzumeConfigVersion.cmake
     DESTINATION ${SUZUME_INSTALL_CMAKEDIR}
   )
 
