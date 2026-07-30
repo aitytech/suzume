@@ -41,6 +41,14 @@ constexpr NominalHeadProfile nominalHeadProfile(EPOS head) {
   };
 }
 
+// Being usable in a constant expression is part of these helpers' contract, and
+// only an actual constant evaluation enforces it. A constexpr function that
+// reaches a non-constexpr one is ill-formed with no diagnostic required, so a
+// compiler may accept it here and a stricter toolchain refuse the same file.
+static_assert(isNominalHead(EPOS::Noun));
+static_assert(!isNominalHead(EPOS::NounFormal));
+static_assert(nominalHeadProfile(EPOS::Pronoun).accepts_final_particle);
+
 void applyRule(BigramMatrix& table, EPOS head, EPOS next, float rule_cost) {
   const BigramRule rule{head, next, rule_cost};
   applyRules(table, &rule, 1);

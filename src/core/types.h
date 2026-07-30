@@ -342,7 +342,7 @@ ExtendedPOS posToExtendedPos(PartOfSpeech pos);
 /**
  * @brief Check if ExtendedPOS is a verb form
  */
-inline bool isVerbForm(ExtendedPOS epos) {
+constexpr bool isVerbForm(ExtendedPOS epos) {
   return (epos >= ExtendedPOS::VerbShuushikei && epos <= ExtendedPOS::VerbTaraForm) ||
          epos == ExtendedPOS::VerbContractedKateikei;
 }
@@ -350,7 +350,7 @@ inline bool isVerbForm(ExtendedPOS epos) {
 /**
  * @brief Check if ExtendedPOS is an adjective form
  */
-inline bool isAdjectiveForm(ExtendedPOS epos) {
+constexpr bool isAdjectiveForm(ExtendedPOS epos) {
   return (epos >= ExtendedPOS::AdjBasic && epos <= ExtendedPOS::AdjNaAdj) || epos == ExtendedPOS::AdjMizenkei;
 }
 
@@ -359,7 +359,7 @@ inline bool isAdjectiveForm(ExtendedPOS epos) {
  * Note: AuxExcessive (すぎる) and AuxGaru (がる) are excluded because they
  * map to Verb (補助動詞/接尾動詞).
  */
-inline bool isAuxiliaryType(ExtendedPOS epos) {
+constexpr bool isAuxiliaryType(ExtendedPOS epos) {
   // Late additions are listed explicitly because their serialized enum values
   // cannot be inserted into the contiguous auxiliary range.
   return (epos >= ExtendedPOS::AuxTenseTa && epos <= ExtendedPOS::AuxGozaru) || epos == ExtendedPOS::AuxNegativeMai ||
@@ -384,7 +384,7 @@ inline bool isAuxiliaryType(ExtendedPOS epos) {
  * irrealis, so at a continuative or a-row irrealis position only the literary む
  * family can match.
  */
-inline bool isClassicalAuxiliaryType(ExtendedPOS epos) {
+constexpr bool isClassicalAuxiliaryType(ExtendedPOS epos) {
   return epos == ExtendedPOS::AuxNegativeNu || epos == ExtendedPOS::AuxVolitional ||
          epos == ExtendedPOS::AuxClassicalNari || epos == ExtendedPOS::AuxClassicalKeri ||
          epos == ExtendedPOS::AuxClassicalTari || epos == ExtendedPOS::AuxClassicalPerfect ||
@@ -394,14 +394,14 @@ inline bool isClassicalAuxiliaryType(ExtendedPOS epos) {
 /**
  * @brief Check if ExtendedPOS is a particle type
  */
-inline bool isParticleType(ExtendedPOS epos) {
+constexpr bool isParticleType(ExtendedPOS epos) {
   return epos >= ExtendedPOS::ParticleCase && epos <= ExtendedPOS::ParticleBinding;
 }
 
 /**
  * @brief Check if ExtendedPOS is a noun type
  */
-inline bool isNounType(ExtendedPOS epos) {
+constexpr bool isNounType(ExtendedPOS epos) {
   // Keep this explicit: ExtendedPOS is serialized, so later nominal categories
   // are appended after the original contiguous noun block.
   switch (epos) {
@@ -421,7 +421,7 @@ inline bool isNounType(ExtendedPOS epos) {
 /**
  * @brief Check if ExtendedPOS is a pronoun type
  */
-inline bool isPronounType(ExtendedPOS epos) {
+constexpr bool isPronounType(ExtendedPOS epos) {
   switch (epos) {
     case ExtendedPOS::Pronoun:
     case ExtendedPOS::PronounInterrogative:
