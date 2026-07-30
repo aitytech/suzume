@@ -19,6 +19,7 @@
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"
 #include "suffix_candidates.h"
+#include "tokenizer_utils.h"
 #include "unknown.h"
 #include "verb_candidates_helpers.h"
 
@@ -74,21 +75,7 @@ bool isParticleSequenceWithoutLexicalReading(const std::vector<char32_t>& codepo
   if (hasExactPartOfSpeech(*dict_manager, whole_surface, kLexicalMask)) {
     return false;
   }
-
-  std::vector<bool> reachable(end_pos - start_pos + 1, false);
-  reachable[0] = true;
-  for (size_t relative_start = 0; relative_start < end_pos - start_pos; ++relative_start) {
-    if (!reachable[relative_start]) {
-      continue;
-    }
-    for (size_t relative_end = relative_start + 1; relative_end <= end_pos - start_pos; ++relative_end) {
-      const std::string part = extractSubstring(codepoints, start_pos + relative_start, start_pos + relative_end);
-      if (dict_manager->lookupExact(part, core::PartOfSpeech::Particle) != nullptr) {
-        reachable[relative_end] = true;
-      }
-    }
-  }
-  return reachable.back();
+  return maximalSegmentCount(*dict_manager, codepoints, start_pos, end_pos, core::PartOfSpeech::Particle) > 0;
 }
 
 // A genitive の after a substantive two-mora prefix is a phrase boundary for

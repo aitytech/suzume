@@ -20,6 +20,7 @@
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"
 #include "suffix_candidates.h"
+#include "tokenizer_utils.h"
 #include "unknown.h"
 #include "verb_candidates.h"
 
@@ -77,13 +78,8 @@ bool pronounEndsAt(const dictionary::DictionaryManager* dict_manager, const std:
     return false;
   }
   const size_t max_len = pos < 3 ? pos : 3;
-  for (size_t len = 1; len <= max_len; ++len) {
-    const std::string word = extractSubstring(codepoints, pos - len, pos);
-    if (dict_manager->lookupExact(word, core::PartOfSpeech::Pronoun) != nullptr) {
-      return true;
-    }
-  }
-  return false;
+  return hasDictionaryEntryEndingAt(*dict_manager, codepoints, pos - max_len, pos,
+                                    partOfSpeechMask(core::PartOfSpeech::Pronoun));
 }
 
 bool deriveGodanMizenkeiForms(const std::vector<char32_t>& codepoints, size_t start_pos, size_t mizenkei_end,

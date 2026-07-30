@@ -365,15 +365,8 @@ bool hasAuxiliaryChainDecomposition(const std::vector<char32_t>& codepoints, siz
   if (dict_manager == nullptr || end_pos < start_pos + 3) {
     return false;
   }
-  for (size_t split = start_pos + 1; split < end_pos; ++split) {
-    if (dict_manager->lookupExact(extractSubstring(codepoints, start_pos, split), core::PartOfSpeech::Auxiliary) !=
-            nullptr &&
-        dict_manager->lookupExact(extractSubstring(codepoints, split, end_pos), core::PartOfSpeech::Auxiliary) !=
-            nullptr) {
-      return true;
-    }
-  }
-  return false;
+  constexpr PartOfSpeechMask kAuxiliaryMask = partOfSpeechMask(core::PartOfSpeech::Auxiliary);
+  return hasDictionarySplit(*dict_manager, codepoints, start_pos, end_pos, kAuxiliaryMask, kAuxiliaryMask);
 }
 
 bool hasFunctionWordChainDecomposition(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
@@ -394,21 +387,7 @@ bool hasFunctionWordChainDecomposition(const std::vector<char32_t>& codepoints, 
                                   core::PartOfSpeech::Particle) == nullptr) {
       continue;
     }
-    std::vector<int> auxiliary_count(particle_start - start_pos + 1, -1);
-    auxiliary_count[0] = 0;
-    for (size_t relative_start = 0; relative_start < particle_start - start_pos; ++relative_start) {
-      if (auxiliary_count[relative_start] < 0) {
-        continue;
-      }
-      for (size_t relative_end = relative_start + 1; relative_end <= particle_start - start_pos; ++relative_end) {
-        if (dict_manager->lookupExact(
-                extractSubstring(codepoints, start_pos + relative_start, start_pos + relative_end),
-                core::PartOfSpeech::Auxiliary) != nullptr) {
-          auxiliary_count[relative_end] = std::max(auxiliary_count[relative_end], auxiliary_count[relative_start] + 1);
-        }
-      }
-    }
-    if (auxiliary_count.back() >= 1) {
+    if (maximalSegmentCount(*dict_manager, codepoints, start_pos, particle_start, core::PartOfSpeech::Auxiliary) >= 1) {
       return true;
     }
   }

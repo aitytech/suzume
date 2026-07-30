@@ -19,6 +19,7 @@
 #include "normalize/char_type.h"
 #include "normalize/utf8.h"
 #include "suffix_candidates.h"
+#include "tokenizer_utils.h"
 #include "unknown.h"
 #include "verb_candidates.h"
 
@@ -34,18 +35,11 @@ bool immediatelyFollowsParticleHost(const std::vector<char32_t>& codepoints, siz
     return false;
   }
   constexpr size_t kMaxHostChars = 12;
+  constexpr PartOfSpeechMask kHostMask =
+      partOfSpeechMask(core::PartOfSpeech::Noun) | partOfSpeechMask(core::PartOfSpeech::Pronoun) |
+      partOfSpeechMask(core::PartOfSpeech::Verb) | partOfSpeechMask(core::PartOfSpeech::Adjective);
   const size_t min_host_start = (start_pos > kMaxHostChars) ? start_pos - kMaxHostChars : 0;
-  for (size_t host_start = start_pos; host_start > min_host_start;) {
-    --host_start;
-    const std::string host_surface = extractSubstring(codepoints, host_start, start_pos);
-    if (dict_manager->lookupExact(host_surface, core::PartOfSpeech::Noun) != nullptr ||
-        dict_manager->lookupExact(host_surface, core::PartOfSpeech::Pronoun) != nullptr ||
-        dict_manager->lookupExact(host_surface, core::PartOfSpeech::Verb) != nullptr ||
-        dict_manager->lookupExact(host_surface, core::PartOfSpeech::Adjective) != nullptr) {
-      return true;
-    }
-  }
-  return false;
+  return hasDictionaryEntryEndingAt(*dict_manager, codepoints, min_host_start, start_pos, kHostMask);
 }
 
 bool startsWithParticleThenVerifiedVerb(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,

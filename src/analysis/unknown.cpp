@@ -144,15 +144,10 @@ bool spansAdverbAdjectiveBoundary(const suzume::analysis::UnknownCandidate& cand
       candidate.end - candidate.start > suzume::analysis::candidate::kMaxAdverbAdjectiveBoundaryChars) {
     return false;
   }
-  for (size_t split = candidate.start + 1; split < candidate.end; ++split) {
-    const std::string left = suzume::analysis::extractSubstring(codepoints, candidate.start, split);
-    const std::string right = suzume::analysis::extractSubstring(codepoints, split, candidate.end);
-    if (dict_manager->lookupExact(left, suzume::core::PartOfSpeech::Adverb) != nullptr &&
-        dict_manager->lookupExact(right, suzume::core::PartOfSpeech::Adjective) != nullptr) {
-      return true;
-    }
-  }
-  return false;
+  return suzume::analysis::hasDictionarySplit(
+      *dict_manager, codepoints, candidate.start, candidate.end,
+      suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Adverb),
+      suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Adjective));
 }
 
 // A leading particle followed by a registered predicate remains compositional

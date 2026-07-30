@@ -334,6 +334,56 @@ bool lookupResultsHaveExtendedPOS(const std::vector<dictionary::LookupResult>& r
   });
 }
 
+int maximalSegmentCount(const dictionary::DictionaryManager& dict_manager, const std::vector<char32_t>& codepoints,
+                        size_t start_pos, size_t end_pos, core::PartOfSpeech pos) {
+  if (start_pos >= end_pos) {
+    return -1;
+  }
+  const size_t span = end_pos - start_pos;
+  std::vector<int> part_count(span + 1, -1);
+  part_count[0] = 0;
+  for (size_t relative_start = 0; relative_start < span; ++relative_start) {
+    if (part_count[relative_start] < 0) {
+      continue;
+    }
+    for (size_t relative_end = relative_start + 1; relative_end <= span; ++relative_end) {
+      const std::string part = extractSubstring(codepoints, start_pos + relative_start, start_pos + relative_end);
+      if (dict_manager.lookupExact(part, pos) != nullptr) {
+        part_count[relative_end] = std::max(part_count[relative_end], part_count[relative_start] + 1);
+      }
+    }
+  }
+  return part_count.back();
+}
+
+bool hasDictionaryEntryEndingAt(const dictionary::DictionaryManager& dict_manager,
+                                const std::vector<char32_t>& codepoints, size_t scan_start, size_t end_pos,
+                                PartOfSpeechMask pos_mask) {
+  if (end_pos > codepoints.size()) {
+    return false;
+  }
+  for (size_t start = scan_start; start < end_pos; ++start) {
+    if (hasExactPartOfSpeech(dict_manager, extractSubstring(codepoints, start, end_pos), pos_mask)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool hasDictionarySplit(const dictionary::DictionaryManager& dict_manager, const std::vector<char32_t>& codepoints,
+                        size_t start_pos, size_t end_pos, PartOfSpeechMask left_mask, PartOfSpeechMask right_mask) {
+  if (end_pos > codepoints.size()) {
+    return false;
+  }
+  for (size_t split = start_pos + 1; split < end_pos; ++split) {
+    if (hasExactPartOfSpeech(dict_manager, extractSubstring(codepoints, start_pos, split), left_mask) &&
+        hasExactPartOfSpeech(dict_manager, extractSubstring(codepoints, split, end_pos), right_mask)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool hasCompleteVerbLemma(const dictionary::DictionaryManager& dict_manager, std::string_view surface,
                           size_t char_length, std::string_view lemma) {
   for (const auto& match : dict_manager.lookup(surface, 0)) {

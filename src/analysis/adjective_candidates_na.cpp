@@ -13,6 +13,7 @@
 #include "normalize/utf8.h"
 #include "scorer_constants.h"
 #include "suffix_candidates.h"
+#include "tokenizer_utils.h"
 #include "unknown.h"
 #include "verb_candidates_helpers.h"
 
@@ -28,13 +29,8 @@ bool hasIndependentAdjectiveHost(const std::vector<char32_t>& codepoints, size_t
   if (dict_manager == nullptr || end_pos <= start_pos + 1) {
     return false;
   }
-  for (size_t host_start = start_pos + 1; host_start < end_pos; ++host_start) {
-    const std::string host = extractSubstring(codepoints, host_start, end_pos);
-    if (dict_manager->lookupExact(host, core::PartOfSpeech::Adjective) != nullptr) {
-      return true;
-    }
-  }
-  return false;
+  return hasDictionaryEntryEndingAt(*dict_manager, codepoints, start_pos + 1, end_pos,
+                                    partOfSpeechMask(core::PartOfSpeech::Adjective));
 }
 
 void generateHiraganaNariNaAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,

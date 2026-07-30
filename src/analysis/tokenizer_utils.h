@@ -50,6 +50,32 @@ bool lookupResultsHavePartOfSpeech(const std::vector<dictionary::LookupResult>& 
 bool lookupResultsHaveExtendedPOS(const std::vector<dictionary::LookupResult>& results, core::ExtendedPOS extended_pos,
                                   size_t length = 0);
 
+/**
+ * Largest number of registered words of one part of speech a span can be
+ * segmented into, or -1 when no segmentation covers it entirely. Multi-mora
+ * entries stay whole, so a span that is one such word counts as one part
+ * rather than as its moras.
+ */
+int maximalSegmentCount(const dictionary::DictionaryManager& dict_manager, const std::vector<char32_t>& codepoints,
+                        size_t start_pos, size_t end_pos, core::PartOfSpeech pos);
+
+/**
+ * Whether some span ending at @p end_pos, and starting at or after
+ * @p scan_start, is a dictionary entry with one of the requested parts of
+ * speech. Used to prove that a closed or attested word closes a boundary.
+ */
+bool hasDictionaryEntryEndingAt(const dictionary::DictionaryManager& dict_manager,
+                                const std::vector<char32_t>& codepoints, size_t scan_start, size_t end_pos,
+                                PartOfSpeechMask pos_mask);
+
+/**
+ * Whether the span splits at some interior boundary into two dictionary
+ * entries, the left one matching @p left_mask and the right one @p right_mask.
+ * The first admissible split is enough; no split is preferred over another.
+ */
+bool hasDictionarySplit(const dictionary::DictionaryManager& dict_manager, const std::vector<char32_t>& codepoints,
+                        size_t start_pos, size_t end_pos, PartOfSpeechMask left_mask, PartOfSpeechMask right_mask);
+
 /** Whether a complete dictionary match is a verb with the requested lemma. */
 bool hasCompleteVerbLemma(const dictionary::DictionaryManager& dict_manager, std::string_view surface,
                           size_t char_length, std::string_view lemma);

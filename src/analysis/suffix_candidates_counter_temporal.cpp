@@ -15,6 +15,47 @@
 
 namespace suzume::analysis::counter_detail {
 
+namespace {
+
+// A lexicalized duration unit is emitted as one search token, and an optional
+// following kanji completes it into a longer closed unit (三ヶ月+間, 一時間+目).
+// The two duration spellings below differ only in the kana that heads the unit
+// and the kanji that completes it.
+void appendDurationCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t unit_end,
+                              char32_t completion, std::vector<UnknownCandidate>& candidates, const char* unit_pattern,
+                              const char* completion_pattern) {
+#ifndef SUZUME_DEBUG_INFO
+  static_cast<void>(unit_pattern);
+  static_cast<void>(completion_pattern);
+#endif
+  std::string surface = extractSubstring(codepoints, start_pos, unit_end);
+  if (surface.empty()) {
+    return;
+  }
+  auto cand =
+      makeCandidate(surface, start_pos, unit_end, core::PartOfSpeech::Noun, candidate::kNumeralKanaMonthMergeBonus,
+                    false, CandidateOrigin::Counter, core::ExtendedPOS::NounNumber);
+  cand.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+  cand.pattern = unit_pattern;
+#endif
+  candidates.push_back(cand);
+  if (unit_end >= codepoints.size() || codepoints[unit_end] != completion) {
+    return;
+  }
+  std::string completed_surface = extractSubstring(codepoints, start_pos, unit_end + 1);
+  auto completed = makeCandidate(completed_surface, start_pos, unit_end + 1, core::PartOfSpeech::Noun,
+                                 candidate::kClosedTemporalCounterMergeBonus, false, CandidateOrigin::Counter,
+                                 core::ExtendedPOS::NounNumber);
+  completed.lemma = completed_surface;
+#ifdef SUZUME_DEBUG_INFO
+  completed.pattern = completion_pattern;
+#endif
+  candidates.push_back(completed);
+}
+
+}  // namespace
+
 void appendTemporalCounterCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                      const std::vector<normalize::CharType>& char_types,
                                      const dictionary::DictionaryManager* dict_manager,
@@ -32,54 +73,14 @@ void appendTemporalCounterCandidates(const std::vector<char32_t>& codepoints, si
     // numerals as well as digit-based pretokenized durations.
     if (numeral_end + 1 < codepoints.size() && codepoints[numeral_end] == U'時' &&
         codepoints[numeral_end + 1] == U'間') {
-      std::string surface = extractSubstring(codepoints, start_pos, numeral_end + 2);
-      if (!surface.empty()) {
-        auto cand = makeCandidate(surface, start_pos, numeral_end + 2, core::PartOfSpeech::Noun,
-                                  candidate::kNumeralKanaMonthMergeBonus, false, CandidateOrigin::Counter,
-                                  core::ExtendedPOS::NounNumber);
-        cand.lemma = surface;
-#ifdef SUZUME_DEBUG_INFO
-        cand.pattern = "numeral_jikan_duration_merge";
-#endif
-        candidates.push_back(cand);
-        if (numeral_end + 2 < codepoints.size() && codepoints[numeral_end + 2] == U'目') {
-          std::string completed_surface = extractSubstring(codepoints, start_pos, numeral_end + 3);
-          auto completed = makeCandidate(completed_surface, start_pos, numeral_end + 3, core::PartOfSpeech::Noun,
-                                         candidate::kClosedTemporalCounterMergeBonus, false, CandidateOrigin::Counter,
-                                         core::ExtendedPOS::NounNumber);
-          completed.lemma = completed_surface;
-#ifdef SUZUME_DEBUG_INFO
-          completed.pattern = "temporal_counter_ordinal_merge";
-#endif
-          candidates.push_back(completed);
-        }
-      }
+      appendDurationCandidates(codepoints, start_pos, numeral_end + 2, U'目', candidates,
+                               "numeral_jikan_duration_merge", "temporal_counter_ordinal_merge");
     }
     if (numeral_end + 1 < codepoints.size() &&
         (codepoints[numeral_end] == U'か' || codepoints[numeral_end] == U'ヶ' || codepoints[numeral_end] == U'ケ') &&
         codepoints[numeral_end + 1] == U'月') {
-      std::string surface = extractSubstring(codepoints, start_pos, numeral_end + 2);
-      if (!surface.empty()) {
-        auto cand = makeCandidate(surface, start_pos, numeral_end + 2, core::PartOfSpeech::Noun,
-                                  candidate::kNumeralKanaMonthMergeBonus, false, CandidateOrigin::Counter,
-                                  core::ExtendedPOS::NounNumber);
-        cand.lemma = surface;
-#ifdef SUZUME_DEBUG_INFO
-        cand.pattern = "numeral_kana_month_merge";
-#endif
-        candidates.push_back(cand);
-        if (numeral_end + 2 < codepoints.size() && codepoints[numeral_end + 2] == U'間') {
-          std::string completed_surface = extractSubstring(codepoints, start_pos, numeral_end + 3);
-          auto completed = makeCandidate(completed_surface, start_pos, numeral_end + 3, core::PartOfSpeech::Noun,
-                                         candidate::kClosedTemporalCounterMergeBonus, false, CandidateOrigin::Counter,
-                                         core::ExtendedPOS::NounNumber);
-          completed.lemma = completed_surface;
-#ifdef SUZUME_DEBUG_INFO
-          completed.pattern = "temporal_counter_span_merge";
-#endif
-          candidates.push_back(completed);
-        }
-      }
+      appendDurationCandidates(codepoints, start_pos, numeral_end + 2, U'間', candidates, "numeral_kana_month_merge",
+                               "temporal_counter_span_merge");
     }
   }
 

@@ -88,14 +88,9 @@ bool predicateEndsAt(const std::vector<char32_t>& codepoints, size_t pos,
     return false;
   }
   const size_t probe_start = (pos >= 2) ? pos - 2 : 0;
-  for (size_t start = probe_start; start < pos; ++start) {
-    const std::string host = extractSubstring(codepoints, start, pos);
-    if (dict_manager->lookupExact(host, core::PartOfSpeech::Verb) != nullptr ||
-        dict_manager->lookupExact(host, core::PartOfSpeech::Auxiliary) != nullptr) {
-      return true;
-    }
-  }
-  return false;
+  return hasDictionaryEntryEndingAt(
+      *dict_manager, codepoints, probe_start, pos,
+      partOfSpeechMask(core::PartOfSpeech::Verb) | partOfSpeechMask(core::PartOfSpeech::Auxiliary));
 }
 
 bool clauseEndsAt(const std::vector<char32_t>& codepoints, size_t pos) {

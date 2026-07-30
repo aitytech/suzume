@@ -176,20 +176,7 @@ bool decomposesIntoMultipleParticles(const std::vector<char32_t>& codepoints, si
   if (dict_manager == nullptr || end_pos <= start_pos + 1) {
     return false;
   }
-  std::vector<int> part_count(end_pos - start_pos + 1, -1);
-  part_count[0] = 0;
-  for (size_t relative_start = 0; relative_start < end_pos - start_pos; ++relative_start) {
-    if (part_count[relative_start] < 0) {
-      continue;
-    }
-    for (size_t relative_end = relative_start + 1; relative_end <= end_pos - start_pos; ++relative_end) {
-      const std::string part = extractSubstring(codepoints, start_pos + relative_start, start_pos + relative_end);
-      if (dict_manager->lookupExact(part, core::PartOfSpeech::Particle) != nullptr) {
-        part_count[relative_end] = std::max(part_count[relative_end], part_count[relative_start] + 1);
-      }
-    }
-  }
-  return part_count.back() >= 2;
+  return maximalSegmentCount(*dict_manager, codepoints, start_pos, end_pos, core::PartOfSpeech::Particle) >= 2;
 }
 
 bool isFollowedByNominalParticle(const std::vector<char32_t>& codepoints, size_t end_pos,

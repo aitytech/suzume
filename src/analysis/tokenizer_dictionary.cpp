@@ -184,23 +184,7 @@ bool startsInsideVerifiedPredicate(const core::Lattice& lattice, size_t start_po
 
 bool canSegmentAsParticles(const dictionary::DictionaryManager& dict_manager, const std::vector<char32_t>& codepoints,
                            size_t start_pos, size_t end_pos) {
-  if (start_pos >= end_pos) {
-    return false;
-  }
-  std::vector<bool> reachable(end_pos - start_pos + 1, false);
-  reachable[0] = true;
-  for (size_t offset = 0; offset < end_pos - start_pos; ++offset) {
-    if (!reachable[offset]) {
-      continue;
-    }
-    for (size_t next_offset = offset + 1; next_offset <= end_pos - start_pos; ++next_offset) {
-      const std::string surface = extractSubstring(codepoints, start_pos + offset, start_pos + next_offset);
-      if (dict_manager.lookupExact(surface, core::PartOfSpeech::Particle) != nullptr) {
-        reachable[next_offset] = true;
-      }
-    }
-  }
-  return reachable.back();
+  return maximalSegmentCount(dict_manager, codepoints, start_pos, end_pos, core::PartOfSpeech::Particle) > 0;
 }
 
 // A dictionary adverb may begin at the terminal い of an already complete
@@ -579,9 +563,13 @@ bool hasPrecedingQuantityEdge(const core::Lattice& lattice, size_t end_pos) {
 // the attested verb stem and its matching past allomorph form a complete
 // clause.  Resolve this from the conjugation table and lexical base evidence,
 // never from a particular homographic surface.
-bool isDictionaryOnbinPast(const dictionary::DictionaryManager& dict_manager, std::string_view surface) {
-  const std::string_view past = utf8::lastChar(surface);
-  if (past != "た" && past != "だ") {
+// Both the past and the connective suffix select their voiced allomorph from
+// the same Godan row, so the two forms differ only in which kana pair closes
+// the sequence.
+bool isDictionaryOnbinBefore(const dictionary::DictionaryManager& dict_manager, std::string_view surface,
+                             std::string_view unvoiced, std::string_view voiced) {
+  const std::string_view suffix = utf8::lastChar(surface);
+  if (suffix != unvoiced && suffix != voiced) {
     return false;
   }
   const std::string_view onbin_stem = utf8::dropLastChar(surface);
@@ -595,26 +583,15 @@ bool isDictionaryOnbinPast(const dictionary::DictionaryManager& dict_manager, st
     return false;
   }
   const auto* row = grammar::Conjugation::getGodanRow(match.verb_type);
-  return row != nullptr && (row->voiced_ta ? past == "だ" : past == "た");
+  return row != nullptr && (row->voiced_ta ? suffix == voiced : suffix == unvoiced);
+}
+
+bool isDictionaryOnbinPast(const dictionary::DictionaryManager& dict_manager, std::string_view surface) {
+  return isDictionaryOnbinBefore(dict_manager, surface, "た", "だ");
 }
 
 bool isDictionaryOnbinTeForm(const dictionary::DictionaryManager& dict_manager, std::string_view surface) {
-  const std::string_view connective = utf8::lastChar(surface);
-  if (connective != "て" && connective != "で") {
-    return false;
-  }
-  const std::string_view onbin_stem = utf8::dropLastChar(surface);
-  const std::string_view onbin = utf8::lastChar(onbin_stem);
-  const std::string_view lexical_stem = utf8::dropLastChar(onbin_stem);
-  if (lexical_stem.empty()) {
-    return false;
-  }
-  const auto match = verb_helpers::firstGodanOnbinDictBase(&dict_manager, lexical_stem, onbin);
-  if (!match.matched) {
-    return false;
-  }
-  const auto* row = grammar::Conjugation::getGodanRow(match.verb_type);
-  return row != nullptr && (row->voiced_ta ? connective == "で" : connective == "て");
+  return isDictionaryOnbinBefore(dict_manager, surface, "て", "で");
 }
 
 bool startsKuruConditional(const std::vector<char32_t>& codepoints, size_t start_pos) {

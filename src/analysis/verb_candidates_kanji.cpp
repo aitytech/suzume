@@ -23,6 +23,7 @@
 #include "normalize/exceptions.h"
 #include "normalize/utf8.h"
 #include "suffix_candidates.h"
+#include "tokenizer_utils.h"
 #include "unknown.h"
 #include "verb_candidates.h"
 
@@ -156,13 +157,8 @@ bool hasDictionaryAdjectiveTail(const std::vector<char32_t>& codepoints, size_t 
   if (dict_manager == nullptr) {
     return false;
   }
-  for (size_t tail_pos = start_pos + 1; tail_pos < end_pos; ++tail_pos) {
-    if (dict_manager->lookupExact(extractSubstring(codepoints, tail_pos, end_pos), core::PartOfSpeech::Adjective) !=
-        nullptr) {
-      return true;
-    }
-  }
-  return false;
+  return hasDictionaryEntryEndingAt(*dict_manager, codepoints, start_pos + 1, end_pos,
+                                    partOfSpeechMask(core::PartOfSpeech::Adjective));
 }
 
 // A particle-like first okurigana mora is normally a reliable noun boundary

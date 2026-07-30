@@ -173,6 +173,36 @@ bool overlapsPredicativeNegativeConjecture(const core::Lattice& lattice,
   return false;
 }
 
+// Shared evidence for the two closed suffixes below: the candidate span ends
+// with a registered auxiliary of the given kind whose own left boundary is
+// already closed by a dictionary-backed irrealis stem.  Demanding the
+// candidate's lemma as well narrows the match to the very word the candidate
+// claims to be, which the passive case deliberately does not require.
+bool coversRegisteredAuxiliaryOnVerifiedMizenkei(const core::Lattice& lattice,
+                                                 const dictionary::DictionaryManager& dict_manager,
+                                                 std::string_view text, const ByteOffsets& byte_offsets,
+                                                 const UnknownCandidate& candidate,
+                                                 core::ExtendedPOS auxiliary_extended_pos, bool require_same_lemma) {
+  for (size_t auxiliary_start = candidate.start + 1; auxiliary_start < candidate.end; ++auxiliary_start) {
+    const std::string_view suffix = textRange(text, byte_offsets, auxiliary_start, candidate.end);
+    const auto* auxiliary = dict_manager.lookupExact(suffix, core::PartOfSpeech::Auxiliary);
+    if (auxiliary == nullptr || auxiliary->extended_pos != auxiliary_extended_pos) {
+      continue;
+    }
+    for (size_t predecessor_start = candidate.start; predecessor_start < auxiliary_start; ++predecessor_start) {
+      for (const uint32_t edge_id : lattice.edgeIdsAt(predecessor_start)) {
+        const auto& predecessor = lattice.getEdge(edge_id);
+        if (predecessor.end == auxiliary_start && predecessor.fromDictionary() &&
+            predecessor.extended_pos == core::ExtendedPOS::VerbMizenkei &&
+            (!require_same_lemma || predecessor.lemma == candidate.lemma)) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 // A generated verb cannot absorb a closed classical negative when the same
 // lemma already supplies a dictionary-backed irrealis stem immediately to its
 // left.  This is stronger evidence than merely finding an auxiliary-looking
@@ -186,24 +216,8 @@ bool absorbsVerifiedClassicalNegative(const core::Lattice& lattice, const dictio
       (exact_verb != nullptr && exact_verb->lemma == exact_verb->surface)) {
     return false;
   }
-
-  for (size_t auxiliary_start = candidate.start + 1; auxiliary_start < candidate.end; ++auxiliary_start) {
-    const std::string_view suffix = textRange(text, byte_offsets, auxiliary_start, candidate.end);
-    const auto* auxiliary = dict_manager.lookupExact(suffix, core::PartOfSpeech::Auxiliary);
-    if (auxiliary == nullptr || auxiliary->extended_pos != core::ExtendedPOS::AuxNegativeNu) {
-      continue;
-    }
-    for (size_t predecessor_start = candidate.start; predecessor_start < auxiliary_start; ++predecessor_start) {
-      for (const uint32_t edge_id : lattice.edgeIdsAt(predecessor_start)) {
-        const auto& predecessor = lattice.getEdge(edge_id);
-        if (predecessor.end == auxiliary_start && predecessor.fromDictionary() &&
-            predecessor.extended_pos == core::ExtendedPOS::VerbMizenkei && predecessor.lemma == candidate.lemma) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
+  return coversRegisteredAuxiliaryOnVerifiedMizenkei(lattice, dict_manager, text, byte_offsets, candidate,
+                                                     core::ExtendedPOS::AuxNegativeNu, true);
 }
 
 // Before closed negation, do not replace a proven irrealis + passive chain
@@ -226,24 +240,8 @@ bool absorbsPassiveBeforeNegative(const core::Lattice& lattice, const dictionary
   if (!followed_by_negative) {
     return false;
   }
-
-  for (size_t auxiliary_start = candidate.start + 1; auxiliary_start < candidate.end; ++auxiliary_start) {
-    const std::string_view suffix = textRange(text, byte_offsets, auxiliary_start, candidate.end);
-    const auto* auxiliary = dict_manager.lookupExact(suffix, core::PartOfSpeech::Auxiliary);
-    if (auxiliary == nullptr || auxiliary->extended_pos != core::ExtendedPOS::AuxPassive) {
-      continue;
-    }
-    for (size_t predecessor_start = candidate.start; predecessor_start < auxiliary_start; ++predecessor_start) {
-      for (const uint32_t edge_id : lattice.edgeIdsAt(predecessor_start)) {
-        const auto& predecessor = lattice.getEdge(edge_id);
-        if (predecessor.end == auxiliary_start && predecessor.fromDictionary() &&
-            predecessor.extended_pos == core::ExtendedPOS::VerbMizenkei) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
+  return coversRegisteredAuxiliaryOnVerifiedMizenkei(lattice, dict_manager, text, byte_offsets, candidate,
+                                                     core::ExtendedPOS::AuxPassive, false);
 }
 
 // A complete multi-kanji nominal stem owns its full span before a closed する

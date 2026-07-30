@@ -39,6 +39,24 @@ bool consumesSahenConditional(const std::vector<char32_t>& codepoints, size_t st
   return hasCompleteVerbLemma(dict_manager, conditional, 2, "する");
 }
 
+// A generated split stem is usable only when it is a proper prefix of the
+// compound as the text actually spells it, and its end stays inside the
+// analysed span. Both split candidates share this admission test; the returned
+// end position is where the auxiliary that follows would start.
+constexpr size_t kStemNotAdmitted = static_cast<size_t>(-1);
+
+size_t admittedStemEnd(const std::string& stem, std::string_view compound_surface, std::string_view text,
+                       size_t start_byte, size_t start_pos, size_t codepoint_count) {
+  if (stem.empty() || stem.size() >= compound_surface.size()) {
+    return kStemNotAdmitted;
+  }
+  if (text.substr(start_byte, stem.size()) != stem) {
+    return kStemNotAdmitted;
+  }
+  const size_t stem_end_pos = start_pos + normalize::utf8Length(stem);
+  return stem_end_pos > codepoint_count ? kStemNotAdmitted : stem_end_pos;
+}
+
 }  // namespace
 
 void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, const std::vector<char32_t>& codepoints,
@@ -367,14 +385,9 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
 
     // Helper lambda to add te-stem edge
     auto addTeStemEdge = [&](const std::string& stem) {
-      if (stem.empty() || stem.size() >= compound_surface.size())
-        return false;
-      std::string_view text_prefix = text.substr(start_byte, stem.size());
-      if (text_prefix != stem)
-        return false;
-
-      const size_t stem_end_pos = start_pos + normalize::utf8Length(stem);
-      if (stem_end_pos > codepoints.size())
+      const size_t stem_end_pos =
+          admittedStemEnd(stem, compound_surface, text, start_byte, start_pos, codepoints.size());
+      if (stem_end_pos == kStemNotAdmitted)
         return false;
 
       // Determine ExtendedPOS based on te-form type
@@ -436,14 +449,9 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
       }
 
       auto addMizenkeiEdge = [&](const std::string& stem) {
-        if (stem.empty() || stem.size() >= compound_surface.size())
-          return false;
-        std::string_view text_prefix = text.substr(start_byte, stem.size());
-        if (text_prefix != stem)
-          return false;
-
-        const size_t stem_end_pos = start_pos + normalize::utf8Length(stem);
-        if (stem_end_pos > codepoints.size())
+        const size_t stem_end_pos =
+            admittedStemEnd(stem, compound_surface, text, start_byte, start_pos, codepoints.size());
+        if (stem_end_pos == kStemNotAdmitted)
           return false;
 
         // Check that what follows attaches to mizenkei: a passive/causative
