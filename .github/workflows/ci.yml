@@ -157,12 +157,17 @@ jobs:
         run: |
           ./build/bin/suzume_test
           ctest --test-dir build --output-on-failure -R native_cli_contract
-      - name: Run in-tree and installed-package examples
-        run: make examples-test consumer-smoke
+      # Upload before any later step touches build/. `make examples-test` runs the
+      # Makefile's own configure, which reconfigures that same directory from Debug
+      # to Release and recompiles every object; the fresh .gcno files then no longer
+      # match the .gcda the test binary just wrote, so the report would carry only
+      # what the example programs executed.
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Run in-tree and installed-package examples
+        run: make examples-test consumer-smoke
       - name: Build WASM binding
         working-directory: bindings/wasm
         run: |
