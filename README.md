@@ -46,7 +46,6 @@ examples, trade-offs, and known constraints.
 ```bash
 npm install @libraz/suzume            # JavaScript / TypeScript
 pip install suzume                    # Python
-go get github.com/libraz/go-suzume    # Go
 ```
 
 The Python wheel also installs the `suzume` command. PyPI provides binary
@@ -54,9 +53,18 @@ wheels for Linux x86_64 and macOS arm64; Windows, other architectures, and
 source distributions are not supported.
 
 The Go module is maintained and versioned in a separate repository; it is not
-built or compatibility-gated by this repository. It ships no precompiled
-binary, builds the static library from source once via `make lib` in the module
-directory, and embeds the dictionaries in your binary.
+built or compatibility-gated by this repository. It ships no precompiled binary
+and builds the static library from source, so it is installed from a checkout
+rather than with `go get` alone:
+
+```bash
+git clone https://github.com/libraz/go-suzume.git
+cd go-suzume && make lib
+```
+
+Point your module at that checkout with `go mod edit -replace`. The dictionaries
+are then embedded in your binary. See the
+[Go bindings guide](https://suzume.libraz.net/docs/go) for the full procedure.
 
 For C/C++ installation, native builds, user dictionaries, and all runtime
 options, see the [documentation](https://suzume.libraz.net/docs/getting-started).

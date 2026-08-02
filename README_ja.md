@@ -36,12 +36,18 @@ Suzumeは品詞付与と原形復元も行うため、活用した動詞・形�
 ```bash
 npm install @libraz/suzume            # JavaScript / TypeScript
 pip install suzume                    # Python
-go get github.com/libraz/go-suzume    # Go
 ```
 
 Python版をインストールすると、`suzume`コマンドも使えるようになります。PyPIではLinux x86_64とmacOS arm64向けのバイナリwheelだけを配布しています。Windows、その他のアーキテクチャ、ソース配布には対応していません。
 
-Goモジュールはビルド済みバイナリを同梱しません。モジュールのディレクトリで`make lib`を一度実行して静的ライブラリをソースからビルドし、辞書は実行バイナリに埋め込みます。
+Goモジュールは別リポジトリで管理・バージョニングされており、本リポジトリではビルドも互換性の担保も行いません。ビルド済みバイナリを同梱せず静的ライブラリをソースからビルドするため、`go get`だけではなくチェックアウトからインストールします。
+
+```bash
+git clone https://github.com/libraz/go-suzume.git
+cd go-suzume && make lib
+```
+
+利用側のモジュールからは`go mod edit -replace`でこのチェックアウトを参照します。辞書は実行バイナリに埋め込まれます。手順の詳細は[Goバインディングガイド](https://suzume.libraz.net/ja/docs/go)を参照してください。
 
 C/C++のインストール、ネイティブビルド、ユーザー辞書、すべての実行時オプションは[ドキュメント](https://suzume.libraz.net/ja/docs/getting-started)を参照してください。
 
