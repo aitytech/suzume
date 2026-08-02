@@ -165,37 +165,21 @@ std::vector<core::Morpheme> Postprocessor::mergeNumericExpressions(std::vector<c
       continue;
     }
 
-    // Pattern 2: Merge number + unit (3 + 時間, 100 + ゴールド, 3時 + 間)
-    // Exception: 対 (versus) should not merge - 2対1 should be 2|対|1
-    if (current.pos == core::PartOfSpeech::Noun && isNumericExpression(current.surface) &&
-        endsWithDigit(current.surface) && idx + 1 < morphemes.size()) {
-      const auto& next = morphemes[idx + 1];
-      bool is_versus = (next.surface == "対");
-      if (next.pos == core::PartOfSpeech::Noun && looksLikeUnit(next.surface) && !is_versus) {
-        core::Morpheme merged = current;
-        resolver::mergeInto(merged, next);
-        merged.lemma = merged.surface;
-
-        SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] Merged number+unit: \"" << current.surface << "\" + \"" << next.surface
-                                                                     << "\" → \"" << merged.surface << "\"\n");
-
-        result.push_back(merged);
-        idx += 2;
-        continue;
-      }
-    }
-
-    // Pattern 3: Merge numeric with unit suffix (3時 + 間 → 3時間)
+    // Patterns 2/3: Merge a numeric expression with a following unit. The
+    // digit-led unit case takes precedence over a quantity suffix exactly as
+    // before; only the identical merge/output path is shared.
     if (current.pos == core::PartOfSpeech::Noun && isNumericExpression(current.surface) && idx + 1 < morphemes.size()) {
       const auto& next = morphemes[idx + 1];
-      // Check for common time/counter suffixes that get split
-      if (next.pos == core::PartOfSpeech::Noun && isQuantityPhraseSuffixSurface(next.surface)) {
+      const bool is_number_unit = endsWithDigit(current.surface) && looksLikeUnit(next.surface) && next.surface != "対";
+      const bool is_quantity_suffix = isQuantityPhraseSuffixSurface(next.surface);
+      if (next.pos == core::PartOfSpeech::Noun && (is_number_unit || is_quantity_suffix)) {
         core::Morpheme merged = current;
         resolver::mergeInto(merged, next);
         merged.lemma = merged.surface;
 
-        SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] Merged numeric+suffix: \"" << current.surface << "\" + \"" << next.surface
-                                                                        << "\" → \"" << merged.surface << "\"\n");
+        SUZUME_DEBUG_LOG_VERBOSE("[POSTPROC] Merged " << (is_number_unit ? "number+unit" : "numeric+suffix") << ": \""
+                                                      << current.surface << "\" + \"" << next.surface << "\" → \""
+                                                      << merged.surface << "\"\n");
 
         result.push_back(merged);
         idx += 2;
