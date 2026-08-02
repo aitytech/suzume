@@ -169,57 +169,9 @@ class UnknownWordGenerator {
   grammar::Inflection inflection_;
 
   /**
-   * @brief Generate compound verb candidates (e.g., 恐れ入ります, 差し上げます)
-   *
-   * Detects patterns like Kanji+Hiragana+Kanji+Hiragana and checks
-   * if the base form exists in dictionary.
-   */
-  void generateCompoundVerbCandidates(std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
-                                      const std::vector<normalize::CharType>& char_types,
-                                      std::vector<UnknownCandidate>& candidates) const;
-
-  /**
-   * @brief Generate verb candidates (kanji + conjugation endings)
-   */
-  /**
-   * @brief Generate hiragana verb candidates (pure hiragana verbs like いく, くる)
-   */
-  std::vector<UnknownCandidate> generateHiraganaVerbCandidates(
-      std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
-      const std::vector<normalize::CharType>& char_types) const;
-
-  /**
-   * @brief Generate i-adjective candidates (kanji + conjugation endings)
-   */
-  void generateAdjectiveCandidates(std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
-                                   const std::vector<normalize::CharType>& char_types,
-                                   std::vector<UnknownCandidate>& candidates) const;
-
-  /**
-   * @brief Generate i-adjective stem candidates (難し, 美し before auxiliaries)
-   */
-  void generateAdjectiveStemCandidates(std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
-                                       const std::vector<normalize::CharType>& char_types,
-                                       std::vector<UnknownCandidate>& candidates) const;
-
-  /**
-   * @brief Generate hiragana i-adjective candidates (pure hiragana like まずい)
-   */
-  void generateHiraganaAdjectiveCandidates(std::string_view text, const std::vector<char32_t>& codepoints,
-                                           size_t start_pos, const std::vector<normalize::CharType>& char_types,
-                                           std::vector<UnknownCandidate>& candidates) const;
-
-  /**
-   * @brief Generate na-adjective candidates (〜的 patterns)
-   */
-  void generateNaAdjectiveCandidates(std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
-                                     const std::vector<normalize::CharType>& char_types,
-                                     std::vector<UnknownCandidate>& candidates) const;
-
-  /**
    * @brief Generate candidates for same-type sequences
    */
-  void generateBySameType(std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
+  void generateBySameType(const std::vector<char32_t>& codepoints, size_t start_pos,
                           const std::vector<normalize::CharType>& char_types,
                           std::vector<UnknownCandidate>& candidates) const;
 
@@ -229,13 +181,6 @@ class UnknownWordGenerator {
   void generateAlphanumeric(std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
                             const std::vector<normalize::CharType>& char_types,
                             std::vector<UnknownCandidate>& candidates) const;
-
-  /**
-   * @brief Generate candidates with suffix separation
-   */
-  void generateWithSuffix(std::string_view text, const std::vector<char32_t>& codepoints, size_t start_pos,
-                          const std::vector<normalize::CharType>& char_types,
-                          std::vector<UnknownCandidate>& candidates) const;
 
   /**
    * @brief Generate character speech pattern candidates (キャラ語尾)

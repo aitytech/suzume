@@ -635,20 +635,22 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
 
     // Generate compound verb candidates (kanji + hiragana + kanji + hiragana)
     // e.g., 恐れ入ります, 差し上げます, 申し上げます
-    generateCompoundVerbCandidates(text, codepoints, start_pos, char_types, candidates);
+    analysis::generateCompoundVerbCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_,
+                                             options_.verb_candidate_options, candidates);
 
     // Generate i-adjective candidates (kanji + hiragana conjugation endings)
-    generateAdjectiveCandidates(text, codepoints, start_pos, char_types, candidates);
+    analysis::generateAdjectiveCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_, candidates);
 
     // Generate i-adjective STEM candidates (難し, 美し for 難しそう, 美しすぎる)
     // This preserves the adjective stem and appearance-auxiliary boundary.
-    generateAdjectiveStemCandidates(text, codepoints, start_pos, char_types, candidates);
+    analysis::generateAdjectiveStemCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_,
+                                              candidates);
 
     // Generate productive nominal-base suffix verbs (春めく、謎めく).
     generateProductiveSuffixVerbCandidates(codepoints, start_pos, char_types, candidates);
 
     // Generate na-adjective candidates (〜的 patterns)
-    generateNaAdjectiveCandidates(text, codepoints, start_pos, char_types, candidates);
+    analysis::generateNaAdjectiveCandidates(codepoints, start_pos, char_types, options_, dict_manager_, candidates);
 
     // Generate nominalized noun candidates (kanji + short hiragana)
     // e.g., 手助け, 片付け, 引き上げ
@@ -682,11 +684,14 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
 
   // Generate hiragana verb candidates (pure hiragana verbs like いく, くる)
   if (char_types[start_pos] == normalize::CharType::Hiragana) {
-    appendCandidates(candidates, generateHiraganaVerbCandidates(text, codepoints, start_pos, char_types));
-    generateNaAdjectiveCandidates(text, codepoints, start_pos, char_types, candidates);
+    appendCandidates(candidates,
+                     analysis::generateHiraganaVerbCandidates(codepoints, start_pos, char_types, inflection_,
+                                                              dict_manager_, options_.verb_candidate_options));
+    analysis::generateNaAdjectiveCandidates(codepoints, start_pos, char_types, options_, dict_manager_, candidates);
 
     // Generate hiragana i-adjective candidates (まずい, おいしい, etc.)
-    generateHiraganaAdjectiveCandidates(text, codepoints, start_pos, char_types, candidates);
+    analysis::generateHiraganaAdjectiveCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_,
+                                                  candidates);
 
     // Generate productive suffix candidates (ありがち, 忘れっぽい, etc.)
     generateProductiveSuffixCandidates(codepoints, start_pos, char_types, candidates);
@@ -709,7 +714,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
   }
 
   // Generate by same type
-  generateBySameType(text, codepoints, start_pos, char_types, candidates);
+  generateBySameType(codepoints, start_pos, char_types, candidates);
 
   // The closed adjective suffix がまし〜 can follow a mixed-script nominal host
   // that the ordinary leading-kanji adjective scan cannot cross.
@@ -724,7 +729,7 @@ std::vector<UnknownCandidate> UnknownWordGenerator::generate(std::string_view te
 
   // Generate with suffix separation for kanji
   if (options_.separate_suffix && char_types[start_pos] == normalize::CharType::Kanji) {
-    generateWithSuffix(text, codepoints, start_pos, char_types, candidates);
+    analysis::generateWithSuffix(codepoints, start_pos, char_types, options_, candidates);
   }
 
   // Generate character speech candidates (キャラ語尾)
@@ -845,64 +850,6 @@ void UnknownWordGenerator::generateAlphanumeric(std::string_view /*text*/, const
       candidates.push_back(cand);
     }
   }
-}
-
-void UnknownWordGenerator::generateWithSuffix(std::string_view /*text*/, const std::vector<char32_t>& codepoints,
-                                              size_t start_pos, const std::vector<normalize::CharType>& char_types,
-                                              std::vector<UnknownCandidate>& candidates) const {
-  // Delegate to the standalone function
-  analysis::generateWithSuffix(codepoints, start_pos, char_types, options_, candidates);
-}
-
-void UnknownWordGenerator::generateCompoundVerbCandidates(std::string_view /*text*/,
-                                                          const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                          const std::vector<normalize::CharType>& char_types,
-                                                          std::vector<UnknownCandidate>& candidates) const {
-  // Delegate to the standalone function
-  analysis::generateCompoundVerbCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_,
-                                           options_.verb_candidate_options, candidates);
-}
-
-std::vector<UnknownCandidate> UnknownWordGenerator::generateHiraganaVerbCandidates(
-    std::string_view /*text*/, const std::vector<char32_t>& codepoints, size_t start_pos,
-    const std::vector<normalize::CharType>& char_types) const {
-  // Delegate to the standalone function
-  return analysis::generateHiraganaVerbCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_,
-                                                  options_.verb_candidate_options);
-}
-
-void UnknownWordGenerator::generateAdjectiveCandidates(std::string_view /*text*/,
-                                                       const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                       const std::vector<normalize::CharType>& char_types,
-                                                       std::vector<UnknownCandidate>& candidates) const {
-  // Delegate to the standalone function
-  analysis::generateAdjectiveCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_, candidates);
-}
-
-void UnknownWordGenerator::generateAdjectiveStemCandidates(std::string_view /*text*/,
-                                                           const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                           const std::vector<normalize::CharType>& char_types,
-                                                           std::vector<UnknownCandidate>& candidates) const {
-  // Delegate to the standalone function
-  analysis::generateAdjectiveStemCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_, candidates);
-}
-
-void UnknownWordGenerator::generateHiraganaAdjectiveCandidates(std::string_view /*text*/,
-                                                               const std::vector<char32_t>& codepoints,
-                                                               size_t start_pos,
-                                                               const std::vector<normalize::CharType>& char_types,
-                                                               std::vector<UnknownCandidate>& candidates) const {
-  // Delegate to the standalone function
-  analysis::generateHiraganaAdjectiveCandidates(codepoints, start_pos, char_types, inflection_, dict_manager_,
-                                                candidates);
-}
-
-void UnknownWordGenerator::generateNaAdjectiveCandidates(std::string_view /*text*/,
-                                                         const std::vector<char32_t>& codepoints, size_t start_pos,
-                                                         const std::vector<normalize::CharType>& char_types,
-                                                         std::vector<UnknownCandidate>& candidates) const {
-  // Delegate to the standalone function
-  analysis::generateNaAdjectiveCandidates(codepoints, start_pos, char_types, options_, dict_manager_, candidates);
 }
 
 }  // namespace suzume::analysis

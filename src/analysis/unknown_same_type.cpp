@@ -265,8 +265,8 @@ bool startsAtDictionaryVerbContinuative(const std::vector<char32_t>& codepoints,
 
 }  // namespace
 
-void UnknownWordGenerator::generateBySameType(std::string_view text, const std::vector<char32_t>& codepoints,
-                                              size_t start_pos, const std::vector<normalize::CharType>& char_types,
+void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                              const std::vector<normalize::CharType>& char_types,
                                               std::vector<UnknownCandidate>& candidates) const {
   if (start_pos >= char_types.size()) {
     return;
@@ -814,7 +814,8 @@ void UnknownWordGenerator::generateBySameType(std::string_view text, const std::
         if (noun == nullptr || noun->extended_pos != core::ExtendedPOS::NounFormal) {
           continue;
         }
-        const auto predicates = generateHiraganaVerbCandidates(text, codepoints, predicate_start, char_types);
+        const auto predicates = analysis::generateHiraganaVerbCandidates(
+            codepoints, predicate_start, char_types, inflection_, dict_manager_, options_.verb_candidate_options);
         for (const auto& predicate : predicates) {
           if (predicate.extended_pos != core::ExtendedPOS::VerbMizenkei || predicate.end <= pos ||
               predicate.end >= codepoints.size()) {
