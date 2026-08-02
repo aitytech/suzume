@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
+from suzume_mcp.core.postprocessors import POSTPROCESSORS
 from suzume_mcp.core.suzume_utils import _oracle_text, format_expected, get_expected_tokens, tokens_match
 
 pytestmark = pytest.mark.skipif(
@@ -209,11 +210,12 @@ class TestSurfaceIsNeverLost:
             tokens[0]["surface"] = "大阪"
             return True
 
+        corrupting_rules = tuple(
+            (label, corrupt_surface if label == "adverbial-na-adjective" else processor)
+            for label, processor in POSTPROCESSORS
+        )
         with (
-            patch(
-                "suzume_mcp.core.suzume_utils.postprocess_adverbial_na_adjective",
-                side_effect=corrupt_surface,
-            ),
+            patch("suzume_mcp.core.suzume_utils.postprocessor_rules", return_value=corrupting_rules),
             pytest.raises(RuntimeError, match="do not reconstruct"),
         ):
             get_expected_tokens("東京")

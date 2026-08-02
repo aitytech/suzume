@@ -1,6 +1,8 @@
 """Tests for postprocessor functions."""
 
+from suzume_mcp.core import postprocessors
 from suzume_mcp.core.postprocessors import (
+    POSTPROCESSORS,
     _non_overlapping_replacements,
     postprocess_adjective_garu,
     postprocess_adjective_nominalizer,
@@ -64,6 +66,21 @@ def _tok(surface, pos, **kw):
     t = {"surface": surface, "pos": pos, "lemma": surface}
     t.update(kw)
     return t
+
+
+def test_postprocessor_registry_is_complete_and_has_unique_labels():
+    """Every context-dependent postprocessor must have one ordered rule entry."""
+    rules = postprocessors.postprocessor_rules()
+    labels = [label for label, _ in rules]
+    defined = {
+        processor
+        for name, processor in vars(postprocessors).items()
+        if name.startswith("postprocess_") and name != "postprocess_mecab_tokens" and callable(processor)
+    }
+
+    assert len(labels) == len(set(labels))
+    assert {processor for _, processor in rules} == defined
+    assert rules == POSTPROCESSORS
 
 
 class TestModifierGodanImperative:

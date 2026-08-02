@@ -2650,3 +2650,116 @@ def postprocess_adverbial_na_adjective(tokens: list[dict]) -> bool:
         token["pos"] = "Adjective"
         changed = True
     return changed
+
+
+# The invocation order is semantic: postprocessors mutate the same token list
+# and the first mutation supplies the public applied-rule label.  Keep that
+# order next to the implementations rather than duplicating it as imports and
+# one-off calls in suzume_utils.
+POSTPROCESSORS: tuple[tuple[str, Callable[[list[dict]], bool]], ...] = (
+    ("sou-context", postprocess_sou),
+    ("ikaga-adverb", postprocess_ikaga),
+    ("tada-context", postprocess_tada),
+    ("demo-particle", postprocess_demo),
+    ("hiragana-yaka-adverbial", postprocess_hiragana_yaka_adverbial),
+    ("closed-function-word-pos", postprocess_closed_function_words),
+    ("closed-subsidiary-aux", postprocess_closed_subsidiary_aux),
+    ("classical-focus-namu", postprocess_classical_focus_namu),
+    ("honorific-i-adjective", postprocess_honorific_i_adjective),
+    ("i-adjective-upper-bound", postprocess_i_adjective_upper_bound),
+    ("kadouka-adverb", postprocess_kadouka_adverb),
+    ("ii-adjective", postprocess_ii),
+    ("iru-aux", postprocess_iru_aux),
+    ("giving-receiving-aux", postprocess_giving_aux),
+    ("contracted-progressive-aux", postprocess_contracted_progressive_aux),
+    ("itadakeru-aux", postprocess_itadakeru_aux),
+    ("miru-aux", postprocess_miru_aux),
+    ("monono-conjunction", postprocess_monono_conjunction),
+    ("formal-noun-lemma", postprocess_formal_noun_lemma),
+    ("adjective-nominalizer", postprocess_adjective_nominalizer),
+    ("shortened-causative-passive", postprocess_shortened_causative_passive),
+    ("modifier-godan-imperative", postprocess_modifier_godan_imperative),
+    ("contracted-shimau-aux", postprocess_shimau_aux),
+    ("quantity-bound-suffix", postprocess_quantity_bound_suffix),
+    ("exclusion-suffix", postprocess_exclusion_suffix),
+    ("state-suffix", postprocess_state_suffix),
+    ("productive-verb-suffix-stem", postprocess_productive_verb_suffix_stem),
+    ("teki-na-adjective", postprocess_teki_na_adjective),
+    ("difficulty-adjective-stem", postprocess_difficulty_adjective_stem),
+    ("renyokei-compound-particle", postprocess_renyokei_compound_particle),
+    ("compound-case-particle-aru", postprocess_compound_case_particle_aru),
+    ("to-areba-conditional", postprocess_to_areba_conditional),
+    ("tagaru-search-unit", postprocess_tagaru_aux),
+    ("l2-noun-context", postprocess_l2_noun_context),
+    ("adjective-garu-pos", postprocess_adjective_garu),
+    ("fuu-formal-noun", postprocess_fuu_formal_noun),
+    ("indefinite-ka", postprocess_indefinite_ka),
+    ("subsidiary-yuku", postprocess_subsidiary_yuku),
+    ("hiragana-purpose-noun", postprocess_hiragana_purpose_noun),
+    ("short-hiragana-onbin", postprocess_short_hiragana_onbin),
+    ("hiragana-godan-wa-terminal", postprocess_hiragana_godan_wa_terminal),
+    ("honorific-request-renyokei", postprocess_honorific_request),
+    ("honorific-oki-aux", postprocess_honorific_oki_aux),
+    ("de-particle", postprocess_de_particle),
+    ("te-form-contraction-particle", postprocess_te_form_contraction),
+    ("dai-final-particle", postprocess_dai_final_particle),
+    ("chigai-negative-adjective", postprocess_chigai_negative_adjective),
+    ("nanka-colloquial-particle", postprocess_nanka_particle),
+    ("kiri-limiting-particle", postprocess_kiri_limited_particle),
+    ("kuru-causative-lemma", postprocess_kuru_causative),
+    ("onaji-predicative-na-adjective", postprocess_onaji_predicate),
+    ("de-aru", postprocess_de_aru),
+    ("dewa-aru-boundary", postprocess_dewa_aru_boundary),
+    ("ka-suru-noun", postprocess_ka_suru_noun),
+    ("taihen-context", postprocess_taihen),
+    ("na-adjective-noun-use", postprocess_na_adj_noun),
+    ("deverbal-noun-context", postprocess_deverbal_noun_context),
+    ("attributive-mamonaku", postprocess_attributive_mamonaku),
+    ("adverb-nominal-context", postprocess_adverb_nominal_context),
+    ("nominal-conjunction-homograph", postprocess_nominal_conjunction_homograph),
+    ("interjection-before-copula", postprocess_interjection_before_copula),
+    ("temporal-nao-adverb", postprocess_temporal_nao),
+    ("tsuke-noun", postprocess_tsuke_noun),
+    ("copular-negative-pos", postprocess_copula_neg),
+    ("you-noun", postprocess_you_noun),
+    ("classical-ramu-boundary", postprocess_classical_ramu_boundary),
+    ("classical-desiderative-aux", postprocess_classical_desiderative_aux),
+    ("classical-honorific-aux", postprocess_classical_honorific_aux),
+    ("classical-conjecture-aux", postprocess_classical_conjecture_aux),
+    ("classical-kere-aux", postprocess_classical_kere_aux),
+    ("classical-perfect-aux", postprocess_classical_perfect_aux),
+    ("classical-past-shi", postprocess_classical_past_shi),
+    ("adverbial-temporal-prefix", postprocess_adverbial_temporal_prefix),
+    ("prolonged-sound-noun", postprocess_prolonged_sound_noun),
+    ("yoshi-formal-noun", postprocess_yoshi_formal_noun),
+    ("sou-aux", postprocess_sou_aux),
+    ("nara-verb", postprocess_nara_verb),
+    ("n-kuruwa", postprocess_n_kuruwa),
+    ("nai-context", postprocess_nai_context),
+    ("binding-negative-aux", postprocess_binding_negative_aux),
+    ("productive-search-unit-boundaries", postprocess_productive_search_unit_boundaries),
+    ("bound-derived-adjective", postprocess_bound_derived_adjective),
+    ("quotative-determiner-spelling", postprocess_quotative_determiner_spelling),
+    ("adverbial-na-adjective", postprocess_adverbial_na_adjective),
+)
+
+
+def postprocessor_rules() -> tuple[tuple[str, Callable[[list[dict]], bool]], ...]:
+    """Return the validated, ordered context-dependent postprocessors."""
+    labels = [label for label, _ in POSTPROCESSORS]
+    if len(labels) != len(set(labels)):
+        raise RuntimeError("duplicate postprocessor rule label")
+
+    registered = {processor for _, processor in POSTPROCESSORS}
+    defined = {
+        processor
+        for name, processor in globals().items()
+        if name.startswith("postprocess_") and name != "postprocess_mecab_tokens" and callable(processor)
+    }
+    if missing := defined - registered:
+        names = ", ".join(sorted(processor.__name__ for processor in missing))
+        raise RuntimeError(f"unregistered postprocessor: {names}")
+    if extra := registered - defined:
+        names = ", ".join(sorted(processor.__name__ for processor in extra))
+        raise RuntimeError(f"unknown postprocessor: {names}")
+    return POSTPROCESSORS
