@@ -4,6 +4,8 @@
 #include <string_view>
 #include <vector>
 
+#include "dictionary/dictionary_lookup.h"
+
 // Layer 1 is the finite built-in grammar inventory: function words plus
 // grammar-licensed determiners, pronouns, formal nouns, and interjections.
 // Productive open-class nouns, verbs, adjectives, and adverbs are handled by:
@@ -149,39 +151,7 @@ void CoreDictionary::buildTrie() {
 }
 
 std::vector<LookupResult> CoreDictionary::lookup(std::string_view text, size_t start_pos) const {
-  std::vector<LookupResult> results;
-
-  if (entries_.empty() || start_pos >= text.size()) {
-    return results;
-  }
-
-  // Use Double-Array common prefix search
-  auto trie_results = trie_.commonPrefixSearch(text, start_pos);
-
-  for (const auto& tres : trie_results) {
-    if (tres.value < 0 || static_cast<size_t>(tres.value) >= entries_.size()) {
-      continue;
-    }
-
-    size_t first_idx = static_cast<size_t>(tres.value);
-    const std::string& matched_surface = entries_[first_idx].surface;
-
-    // Collect all entries with the same surface (consecutive in sorted array)
-    for (size_t idx = first_idx; idx < entries_.size(); ++idx) {
-      if (entries_[idx].surface != matched_surface) {
-        break;
-      }
-
-      LookupResult result{};
-      result.entry_id = static_cast<uint32_t>(idx);
-      // Convert byte length to character count
-      result.length = normalize::utf8Length(text.substr(start_pos, tres.length));
-      result.entry = &entries_[idx];
-      results.push_back(result);
-    }
-  }
-
-  return results;
+  return lookupByTrie(trie_, entries_, text, start_pos);
 }
 
 const DictionaryEntry* CoreDictionary::getEntry(uint32_t idx) const {
@@ -192,17 +162,7 @@ const DictionaryEntry* CoreDictionary::getEntry(uint32_t idx) const {
 }
 
 const DictionaryEntry* CoreDictionary::lookupExact(std::string_view surface, core::PartOfSpeech pos) const {
-  const int32_t first_idx = trie_.exactMatch(surface);
-  if (first_idx < 0 || static_cast<size_t>(first_idx) >= entries_.size()) {
-    return nullptr;
-  }
-
-  for (size_t idx = static_cast<size_t>(first_idx); idx < entries_.size() && entries_[idx].surface == surface; ++idx) {
-    if (pos == core::PartOfSpeech::Unknown || entries_[idx].pos == pos) {
-      return &entries_[idx];
-    }
-  }
-  return nullptr;
+  return lookupExactByTrie(trie_, entries_, surface, pos);
 }
 
 }  // namespace suzume::dictionary

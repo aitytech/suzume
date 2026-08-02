@@ -2,6 +2,7 @@
 
 add_library(suzume_dictionary OBJECT
   dictionary.cpp
+  dictionary_lookup.cpp
   core_dict.cpp
   source_parser.cpp
   user_dict.cpp

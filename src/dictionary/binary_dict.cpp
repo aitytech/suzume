@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cstring>
+
+#include "dictionary/dictionary_lookup.h"
 #ifndef __EMSCRIPTEN__
 #include <filesystem>
 #include <fstream>
@@ -460,44 +462,11 @@ core::Expected<size_t, core::Error> BinaryDictionary::parseData(const uint8_t* d
 }
 
 std::vector<LookupResult> BinaryDictionary::lookup(std::string_view text, size_t start_pos) const {
-  std::vector<LookupResult> results;
-
-  if (!isLoaded() || start_pos >= text.size()) {
-    return results;
-  }
-
-  auto trie_results = trie_.commonPrefixSearch(text, start_pos);
-
-  for (const auto& tres : trie_results) {
-    if (tres.value >= 0 && static_cast<size_t>(tres.value) < entries_.size()) {
-      const size_t first_idx = static_cast<size_t>(tres.value);
-      const std::string& matched_surface = entries_[first_idx].surface;
-      for (size_t idx = first_idx; idx < entries_.size() && entries_[idx].surface == matched_surface; ++idx) {
-        LookupResult result{};
-        result.entry_id = static_cast<uint32_t>(idx);
-        // Convert byte length from trie to character count
-        result.length = normalize::utf8Length(text.substr(start_pos, tres.length));
-        result.entry = &entries_[idx];
-        results.push_back(result);
-      }
-    }
-  }
-
-  return results;
+  return lookupByTrie(trie_, entries_, text, start_pos);
 }
 
 const DictionaryEntry* BinaryDictionary::lookupExact(std::string_view surface, core::PartOfSpeech pos) const {
-  const int32_t idx = trie_.exactMatch(surface);
-  if (idx < 0 || static_cast<size_t>(idx) >= entries_.size()) {
-    return nullptr;
-  }
-  for (size_t entry_idx = static_cast<size_t>(idx);
-       entry_idx < entries_.size() && entries_[entry_idx].surface == surface; ++entry_idx) {
-    if (pos == core::PartOfSpeech::Unknown || entries_[entry_idx].pos == pos) {
-      return &entries_[entry_idx];
-    }
-  }
-  return nullptr;
+  return lookupExactByTrie(trie_, entries_, surface, pos);
 }
 
 const DictionaryEntry* BinaryDictionary::getEntry(uint32_t idx) const {
