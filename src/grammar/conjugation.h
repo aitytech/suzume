@@ -77,6 +77,16 @@ enum class ConjForm : uint8_t {
   Count_,
 };
 
+/**
+ * @brief Convert a lattice ExtendedPOS decision to its conjugation form.
+ *
+ * Returns Count_ when the ExtendedPOS does not encode an inflection cell.
+ * The next morpheme disambiguates modern volition from ordinary mizenkei.
+ */
+ConjForm conjFormFromExtendedPos(core::ExtendedPOS extended_pos,
+                                 core::ExtendedPOS next_extended_pos = core::ExtendedPOS::Unknown,
+                                 std::string_view next_lemma = {});
+
 static_assert(static_cast<uint8_t>(ConjForm::Base) == 0 && static_cast<uint8_t>(ConjForm::Mizenkei) == 1 &&
                   static_cast<uint8_t>(ConjForm::Renyokei) == 2 && static_cast<uint8_t>(ConjForm::Onbinkei) == 3 &&
                   static_cast<uint8_t>(ConjForm::Kateikei) == 4 && static_cast<uint8_t>(ConjForm::Meireikei) == 5 &&

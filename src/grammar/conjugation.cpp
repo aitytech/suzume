@@ -13,6 +13,42 @@ namespace suzume::grammar {
 
 using normalize::encodeUtf8;
 
+ConjForm conjFormFromExtendedPos(core::ExtendedPOS extended_pos, core::ExtendedPOS next_extended_pos,
+                                 std::string_view next_lemma) {
+  using core::ExtendedPOS;
+
+  switch (extended_pos) {
+    case ExtendedPOS::VerbShuushikei:
+    case ExtendedPOS::VerbRentaikei:
+    case ExtendedPOS::AdjBasic:
+    case ExtendedPOS::AdjNaAdj:
+      return ConjForm::Base;
+    case ExtendedPOS::VerbRenyokei:
+    case ExtendedPOS::AdjRenyokei:
+    case ExtendedPOS::AdjStem:
+      return ConjForm::Renyokei;
+    case ExtendedPOS::VerbMizenkei:
+      return next_extended_pos == ExtendedPOS::AuxVolitional && next_lemma == "う" ? ConjForm::Ishikei
+                                                                                   : ConjForm::Mizenkei;
+    case ExtendedPOS::AdjMizenkei:
+      return ConjForm::Mizenkei;
+    case ExtendedPOS::VerbOnbinkei:
+    case ExtendedPOS::VerbTeForm:
+    case ExtendedPOS::VerbTaForm:
+    case ExtendedPOS::VerbTaraForm:
+    case ExtendedPOS::AdjKatt:
+      return ConjForm::Onbinkei;
+    case ExtendedPOS::VerbKateikei:
+    case ExtendedPOS::VerbContractedKateikei:
+    case ExtendedPOS::AdjKeForm:
+      return ConjForm::Kateikei;
+    case ExtendedPOS::VerbMeireikei:
+      return ConjForm::Meireikei;
+    default:
+      return ConjForm::Count_;
+  }
+}
+
 Conjugation::Conjugation() = default;
 
 const std::array<Conjugation::GodanEntry, Conjugation::kGodanRowCount>& Conjugation::getGodanRows() {

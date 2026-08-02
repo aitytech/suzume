@@ -10,49 +10,6 @@
 
 namespace suzume::postprocess {
 
-namespace {
-
-grammar::ConjForm conjFormFromExtendedPos(core::ExtendedPOS extended_pos, core::ExtendedPOS next_extended_pos,
-                                          std::string_view next_lemma) {
-  using core::ExtendedPOS;
-  using grammar::ConjForm;
-
-  switch (extended_pos) {
-    case ExtendedPOS::VerbShuushikei:
-    case ExtendedPOS::VerbRentaikei:
-    case ExtendedPOS::AdjBasic:
-    case ExtendedPOS::AdjNaAdj:
-      return ConjForm::Base;
-    case ExtendedPOS::VerbRenyokei:
-    case ExtendedPOS::AdjRenyokei:
-    case ExtendedPOS::AdjStem:
-      return ConjForm::Renyokei;
-    case ExtendedPOS::VerbMizenkei:
-      // Modern volition is represented as a mizenkei stem plus the closed
-      // auxiliary う. Keep negative まい in the ordinary mizenkei cell.
-      return next_extended_pos == ExtendedPOS::AuxVolitional && utf8::equalsAny(next_lemma, {"う"})
-                 ? ConjForm::Ishikei
-                 : ConjForm::Mizenkei;
-    case ExtendedPOS::AdjMizenkei:
-      return ConjForm::Mizenkei;
-    case ExtendedPOS::VerbOnbinkei:
-    case ExtendedPOS::VerbTeForm:
-    case ExtendedPOS::VerbTaForm:
-    case ExtendedPOS::VerbTaraForm:
-    case ExtendedPOS::AdjKatt:
-      return ConjForm::Onbinkei;
-    case ExtendedPOS::VerbKateikei:
-    case ExtendedPOS::AdjKeForm:
-      return ConjForm::Kateikei;
-    case ExtendedPOS::VerbMeireikei:
-      return ConjForm::Meireikei;
-    default:
-      return ConjForm::Count_;
-  }
-}
-
-}  // namespace
-
 grammar::ConjForm Lemmatizer::detectConjForm(std::string_view surface, std::string_view lemma, core::PartOfSpeech pos,
                                              std::string_view next_lemma, core::ExtendedPOS extended_pos,
                                              core::ExtendedPOS next_extended_pos) {
@@ -64,7 +21,7 @@ grammar::ConjForm Lemmatizer::detectConjForm(std::string_view surface, std::stri
   // ExtendedPOS is the lattice's grammatical decision and is authoritative.
   // Surface rules below are retained only for callers and legacy morphemes
   // that do not carry a verb/adjective form.
-  if (const grammar::ConjForm form = conjFormFromExtendedPos(extended_pos, next_extended_pos, next_lemma);
+  if (const grammar::ConjForm form = grammar::conjFormFromExtendedPos(extended_pos, next_extended_pos, next_lemma);
       form != grammar::ConjForm::Count_) {
     return form;
   }
