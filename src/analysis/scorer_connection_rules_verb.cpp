@@ -51,7 +51,7 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
       prev.extended_pos == core::ExtendedPOS::VerbOnbinkei && prev.origin == core::CandidateOrigin::VerbHiragana &&
       utf8::endsWith(prev.surface, "い") && next.extended_pos == core::ExtendedPOS::AuxTenseTa;
   if (lexical_renyokei_past || hiragana_onbin_past) {
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 
   // The i-onbin cell has the same closed past boundary as a dictionary
@@ -68,7 +68,7 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
       (isGodanRenyokeiOfLemma(prev.surface, prev.lemma) && !utf8::endsWith(prev.lemma, "す"));
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AuxTenseTa &&
       non_sa_godan_renyokei) {
-    bonus += cost::kSevere;
+    SUZUME_CONNECTION_ADD(bonus, cost::kSevere);
   }
 
   // An onbin form is selected precisely for て/た attachment and cannot be
@@ -76,7 +76,7 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
   // so a registered nominal search unit wins in overlaps such as a particle
   // followed by a noun whose suffix is also a dictionary verb form.
   if (prev.extended_pos == core::ExtendedPOS::VerbOnbinkei && next.extended_pos == core::ExtendedPOS::ParticleCase) {
-    bonus += cost::kSevere;
+    SUZUME_CONNECTION_ADD(bonus, cost::kSevere);
   }
 
   // Bonus for VerbRenyokei/VerbOnbinkei → たり/だり (parallel listing particle)
@@ -87,7 +87,7 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
   if ((prev.extended_pos == core::ExtendedPOS::VerbRenyokei || prev.extended_pos == core::ExtendedPOS::VerbOnbinkei) &&
       (next.surface == "たり" || next.surface == "だり") && next.extended_pos == core::ExtendedPOS::ParticleConj &&
       (grammar::containsKanji(prev.surface) || prev.fromDictionary())) {
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 
   // Penalty for godan passive/causative-passive renyokei (～Aれ for A-row) → た
@@ -103,7 +103,7 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
       next.extended_pos == core::ExtendedPOS::AuxTenseTa) {
     const std::string_view before_re = utf8::dropLastChar(prev.surface);
     if (grammar::verbTypeFromARowCodepoint(utf8::decodeLastChar(before_re)) != grammar::VerbType::Unknown) {
-      bonus += cost::kSevere;  // Cancel VerbRenyokei→た bonus
+      SUZUME_CONNECTION_ADD(bonus, cost::kSevere);  // Cancel VerbRenyokei→た bonus
     }
   }
 
@@ -113,7 +113,7 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
   // The competing path is Noun→で(PARTICLE)→し(VERB)→た with VerbRenyokei→た bonus
   if (prev.surface == "でし" && prev.extended_pos == core::ExtendedPOS::AuxCopulaDesu &&
       (next.surface == "た" || next.surface == "たら") && next.extended_pos == core::ExtendedPOS::AuxTenseTa) {
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 
   // Penalty for た(AuxTenseTa) → ら(Suffix) pattern
@@ -121,7 +121,7 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
   // たら is a conditional form of た and should stay together
   if (prev.surface == "た" && prev.extended_pos == core::ExtendedPOS::AuxTenseTa && next.surface == "ら" &&
       next.extended_pos == core::ExtendedPOS::Suffix) {
-    bonus += cost::kSevere;  // Penalty to discourage た+ら split
+    SUZUME_CONNECTION_ADD(bonus, cost::kSevere);  // Penalty to discourage た+ら split
   }
 
   // The volitional auxiliary is realized as bare う only after an o-row mizenkei
@@ -163,12 +163,14 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
                                   utf8::endsWith(prev.surface, "よ") &&
                                   next.extended_pos == core::ExtendedPOS::AuxVolitional &&
                                   grammar::isSingleHiragana(next.surface, core::hiragana::kU);
-  if (bare_volitional_after_non_o_row || modern_volitional || directional_volitional || passive_volitional) {
-    bonus += (bare_volitional_after_non_o_row ? cost::kSevere : cost::kNeutral) +
-             (modern_volitional ? cost::kVeryStrongBonus + cost::kStrongBonus : cost::kNeutral) +
-             (directional_volitional ? cost::kVeryStrongBonus : cost::kNeutral) +
-             (passive_volitional ? cost::kDoubleVeryStrongBonus : cost::kNeutral);
-  }
+  if (bare_volitional_after_non_o_row)
+    SUZUME_CONNECTION_ADD(bonus, cost::kSevere);
+  if (modern_volitional)
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus + cost::kStrongBonus);
+  if (directional_volitional)
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
+  if (passive_volitional)
+    SUZUME_CONNECTION_ADD(bonus, cost::kDoubleVeryStrongBonus);
 
   return bonus;
 }

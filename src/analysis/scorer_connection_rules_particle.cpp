@@ -51,7 +51,7 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
   // leaving standalone nominal forms such as 読みを/香りを untouched.
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase && grammar::isAccusativeParticleWoSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.fromDictionary()) {
-    bonus += cost::kExtraStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kExtraStrongBonus);
   }
 
   // Penalty for single-char case particle → very short inflected
@@ -83,7 +83,7 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
       next.extended_pos != core::ExtendedPOS::VerbShuushikei &&
       next.surface != "い" &&  // Exclude い - has specific rule
       !is_validated_ichidan_inflection && !is_resolved_i_onbin) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // Penalty for は (topic) → short pure-hiragana verb pattern
@@ -97,7 +97,7 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
       next.surface.size() <= 3 &&                       // 1 char only (3 bytes in UTF-8)
       next.surface != "い" &&                           // い+られ is valid (いる potential)
       !grammar::isSuruRenyokeiSurface(next.surface)) {  // し+ない is valid (emphatic negation)
-    bonus += cost::kVeryRare;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryRare);
   }
 
   // Penalty for pure-hiragana OTHER → single-char VerbRenyokei
@@ -107,7 +107,7 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
   if (prev.pos == core::PartOfSpeech::Other && grammar::isPureHiragana(prev.surface) &&
       prev.surface.size() >= 6 &&                                                          // 2+ hiragana chars
       next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.surface.size() <= 3) {  // Single char (し, き, etc.)
-    bonus += cost::kUncommon;
+    SUZUME_CONNECTION_ADD(bonus, cost::kUncommon);
   }
 
   // An unknown hiragana fragment cannot directly introduce an onbin verb.
@@ -115,7 +115,7 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
   // whereas ordinary adverbial modifiers have their own lexical categories.
   if (prev.pos == core::PartOfSpeech::Other && grammar::isPureHiragana(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::VerbOnbinkei) {
-    bonus += cost::kStrong;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrong);
   }
 
   // Penalty for NOUN → single-hiragana OTHER
@@ -127,7 +127,7 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
   if (prev.pos == core::PartOfSpeech::Noun && grammar::containsKanji(prev.surface) &&
       next.pos == core::PartOfSpeech::Other && next.surface.size() == 3 &&  // Single char = 3 bytes UTF-8
       grammar::isPureHiragana(next.surface)) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // The classical determiner 斯かる always needs a preceding particle, topic
@@ -142,7 +142,7 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
                                            prev.extended_pos == core::ExtendedPOS::ParticleAdverbial;
   if (duration_host_before_kakaru && grammar::isDurationPredicateKakaru(next.surface) &&
       next.extended_pos == core::ExtendedPOS::Determiner) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // A quotative determiner is licensed by the nominal it modifies, and that
@@ -165,7 +165,7 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
   // bonus the determiner's own lexical cost already received on the assumption
   // that a head follows it.
   if (prev.extended_pos == core::ExtendedPOS::DeterminerQuotative && !quotative_determiner_head) {
-    bonus += cost::kProhibitive;
+    SUZUME_CONNECTION_ADD(bonus, cost::kProhibitive);
   }
 
   // Penalty for DET → non-dict single-kanji NOUN
@@ -174,7 +174,7 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
   // Valid DET+NOUN patterns (こんな+事, あんな+人) use dict nouns or multi-char nouns
   if (prev.pos == core::PartOfSpeech::Determiner && next.pos == core::PartOfSpeech::Noun && !next.fromDictionary() &&
       grammar::containsKanji(next.surface) && suzume::normalize::utf8Length(next.surface) == 1) {
-    bonus += cost::kStrong;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrong);
   }
 
   // Penalty for DET → non-dict kanji+hiragana NOUN (nominalized verb pattern)
@@ -189,7 +189,7 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
       const std::string_view before_last = utf8::dropLastChar(next.surface);
       if (kana::isHiraganaCodepoint(utf8::decodeLastChar(next.surface)) && !before_last.empty() &&
           normalize::isKanjiCodepoint(utf8::decodeLastChar(before_last))) {
-        bonus += cost::kAlmostNever;
+        SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
       }
     }
   }
@@ -222,7 +222,7 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
                                        grammar::isHypotheticalSelectingConjunctiveParticle(next.surface) &&
                                        unlicensed_hypothetical_host;
   if (quantifier_host || unlicensed_tomo || unlicensed_hypothetical) {
-    bonus += quantifier_host ? cost::kExtremeBonus : cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, quantifier_host ? cost::kExtremeBonus : cost::kAlmostNever);
   }
 
   return bonus;
@@ -293,7 +293,7 @@ float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::Lattic
                                         grammar::isHumbleHonorificLemma(next.lemma);
   if (prev.pos == core::PartOfSpeech::Prefix && next.pos == core::PartOfSpeech::Verb && !is_honorific_prefix_verb &&
       grammar::isPureHiragana(next.surface) && next.surface.size() <= 6) {  // 2 chars or less
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // Penalty for PREFIX → non-dictionary pure-hiragana verb pattern (3 chars)
@@ -301,7 +301,7 @@ float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::Lattic
   // Valid patterns like お+待ち have kanji, お+召し would be in dictionary
   if (prev.pos == core::PartOfSpeech::Prefix && next.pos == core::PartOfSpeech::Verb && !next.fromDictionary() &&
       grammar::isPureHiragana(next.surface) && next.surface.size() == 9) {  // Exactly 3 chars (9 bytes)
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // Penalty for ADV → short pure-hiragana verb renyokei pattern
@@ -312,7 +312,7 @@ float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::Lattic
   if (prev.pos == core::PartOfSpeech::Adverb && isSingleHiraganaVerbRenyokei(next) && !next.fromDictionary()) {
     // This rule formerly contributed kVeryRare in two call sites. Preserve
     // that effective magnitude while owning the rule here only.
-    bonus += cost::kVeryRare + cost::kVeryRare;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryRare + cost::kVeryRare);
   }
 
   // Penalty for opening bracket → PARTICLE pattern (furigana in parentheses).
@@ -321,7 +321,7 @@ float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::Lattic
   // followed by a particle, so they must not receive this penalty.
   if (prev.pos == core::PartOfSpeech::Symbol && next.pos == core::PartOfSpeech::Particle &&
       normalize::isOpeningBracket(firstCodepoint(prev.surface))) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // Bonus for SYMBOL → long pure-hiragana OTHER (furigana pattern)
@@ -329,7 +329,7 @@ float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::Lattic
   // Long hiragana sequences after symbols should stay as single tokens
   if (prev.pos == core::PartOfSpeech::Symbol && next.pos == core::PartOfSpeech::Other &&
       grammar::isPureHiragana(next.surface) && next.surface.size() >= 12) {  // 4+ chars (12 bytes in UTF-8)
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 
   // Penalty for SYMBOL → short hiragana → AUX pattern (furigana), gated to an
@@ -338,7 +338,7 @@ float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::Lattic
   // 本(重要)です, 評価◎です must keep です/でした whole rather than splitting で|す.
   if (prev.pos == core::PartOfSpeech::Symbol && next.pos == core::PartOfSpeech::Auxiliary &&
       normalize::isOpeningBracket(firstCodepoint(prev.surface))) {
-    bonus += cost::kVeryRare;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryRare);
   }
 
   // Penalty for AuxCopulaDa(で) + ParticleTopic(も) pattern
@@ -347,7 +347,7 @@ float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::Lattic
   // The difference: 何(Pronoun) vs 雨(Noun) - Pronoun should split
   if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && prev.surface == "で" &&
       next.extended_pos == core::ExtendedPOS::ParticleTopic && next.surface == "も") {
-    bonus += cost::kVeryRare;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryRare);
   }
 
   return bonus;

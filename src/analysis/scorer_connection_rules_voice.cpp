@@ -42,7 +42,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase &&
       grammar::isSingleHiragana(prev.surface, core::hiragana::kTo) &&
       next.origin == core::CandidateOrigin::VerbHiraganaPassiveRenyokei) {
-    bonus += cost::kDoubleVeryStrongBonus + cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kDoubleVeryStrongBonus + cost::kVeryStrongBonus);
   }
 
   // The quote-licensed stem must connect to passive られる rather than be
@@ -50,7 +50,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   // when the generator observes the preceding quotative と.
   if (prev.origin == core::CandidateOrigin::VerbHiraganaPassiveRenyokei &&
       next.extended_pos == core::ExtendedPOS::AuxPassive) {
-    bonus += cost::kDoubleVeryStrongBonus + cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kDoubleVeryStrongBonus + cost::kVeryStrongBonus);
   }
 
   // The カ変未然形 来ら takes the potential/passive auxiliary directly
@@ -58,7 +58,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   // preserve the inflectional boundary once the irregular lemma is known.
   if (prev.extended_pos == core::ExtendedPOS::VerbMizenkei && prev.lemma == "来る" &&
       next.extended_pos == core::ExtendedPOS::AuxPassive && utf8::equalsAny(next.surface, {"れる"})) {
-    bonus += cost::kDoubleVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kDoubleVeryStrongBonus);
   }
 
   // A verb mizenkei connects to inflectional auxiliaries (ない, れる, せる,
@@ -66,7 +66,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   // passive + desire chains can fabricate an i-adjective spanning both
   // auxiliaries: 行か+れたく instead of 行か+れ+たく.
   if (prev.extended_pos == core::ExtendedPOS::VerbMizenkei && next.pos == core::PartOfSpeech::Adjective) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // The サ変 irrealis is split across cells: さ exists solely to host a voice
@@ -84,7 +84,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
         next.extended_pos == core::ExtendedPOS::ParticleConj || next.extended_pos == core::ExtendedPOS::AuxAspectIru;
     const bool is_voice_only_cell = grammar::isSingleHiragana(prev.surface, U'さ');
     if (is_voice_only_cell ? !follows_voice_auxiliary : follows_rejected_host) {
-      bonus += cost::kAlmostNever;
+      SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
     }
   }
 
@@ -104,7 +104,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   // かも+し+れ+ない.
   if (next.extended_pos == core::ExtendedPOS::AuxCausative && grammar::isClassicalCausativeAuxiliaryLemma(next.lemma) &&
       (prev.extended_pos != core::ExtendedPOS::VerbMizenkei || !grammar::endsWithARow(prev.surface))) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // A causative auxiliary may be followed by another auxiliary (notably the
@@ -118,7 +118,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
         next.pos == core::PartOfSpeech::Verb && !grammar::isHumbleHonorificLemma(next.lemma);
     const bool modifies_nominal_from_stem = next.pos == core::PartOfSpeech::Noun && !utf8::endsWith(prev.surface, "る");
     if (opens_lexical_verb || modifies_nominal_from_stem) {
-      bonus += cost::kRare;
+      SUZUME_CONNECTION_ADD(bonus, cost::kRare);
     }
   }
 
@@ -127,7 +127,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   // spurious causative-plus-passive chain (せ+れ+ば).
   if (prev.extended_pos == core::ExtendedPOS::AuxCausative && utf8::endsWith(prev.surface, "れ") &&
       next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::endsWith(next.surface, "ば")) {
-    bonus += cost::kVeryStrongBonus + cost::kModerateBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus + cost::kModerateBonus);
   }
 
   // A causative auxiliary retains its boundary before the actual past marker
@@ -135,7 +135,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   // auxiliaries tagged AuxTenseTa do not turn し+てる into a causative chain.
   if (prev.extended_pos == core::ExtendedPOS::AuxCausative && next.extended_pos == core::ExtendedPOS::AuxTenseTa &&
       grammar::isPastMarkerTaDaSurface(next.surface)) {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   // The conditional form of a passive auxiliary also attaches directly to
@@ -143,7 +143,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   // distinguishes this inflection from the ordinary passive continuative.
   if (prev.extended_pos == core::ExtendedPOS::AuxPassive && utf8::endsWith(prev.surface, "れれ") &&
       next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::endsWith(next.surface, "ば")) {
-    bonus += cost::kStrongBonus + cost::kModerateBonus + cost::kMinorBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus + cost::kModerateBonus + cost::kMinorBonus);
   }
 
   // Penalty for VerbRenyokei → れ (AuxPassive) pattern
@@ -154,7 +154,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   // exempt: short hiragana 未然形 carries VerbRenyokei EPOS (やら+れ+た).
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AuxPassive &&
       next.surface == "れ" && !grammar::endsWithARow(prev.surface)) {
-    bonus += cost::kRare;  // Cancel the -0.8 bonus
+    SUZUME_CONNECTION_ADD(bonus, cost::kRare);  // Cancel the -0.8 bonus
   }
 
   // An unverified verb candidate ending in the causative stem させ must
@@ -176,7 +176,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
       prev.pos == core::PartOfSpeech::Noun;
   if (can_precede_humble_subsidiary && next.pos == core::PartOfSpeech::Verb &&
       grammar::isHumbleHonorificLemma(next.lemma)) {
-    bonus += cost::kVeryStrongBonus + cost::kModerateBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus + cost::kModerateBonus);
   }
 
   // Penalty for splitting unknown words after youon (拗音: ょ, ゃ, ゅ)
@@ -187,7 +187,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   if (!prev.fromDictionary() && prev.pos == core::PartOfSpeech::Other) {
     std::string_view last_char = utf8::lastChar(prev.surface);
     if (grammar::isSmallKana(last_char)) {
-      bonus += cost::kStrong;
+      SUZUME_CONNECTION_ADD(bonus, cost::kStrong);
     }
   }
 
@@ -195,7 +195,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   // Plural suffix ら only naturally follows pronouns (彼ら, 僕ら)
   // Without this, NOUN→SUFFIX bonus (-0.8) causes false splits (かし+ら, 自+ら)
   if (prev.pos != core::PartOfSpeech::Pronoun && next.pos == core::PartOfSpeech::Suffix && next.surface == "ら") {
-    bonus += cost::kStrong;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrong);
   }
 
   // Penalty for VerbRenyokei ending in らし → い (AuxAspectIru) pattern
@@ -206,7 +206,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       prev.surface.size() >= core::kTwoJapaneseCharBytes &&  // At least 2 chars (kanji + らし)
       utf8::endsWith(prev.surface, "らし") && next.extended_pos == core::ExtendedPOS::AuxAspectIru) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // Bonus for longer causative forms (させ over さ+せ, させられ over さ+せ+られ)
@@ -216,7 +216,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   if ((prev.extended_pos == core::ExtendedPOS::VerbRenyokei || prev.extended_pos == core::ExtendedPOS::VerbMizenkei) &&
       prev.lemma != "来る" && next.extended_pos == core::ExtendedPOS::AuxCausative &&
       utf8::startsWith(next.surface, "させ")) {
-    bonus += cost::kDoubleVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kDoubleVeryStrongBonus);
   }
 
   // Penalty for Noun → AuxCausative starting with させ (サ変動詞は さ+せ に分割)
@@ -230,10 +230,10 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
     bool is_single_kanji_ichidan = verb_helpers::isSingleKanjiIchidanSurface(prev.surface);
     if (is_single_kanji_ichidan) {
       // Bonus for single-kanji ichidan verb → させ (見+させる, 寝+させる)
-      bonus += cost::kVeryStrongBonus;
+      SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
     } else {
       // Penalty for multi-kanji noun → させ (サ変動詞は さ+せ に分割)
-      bonus += cost::kVeryRare;
+      SUZUME_CONNECTION_ADD(bonus, cost::kVeryRare);
     }
   }
 
@@ -248,7 +248,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
       grammar::isSuruVolitionalStemSurface(next.surface) && grammar::isSuruBaseForm(next.lemma);
   if (prev.pos == core::PartOfSpeech::Noun && next.extended_pos == core::ExtendedPOS::VerbMizenkei &&
       (is_suru_passive_stem || is_suru_volitional_stem)) {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   // Bonus for Noun → VerbMeireikei "せよ"/"しろ" (サ変動詞の命令形)
@@ -258,7 +258,7 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
   // surfaces so godan imperative forms (柿+食え) are not falsely boosted.
   if (prev.pos == core::PartOfSpeech::Noun && next.extended_pos == core::ExtendedPOS::VerbMeireikei &&
       grammar::isSuruImperativeSurface(next.surface)) {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   return bonus;

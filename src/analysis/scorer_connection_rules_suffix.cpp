@@ -66,7 +66,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // treating its final character as a duration suffix.
   if (prev.extended_pos == core::ExtendedPOS::Suffix && grammar::isStateDurationSuffix(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::ParticleCase && grammar::isAccusativeParticleWoSurface(next.surface)) {
-    bonus += cost::kStrong;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrong);
   }
 
   // The literary formal noun いかん forms a case-marked conditional phrase
@@ -74,7 +74,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // outranks the homographic いか + ん negative-verb analysis.
   if (prev.extended_pos == core::ExtendedPOS::NounFormal && prev.lemma == "いかん" &&
       next.extended_pos == core::ExtendedPOS::ParticleCase) {
-    bonus += cost::kDoubleVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kDoubleVeryStrongBonus);
   }
 
   // The explanatory copula sequence のです must not be resegmented as the
@@ -83,7 +83,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // any predicate.
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(prev.surface, {"ので"}) &&
       utf8::equalsAny(next.surface, {"す"})) {
-    bonus += cost::kAlmostNever + cost::kProhibitive;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever + cost::kProhibitive);
   }
 
   // The closed polite copula です must not be reopened at its internal
@@ -111,7 +111,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
       (prev.pos == core::PartOfSpeech::Verb || prev.pos == core::PartOfSpeech::Adjective ||
        prev.pos == core::PartOfSpeech::Auxiliary);
   if (predicate_particle_on_nominal_host || address_suffix_on_predicate_host) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // The fixed negative predicate ほかならない starts after a case-marked
@@ -119,7 +119,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // together instead of reopening the formal noun ほか before ならない.
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase && next.extended_pos == core::ExtendedPOS::VerbMizenkei &&
       next.lemma == "ほかなる") {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   // The conditional allomorph たら is an auxiliary after a completed verb.
@@ -127,21 +127,21 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // homographic conjunctive-particle entry.
   if (prev.extended_pos == core::ExtendedPOS::AuxTenseTa && utf8::equalsAny(prev.surface, {"たら"}) &&
       next.pos == core::PartOfSpeech::Verb) {
-    bonus += cost::kTripleVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kTripleVeryStrongBonus);
   }
 
   // Classical focus なむ can precede a quotative と. The fused particle
   // provides a grammatical boundary that must outrank な + む auxiliaries.
   if (prev.extended_pos == core::ExtendedPOS::ParticleBinding && next.extended_pos == core::ExtendedPOS::ParticleCase &&
       utf8::equalsAny(prev.surface, {"なむ"}) && utf8::equalsAny(next.surface, {"と"})) {
-    bonus += cost::kTripleVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kTripleVeryStrongBonus);
   }
 
   // The adjacent copula and nominalizer spelling だの is the enumerative
   // particle, not a productive copula phrase.
   if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && next.extended_pos == core::ExtendedPOS::ParticleNo &&
       utf8::equalsAny(prev.surface, {"だ"}) && utf8::equalsAny(next.surface, {"の"})) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // A bare noun followed by the adverbial negative なく is the formal
@@ -151,7 +151,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // untouched.
   if (prev.pos == core::PartOfSpeech::Noun && next.extended_pos == core::ExtendedPOS::AdjRenyokei &&
       next.lemma == "ない") {
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 
   // A deverbal noun ending in 違い before ない forms the lexicalized
@@ -159,7 +159,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // productive noun family without changing ordinary nominal negatives.
   if (prev.extended_pos == core::ExtendedPOS::Noun && utf8::endsWith(prev.surface, "違い") &&
       next.extended_pos == core::ExtendedPOS::AdjBasic && next.lemma == "ない") {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   // A personal or demonstrative pronoun cannot directly precede the
@@ -167,7 +167,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // unrelated plural-pronoun-plus-verb path while leaving interrogative
   // 何+し constructions to their dedicated rule.
   if (prev.extended_pos == core::ExtendedPOS::Pronoun && grammar::isConjunctiveParticleShi(next.surface)) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // A dictionary noun followed by a registered adverbial particle is a stable
@@ -176,7 +176,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // generated noun readings such as the adjective ない before ほど.
   if (prev.pos == core::PartOfSpeech::Noun && prev.fromDictionary() &&
       next.extended_pos == core::ExtendedPOS::ParticleAdverbial) {
-    bonus += cost::kMinorBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kMinorBonus);
   }
 
   // A registered two-mora adverbial particle beginning with the copula だ can
@@ -187,14 +187,14 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (prev.pos == core::PartOfSpeech::Noun && next.extended_pos == core::ExtendedPOS::ParticleAdverbial &&
       next.fromDictionary() && normalize::utf8Length(next.surface) == 2 &&
       utf8::decodeFirstChar(next.surface) == U'だ' && utf8::decodeLastChar(next.surface) == U'に') {
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 
   // Determiners directly modify formal nouns (このこと, どういうこと).
   // Preserve that productive adnominal boundary over a split into an
   // adverb/adjective and the independent verb いう.
   if (prev.extended_pos == core::ExtendedPOS::Determiner && next.extended_pos == core::ExtendedPOS::NounFormal) {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   // The productive honorific construction お/ご + verb (お聞きになる,
@@ -206,14 +206,14 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (prev.extended_pos == core::ExtendedPOS::Prefix && grammar::isHonorificPrefix(prev.surface) &&
       next.pos == core::PartOfSpeech::Verb && next.extended_pos != core::ExtendedPOS::VerbMizenkei &&
       next.fromDictionary()) {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   // The parallel compound particle とともに must remain whole instead of
   // being reanalyzed as a quotative particle followed by the adverb ともに.
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase && next.pos == core::PartOfSpeech::Adverb &&
       grammar::isParallelTogetherAdverb(next.surface)) {
-    bonus += cost::kProhibitive;
+    SUZUME_CONNECTION_ADD(bonus, cost::kProhibitive);
   }
 
   // A non-quotative case particle can introduce a multi-mora renyokei in an
@@ -222,7 +222,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // excluded because its following いう boundary is intentionally ambiguous.
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase && !utf8::equalsAny(prev.surface, {"と", "で"}) &&
       next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.surface.size() > core::kJapaneseCharBytes) {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   // A finite verb directly follows the accusative particle を (しびれを切らす),
@@ -230,26 +230,26 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // must leave the polite copula です intact.
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase && grammar::isAccusativeParticleWoSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::VerbShuushikei) {
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 
   // A nominative case particle directly introduces a finite predicate. Keep a
   // dictionary verb at this boundary ahead of a shorter homographic split.
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase && utf8::equalsAny(prev.surface, {"が"}) &&
       next.extended_pos == core::ExtendedPOS::VerbShuushikei && next.fromDictionary()) {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   if (prev.extended_pos == core::ExtendedPOS::AuxTenseTa && utf8::equalsAny(prev.surface, {"た"}) &&
       next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(next.surface, {"ば"})) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // A conditional ば requires a hypothetical verb form (書け+ば), not a
   // terminal form. This blocks fragment paths such as す+ば+らしい.
   if (prev.extended_pos == core::ExtendedPOS::VerbShuushikei && next.extended_pos == core::ExtendedPOS::ParticleConj &&
       utf8::equalsAny(next.surface, {"ば"})) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // A connective し follows a terminal predicate, never an euphonic verb
@@ -257,21 +257,21 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // against a fabricated おい+し route.
   if (prev.extended_pos == core::ExtendedPOS::VerbOnbinkei && next.extended_pos == core::ExtendedPOS::ParticleConj &&
       grammar::isConjunctiveParticleShi(next.surface)) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // A connective し also cannot attach to an interjection or an adverb. Those
   // paths split i-adjective stems (おい+し, バカバカ+し) without a predicate.
   if ((prev.pos == core::PartOfSpeech::Interjection || prev.extended_pos == core::ExtendedPOS::Adverb) &&
       next.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isConjunctiveParticleShi(next.surface)) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // An adjective stem cannot take the past-conditional particle ったら.
   // The sequence is a verb's euphonic stem plus tense auxiliary (なっ+たら).
   if (prev.extended_pos == core::ExtendedPOS::AdjStem && next.extended_pos == core::ExtendedPOS::ParticleFinal &&
       utf8::equalsAny(next.surface, {"ったら"})) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // The concessive particle とも attaches to an adjective renyokei or the
@@ -279,11 +279,11 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // closed particle whole instead of splitting it into quotative と plus も.
   if ((prev.extended_pos == core::ExtendedPOS::AdjRenyokei || prev.extended_pos == core::ExtendedPOS::AuxNegativeNu) &&
       next.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isConcessiveParticleTomoSurface(next.surface)) {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isConcessiveParticleTomoSurface(prev.surface) &&
       (next.extended_pos == core::ExtendedPOS::VerbShuushikei || next.extended_pos == core::ExtendedPOS::AdjBasic)) {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   // A case-marked object cannot be followed by an unsplit negative verb
@@ -292,11 +292,11 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase && grammar::isAccusativeParticleWoSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       utf8::endsWithAny(next.surface, {"ない", "なかっ", "なけれ"})) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase && grammar::isAccusativeParticleWoSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::VerbOnbinkei && utf8::endsWith(next.surface, "なかっ")) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // A candidate ending in te is not a terminal adjective. It must be analyzed
@@ -304,7 +304,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // noun, rather than as a malformed whole adjective (嬉しくてしかたがない).
   if (prev.extended_pos == core::ExtendedPOS::AdjBasic && utf8::endsWith(prev.surface, "て") &&
       next.extended_pos == core::ExtendedPOS::NounFormal) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // An adverbial particle can directly modify a kanji verb in euphonic form
@@ -317,7 +317,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
       next.extended_pos == core::ExtendedPOS::VerbOnbinkei && grammar::containsKanji(next.surface) &&
       (utf8::endsWithAny(next.surface, {"っ", "ん"}) ||
        (utf8::endsWith(next.surface, "い") && !utf8::endsWith(next.surface, "ない")))) {
-    bonus += cost::kExtremeBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kExtremeBonus);
   }
 
   // A productive temporal compound ending in 時 (開始時, 緊急時) is a
@@ -325,7 +325,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // ahead of the competing noun + formal-noun 時 path.
   if (prev.pos == core::PartOfSpeech::Noun && !prev.fromDictionary() && utf8::endsWith(prev.surface, "時") &&
       next.extended_pos == core::ExtendedPOS::ParticleCase) {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   // A one-kanji noun followed by a one-kanji formal noun is usually a lexical
@@ -335,7 +335,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (prev.pos == core::PartOfSpeech::Noun && next.extended_pos == core::ExtendedPOS::NounFormal &&
       normalize::utf8Length(prev.surface) == 1 && normalize::utf8Length(next.surface) == 1 &&
       grammar::isAllKanji(prev.surface) && grammar::isAllKanji(next.surface)) {
-    bonus += cost::kStrong;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrong);
   }
 
   // A multi-kanji lexical stem followed by an all-kanji formal noun is normally
@@ -344,7 +344,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (next.extended_pos == core::ExtendedPOS::NounFormal && normalize::utf8Length(prev.surface) >= 2 &&
       normalize::utf8Length(next.surface) == 1 && grammar::isAllKanji(prev.surface) &&
       grammar::isAllKanji(next.surface) && !normalize::isTemporalSpanSuffixKanji(utf8::decodeFirstChar(next.surface))) {
-    bonus += cost::kStrong;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrong);
   }
 
   // A numeral duration ending in 時間 can directly modify a following
@@ -352,14 +352,14 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // complete NounNumber candidate to a spurious 時+間 suffix split.
   if (prev.extended_pos == core::ExtendedPOS::NounNumber && utf8::endsWith(prev.surface, "時間") &&
       next.pos == core::PartOfSpeech::Verb) {
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 
   // A quantity suffix such as 半 follows a completed numeral-counter phrase;
   // it cannot be the kanji stem of a following compound verb.
   if (prev.extended_pos == core::ExtendedPOS::NounNumber && next.pos == core::PartOfSpeech::Verb &&
       normalize::isQuantityPrefixKanji(utf8::decodeFirstChar(next.surface))) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // A dictionary-verified long hiragana renyokei can lexicalize as a
@@ -369,7 +369,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && prev.fromDictionary() &&
       prev.surface.size() >= 4 * core::kJapaneseCharBytes && grammar::isPureHiragana(prev.surface) &&
       next.pos == core::PartOfSpeech::Noun) {
-    bonus += cost::kDoubleVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kDoubleVeryStrongBonus);
   }
 
   // The concessive particle とも attaches to a predicate (読まずとも), not
@@ -379,7 +379,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if ((prev.pos == core::PartOfSpeech::Adverb || prev.extended_pos == core::ExtendedPOS::AdjBasic ||
        prev.extended_pos == core::ExtendedPOS::AdjNaAdj) &&
       next.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isConcessiveParticleTomoSurface(next.surface)) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // The concessive とも can directly introduce an adjective predicate
@@ -403,7 +403,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
       prev.extended_pos == core::ExtendedPOS::AuxDesireTai && utf8::endsWith(prev.surface, "けれ") &&
       next.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isSingleHiragana(next.surface, U'ば');
   if (concessive_before_adjective || adjective_conditional || desiderative_conditional) {
-    bonus += desiderative_conditional ? cost::kDoubleVeryStrongBonus : cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, desiderative_conditional ? cost::kDoubleVeryStrongBonus : cost::kStrongBonus);
   }
 
   // An adverb ending in the connective mora て cannot directly introduce the
@@ -412,7 +412,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (prev.pos == core::PartOfSpeech::Adverb && utf8::endsWith(prev.surface, "て") &&
       (next.extended_pos == core::ExtendedPOS::AuxAspectIru ||
        (next.pos == core::PartOfSpeech::Verb && next.lemma == "いる"))) {
-    bonus += cost::kSevere;
+    SUZUME_CONNECTION_ADD(bonus, cost::kSevere);
   }
 
   // The directional particle sequence へ+と is productive (次へと進む,
@@ -420,7 +420,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // hiragana spelling to an unknown noun.
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase && next.extended_pos == core::ExtendedPOS::ParticleCase &&
       utf8::equalsAny(prev.surface, {"へ"}) && utf8::equalsAny(next.surface, {"と"})) {
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 
   // A multi-mora delimitative/source/comparative particle can itself be
@@ -432,7 +432,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase && next.extended_pos == core::ExtendedPOS::ParticleCase &&
       prev.fromDictionary() && prev.surface.size() >= core::kTwoJapaneseCharBytes &&
       grammar::isSingleHiragana(next.surface, U'が')) {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   // 向け is a productive audience suffix after a nominal (読者+向けに,
@@ -440,7 +440,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // preferable to an unknown noun candidate spanning the entire expression.
   if (prev.pos == core::PartOfSpeech::Noun && next.pos == core::PartOfSpeech::Suffix &&
       utf8::equalsAny(next.surface, {"向け"})) {
-    bonus += cost::kMinorBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kMinorBonus);
   }
 
   // Adjacent administrative units are separate search units (都道府県+市区町村).
@@ -449,7 +449,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (prev.origin == core::CandidateOrigin::SuffixPattern && next.origin == core::CandidateOrigin::SuffixPattern &&
       prev.pos == core::PartOfSpeech::Noun && next.pos == core::PartOfSpeech::Noun &&
       grammar::endsWithAdministrativeSuffix(prev.surface) && grammar::endsWithAdministrativeSuffix(next.surface)) {
-    bonus += cost::kMinorBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kMinorBonus);
   }
 
   // 中 is a productive state/duration suffix after a nominal stem (作業+中,
@@ -458,7 +458,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (prev.pos == core::PartOfSpeech::Noun && prev.extended_pos != core::ExtendedPOS::NounNumber &&
       !normalize::isNumeralCodepoint(utf8::decodeFirstChar(prev.surface)) && next.pos == core::PartOfSpeech::Suffix &&
       grammar::isStateDurationSuffix(next.surface)) {
-    bonus += cost::kMinorBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kMinorBonus);
   }
 
   // A written honorific title is a separate searchable unit after a multi-kanji
@@ -467,7 +467,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (prev.pos == core::PartOfSpeech::Noun && prev.surface.size() >= 2 * core::kJapaneseCharBytes &&
       grammar::isAllKanji(prev.surface) && next.pos == core::PartOfSpeech::Noun &&
       grammar::isKanjiHonorificTitle(next.surface)) {
-    bonus += cost::kMinorBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kMinorBonus);
   }
 
   // A one-kanji formal noun followed by a one-kanji kanji suffix is normally
@@ -476,7 +476,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (prev.extended_pos == core::ExtendedPOS::NounFormal && next.pos == core::PartOfSpeech::Suffix &&
       normalize::utf8Length(prev.surface) == 1 && normalize::utf8Length(next.surface) == 1 &&
       grammar::isAllKanji(prev.surface) && grammar::isAllKanji(next.surface)) {
-    bonus += cost::kStrong;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrong);
   }
 
   // ところで is a discourse conjunction only at a clause boundary. Likewise,
@@ -489,7 +489,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
       (prev.extended_pos == core::ExtendedPOS::NounFormal || prev.extended_pos == core::ExtendedPOS::AuxTenseTa ||
        prev.extended_pos == core::ExtendedPOS::AuxCopulaDa || prev.extended_pos == core::ExtendedPOS::VerbTaForm ||
        prev.extended_pos == core::ExtendedPOS::ParticleNo)) {
-    bonus += cost::kProhibitive + cost::kSevere;
+    SUZUME_CONNECTION_ADD(bonus, cost::kProhibitive + cost::kSevere);
   }
 
   // ゆえに is a discourse conjunction at a clause boundary, but after a
@@ -498,7 +498,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (next.extended_pos == core::ExtendedPOS::Conjunction && utf8::equalsAny(next.surface, {"ゆえに"}) &&
       (prev.pos == core::PartOfSpeech::Noun || prev.extended_pos == core::ExtendedPOS::Pronoun ||
        prev.extended_pos == core::ExtendedPOS::ParticleNo)) {
-    bonus += cost::kProhibitive;
+    SUZUME_CONNECTION_ADD(bonus, cost::kProhibitive);
   }
 
   // The formal particle により cannot follow the copula's attributive form
@@ -506,7 +506,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // retain the productive comparison boundary (なに+より).
   if ((prev.extended_pos == core::ExtendedPOS::AuxCopulaDa || prev.extended_pos == core::ExtendedPOS::AdjStem) &&
       next.extended_pos == core::ExtendedPOS::ParticleCase && utf8::equalsAny(next.surface, {"により"})) {
-    bonus += cost::kProhibitive;
+    SUZUME_CONNECTION_ADD(bonus, cost::kProhibitive);
   }
 
   // The benefactive formal noun おかげ continues either with the instrumental
@@ -515,7 +515,8 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (prev.extended_pos == core::ExtendedPOS::NounFormal && grammar::isBenefactiveFormalNoun(prev.surface) &&
       ((next.extended_pos == core::ExtendedPOS::ParticleCase && utf8::equalsAny(next.surface, {"で"})) ||
        (next.pos == core::PartOfSpeech::Suffix && utf8::equalsAny(next.surface, {"さま"})))) {
-    bonus += next.pos == core::PartOfSpeech::Suffix ? cost::kDoubleVeryStrongBonus : cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus,
+                          next.pos == core::PartOfSpeech::Suffix ? cost::kDoubleVeryStrongBonus : cost::kStrongBonus);
   }
 
   // Penalty for SUFFIX(さ) + VERB starting with せ/させ pattern
@@ -524,7 +525,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (prev.pos == core::PartOfSpeech::Suffix && utf8::equalsAny(prev.surface, {"さ"}) &&
       next.pos == core::PartOfSpeech::Verb &&
       (utf8::startsWith(next.surface, "せ") || utf8::startsWith(next.surface, "させ"))) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // Penalty for a one-kanji-to-one-kanji noun/suffix transition, in either
@@ -550,7 +551,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     // The split collects the -0.8 bigram bonus here and the SUFFIX→PART_格
     // bonus on the next edge (最+中+に), so a penalty that only offsets the
     // first one still leaves the broken kango cheaper.
-    bonus += cost::kStrong;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrong);
   }
 
   // Penalty for 年+度 lexical binding pattern (年度, fiscal year)
@@ -561,7 +562,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
       normalize::utf8Length(prev.surface) >= 2 && grammar::isAllKanji(prev.surface) &&
       normalize::utf8Length(next.surface) == 1 && grammar::isAllKanji(next.surface)) {
     if (normalize::isFiscalYearBindingPair(utf8::decodeLastChar(prev.surface), utf8::decodeFirstChar(next.surface))) {
-      bonus += cost::kRare;  // +1.0 to neutralize -0.8 bigram bonus
+      SUZUME_CONNECTION_ADD(bonus, cost::kRare);  // +1.0 to neutralize -0.8 bigram bonus
     }
   }
 
@@ -577,7 +578,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
       normalize::utf8Length(prev.surface) >= 3 && normalize::utf8Length(next.surface) == 1 &&
       grammar::isAllKanji(prev.surface) && grammar::isAllKanji(next.surface) &&
       !normalize::isDerivationalNounSuffixKanji(utf8::decodeLastChar(prev.surface))) {
-    bonus += cost::kRare;  // +1.0 to neutralize -0.8 bigram bonus
+    SUZUME_CONNECTION_ADD(bonus, cost::kRare);  // +1.0 to neutralize -0.8 bigram bonus
   }
 
   // A fused でも directly following a content word is the adverbial particle
@@ -599,8 +600,9 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
       grammar::containsKanji(prev.surface) && utf8::endsWith(prev.surface, "し") &&
       next.extended_pos == core::ExtendedPOS::ParticleTopic && grammar::isSingleHiragana(next.surface, U'も');
   if (content_before_discourse_demo || adverb_before_fused_demo || adverb_before_focus_mo) {
-    bonus += adverb_before_fused_demo ? cost::kAlmostNever
-                                      : (content_before_discourse_demo ? cost::kRare : cost::kDoubleVeryStrongBonus);
+    SUZUME_CONNECTION_ADD(bonus, adverb_before_fused_demo
+                                     ? cost::kAlmostNever
+                                     : (content_before_discourse_demo ? cost::kRare : cost::kDoubleVeryStrongBonus));
   }
 
   // Penalty for predicate → copula-compound conjunction (だから/だけど/だが/…) pattern
@@ -618,7 +620,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
        prev.pos == core::PartOfSpeech::Adverb || prev.pos == core::PartOfSpeech::Adjective ||
        prev.pos == core::PartOfSpeech::Suffix || prev.pos == core::PartOfSpeech::Other ||
        prev.extended_pos == core::ExtendedPOS::AuxAppearanceSou)) {
-    bonus += cost::kProhibitive;
+    SUZUME_CONNECTION_ADD(bonus, cost::kProhibitive);
   }
 
   // Note: Removed penalty for PARTICLE と → VERB_音便 いっ pattern
@@ -633,7 +635,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // Valid patterns after VerbRenyokei: た, て, ます, etc. (multi-char or dictionary)
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.pos == core::PartOfSpeech::Auxiliary &&
       !next.fromDictionary() && next.surface.size() <= core::kJapaneseCharBytes) {  // Single char (3 bytes)
-    bonus += cost::kUncommon;
+    SUZUME_CONNECTION_ADD(bonus, cost::kUncommon);
   }
 
   // Penalty for single-char hiragana VerbRenyokei → AuxPassive/AuxCausative
@@ -646,7 +648,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
       (next.extended_pos == core::ExtendedPOS::AuxPassive || next.extended_pos == core::ExtendedPOS::AuxCausative) &&
       prev.surface.size() <= 3 &&                                       // Single hiragana (3 bytes)
       grammar::isPureHiragana(prev.surface) && prev.surface != "い") {  // い+られ is valid (いる potential)
-    bonus += cost::kAlmostNever;                                        // Strongly discourage
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);                   // Strongly discourage
   }
 
   // Penalty for a conjunctive particle → a single-character lexical verb stem.
@@ -660,7 +662,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       next.surface.size() <= 3 &&  // Single hiragana (3 bytes)
       grammar::isPureHiragana(next.surface) && !grammar::isSuruRenyokeiSurface(next.surface)) {
-    bonus += cost::kAlmostNever;  // Strongly discourage
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);  // Strongly discourage
   }
 
   return bonus;

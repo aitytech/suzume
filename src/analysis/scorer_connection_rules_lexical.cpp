@@ -71,7 +71,7 @@ float computeParticleQuoteBonus(const core::LatticeEdge& prev, const core::Latti
   // (ことに+より is こと+により).
   if (prev.pos == core::PartOfSpeech::Adverb && !utf8::endsWith(prev.surface, "に") &&
       next.extended_pos == core::ExtendedPOS::ParticleCase && utf8::equalsAny(next.surface, {"より"})) {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   // A final particle can be quoted as a complete utterance (かしら+と
@@ -80,7 +80,7 @@ float computeParticleQuoteBonus(const core::LatticeEdge& prev, const core::Latti
   // such as ADV+わ+から over an ordinary following predicate.
   if (prev.extended_pos == core::ExtendedPOS::ParticleFinal && next.extended_pos == core::ExtendedPOS::ParticleCase &&
       utf8::equalsAny(next.surface, {"と"})) {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   // A small closed set of sentence-final particles stacks productively
@@ -88,7 +88,7 @@ float computeParticleQuoteBonus(const core::LatticeEdge& prev, const core::Latti
   // the general final-particle-to-final-particle penalty.
   if (prev.extended_pos == core::ExtendedPOS::ParticleFinal && next.extended_pos == core::ExtendedPOS::ParticleFinal &&
       grammar::isFinalParticleStack(prev.surface, next.surface)) {
-    bonus += cost::kExtremeBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kExtremeBonus);
   }
 
   return bonus;
@@ -170,7 +170,7 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   // connection. Dictionary words retain their lexical reading.
   if (!prev.fromDictionary() && prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       utf8::endsWith(prev.surface, "ず") && next.extended_pos == core::ExtendedPOS::VerbShuushikei) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // A dictionary noun that carries a particle-like extended POS is a surface
@@ -188,17 +188,17 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   const bool long_dictionary_noun_compound =
       prev.origin == core::CandidateOrigin::Dictionary && prev.pos == core::PartOfSpeech::Noun &&
       next.pos == core::PartOfSpeech::Noun && normalize::utf8Length(prev.surface) >= 4;
-  if (noun_before_binding_homograph || long_dictionary_noun_compound) {
-    bonus += (noun_before_binding_homograph ? cost::kStrong : float{}) +
-             (long_dictionary_noun_compound ? cost::kModerateBonus + cost::kMinorBonus : float{});
-  }
+  if (noun_before_binding_homograph)
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrong);
+  if (long_dictionary_noun_compound)
+    SUZUME_CONNECTION_ADD(bonus, cost::kModerateBonus + cost::kMinorBonus);
 
   // A contracted negative ん cannot be followed by an independent かっ verb.
   // The colloquial past is represented by the closed auxiliary んかっ, so
   // reject the fabricated ん + かっ verb chain.
   if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNu && next.extended_pos == core::ExtendedPOS::VerbOnbinkei &&
       next.surface == "かっ") {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // A generated verb-onbin candidate whose reconstructed lemma ends in ぬ
@@ -209,7 +209,7 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
       (next.extended_pos == core::ExtendedPOS::ParticleConj ||
        next.extended_pos == core::ExtendedPOS::ParticleAdverbial ||
        next.extended_pos == core::ExtendedPOS::Conjunction)) {
-    bonus += cost::kStrong;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrong);
   }
 
   // Penalty for VerbOnbinkei(ん) → Verb(でる) pattern
@@ -218,21 +218,21 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   // Force the で(PART_接続) + る path instead
   if (prev.extended_pos == core::ExtendedPOS::VerbOnbinkei && utf8::endsWith(prev.surface, "ん") &&
       next.pos == core::PartOfSpeech::Verb && next.surface == "でる") {
-    bonus += cost::kStrong;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrong);
   }
 
   // The completion auxiliary after the renyokei homograph of 出る belongs
   // to the voiced te-form chain (読ん+で+しまう), not to a lexical verb.
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && utf8::equalsAny(prev.lemma, {"出る", "でる"}) &&
       next.extended_pos == core::ExtendedPOS::AuxAspectShimau) {
-    bonus += cost::kStrong;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrong);
   }
 
   // The voiced progressive contraction follows an n-onbin: 読んでる,
   // 飲んでる. Outside this environment でる retains its lexical-verb reading.
   if (prev.extended_pos == core::ExtendedPOS::VerbOnbinkei && utf8::endsWith(prev.surface, "ん") &&
       next.extended_pos == core::ExtendedPOS::AuxAspectIru && next.surface == "でる") {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   // The irregular potential できる can follow either a verbal noun or a
@@ -240,9 +240,9 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   // split while preserving the stronger particle boundary evidence.
   if (next.pos == core::PartOfSpeech::Verb && next.surface == "できる") {
     if (prev.pos == core::PartOfSpeech::Noun) {
-      bonus += cost::kModerateBonus;
+      SUZUME_CONNECTION_ADD(bonus, cost::kModerateBonus);
     } else if (prev.extended_pos == core::ExtendedPOS::ParticleAdverbial) {
-      bonus += cost::kStrongBonus;
+      SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
     }
   }
 
@@ -251,7 +251,7 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   // いた as verb た-form should not follow て directly
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && prev.surface == "て" &&
       next.extended_pos == core::ExtendedPOS::VerbTaForm && next.surface == "いた") {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // Penalty for PREFIX ご → VerbRenyokei ざい pattern
@@ -259,7 +259,7 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   // The prefix ご is for nouns (ご報告), not for splitting ござる
   if (prev.extended_pos == core::ExtendedPOS::Prefix && grammar::isHonorificPrefix(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::VerbRenyokei && utf8::startsWith(next.surface, "ざい")) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // Surface-based bonus for AdjStem → すぎ pattern
@@ -270,7 +270,7 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   if (prev.extended_pos == core::ExtendedPOS::AdjStem && next.extended_pos != core::ExtendedPOS::VerbTeForm &&
       utf8::startsWith(next.surface, "すぎ")) {
     // Strong bonus to overcome AdjStem→Verb prohibitive penalty
-    bonus += sc::kBonusDoubleVeryStrong;
+    SUZUME_CONNECTION_ADD(bonus, sc::kBonusDoubleVeryStrong);
   }
 
   // Surface-based bonus for AdjNaAdj → すぎ pattern
@@ -278,7 +278,7 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   // NOUN→VERB_連用 has bonus from bigram table, which can beat ADJ_NA path
   // This helps dictionary ADJ_NA entries beat unknown NOUN candidates
   if (prev.extended_pos == core::ExtendedPOS::AdjNaAdj && utf8::startsWith(next.surface, "すぎ")) {
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 
   // Surface-based bonus for all-kanji NOUN → すぎ pattern
@@ -288,7 +288,7 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   // Only apply to all-kanji surfaces (not katakana/verb renyokei)
   if (prev.pos == core::PartOfSpeech::Noun && prev.surface.size() >= 6 &&  // 2+ chars (6+ bytes)
       grammar::isAllKanji(prev.surface) && utf8::startsWith(next.surface, "すぎ")) {
-    bonus += sc::kBonusDoubleVeryStrong;
+    SUZUME_CONNECTION_ADD(bonus, sc::kBonusDoubleVeryStrong);
   }
 
   // A sokuonbin copula followed by たら uses the hypothetical form of the
@@ -296,7 +296,7 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   // cannot attach directly to the copula's だっ form.
   if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && utf8::endsWith(prev.surface, "っ") &&
       next.extended_pos == core::ExtendedPOS::AuxTenseTa && utf8::equalsAny(next.surface, {"たら"})) {
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 
   // Penalty for an unsokuonized だ/な auxiliary → ParticleFinal(ったら)
@@ -309,7 +309,8 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   if ((prev.extended_pos == core::ExtendedPOS::AuxCopulaDa || prev.extended_pos == core::ExtendedPOS::AuxTenseTa) &&
       utf8::equalsAny(prev.surface, {"だ", "な"}) && next.extended_pos == core::ExtendedPOS::ParticleFinal &&
       utf8::startsWith(next.surface, "った")) {
-    bonus += prev.extended_pos == core::ExtendedPOS::AuxTenseTa ? cost::kAlmostNever : cost::kStrong;
+    SUZUME_CONNECTION_ADD(bonus,
+                          prev.extended_pos == core::ExtendedPOS::AuxTenseTa ? cost::kAlmostNever : cost::kStrong);
   }
 
   // Penalty for ParticleFinal → VerbRenyokei pattern
@@ -318,7 +319,7 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   // The short hiragana verb ね (寝る renyokei) competes with final particle ね
   // This penalty ensures particle interpretation wins in よね, なね, etc. patterns
   if (prev.extended_pos == core::ExtendedPOS::ParticleFinal && isSingleHiraganaVerbRenyokei(next)) {
-    bonus += cost::kSevere;
+    SUZUME_CONNECTION_ADD(bonus, cost::kSevere);
   }
 
   // The surface か also marks an indefinite phrase (誰か来る, 何かいる).
@@ -328,7 +329,7 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   if (prev.extended_pos == core::ExtendedPOS::ParticleFinal && utf8::equalsAny(prev.surface, {"か"}) &&
       next.pos == core::PartOfSpeech::Verb && next.fromDictionary() &&
       next.extended_pos != core::ExtendedPOS::VerbMizenkei) {
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 
   // The indefinite-particle rescue above cannot introduce the empty-stem
@@ -338,7 +339,7 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   // clause boundary or after its nominal host.
   if (prev.extended_pos == core::ExtendedPOS::ParticleFinal && next.extended_pos == core::ExtendedPOS::VerbMeireikei &&
       grammar::isSuruImperativeSurface(next.surface)) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // Penalty for pure-hiragana Conjunction → bare single-hiragana non-particle
@@ -351,7 +352,7 @@ float computeSugiFinalParticleBonus(const core::LatticeEdge& prev, const core::L
   if (prev.pos == core::PartOfSpeech::Conjunction && grammar::isPureHiragana(prev.surface) &&
       next.pos != core::PartOfSpeech::Particle && grammar::isPureHiragana(next.surface) &&
       next.surface.size() <= 3) {  // Single hiragana (3 bytes)
-    bonus += cost::kNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kNever);
   }
 
   return bonus;

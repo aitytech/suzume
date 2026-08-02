@@ -4,7 +4,7 @@
 # only enforced by convention. Ratchet-based: per core source file it counts
 #   - surface_cmp:    surface-string equality comparisons (hardcoded word tests)
 #   - score_literals: raw float score literals (magic numbers not via named constants)
-#   - score_additions: ordered conditional additions in scorer translation units
+#   - score_additions: named score rules referenced in scorer translation units
 # and fails if any metric EXCEEDS the committed baseline. Metrics may only go down;
 # an intentional reduction is recorded by re-running with `update`, which shows up as
 # a baseline diff in the commit.
@@ -35,7 +35,11 @@ metrics_for() {
   additions=0
   case "$f" in
     src/analysis/scorer*.cpp)
-      additions=$(count '(^|[^[:alnum:]_])(surface_bonus|bonus) *\+=' "$f")
+      # Count individual named score rules, not `bonus +=` statements.  A
+      # single statement may legitimately contain several independent
+      # conditional rules, so counting statements rewards less readable
+      # ternary bundles rather than reducing scoring complexity.
+      additions=$(count 'cost::k[A-Za-z0-9_]+' "$f")
       ;;
   esac
   printf '%s\t%s\t%s\t%s\n' "$f" "$surf" "$floats" "$additions"
@@ -193,7 +197,7 @@ for f in $FILES; do
   bs=$(echo "$base" | cut -f2); bf=$(echo "$base" | cut -f3); ba=$(echo "$base" | cut -f4)
   [ "$s"  -gt "$bs" ] && { echo "❌ $f surface comparisons $s > baseline $bs (generalize with grammar rules; don't add word tests)"; fail=1; } || true
   [ "$fl" -gt "$bf" ] && { echo "❌ $f raw score literals $fl > baseline $bf (use named constants in *_constants.h)"; fail=1; } || true
-  [ "$add" -gt "$ba" ] && { echo "❌ $f scorer additions $add > baseline $ba (reuse a semantic group or predicate)"; fail=1; } || true
+  [ "$add" -gt "$ba" ] && { echo "❌ $f scorer rules $add > baseline $ba (reuse a semantic group or predicate)"; fail=1; } || true
 done
 
 check_purity || fail=1

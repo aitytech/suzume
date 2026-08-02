@@ -30,7 +30,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // correct before an attributive noun (読みつつある本).
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(prev.surface, {"つつ"}) &&
       next.extended_pos == core::ExtendedPOS::VerbShuushikei && next.lemma == "ある") {
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 
   // A conjunctive particle cannot host the contracted negative auxiliary.
@@ -38,7 +38,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // leaving classical negative ず after a conjunction (のみなら+ず) intact.
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && next.extended_pos == core::ExtendedPOS::AuxNegativeNu &&
       grammar::isContractedNegativeAuxiliaryLemma(next.lemma)) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // The conjunctive negative ずに is a single closed auxiliary form. Its
@@ -47,7 +47,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // retain their ordinary boundary.
   if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNu && utf8::equalsAny(prev.surface, {"ず"}) &&
       next.extended_pos == core::ExtendedPOS::ParticleCase && utf8::equalsAny(next.surface, {"に"})) {
-    bonus += cost::kStrong;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrong);
   }
 
   // A nominal phrase followed by の+ある uses the existential verb in
@@ -56,7 +56,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // a determiner.
   if (prev.extended_pos == core::ExtendedPOS::ParticleNo && next.extended_pos == core::ExtendedPOS::VerbShuushikei &&
       next.lemma == "ある") {
-    bonus += cost::kDoubleVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kDoubleVeryStrongBonus);
   }
 
   // The nominalizer の can introduce conditional particles such as なら and
@@ -66,7 +66,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   if (prev.extended_pos == core::ExtendedPOS::ParticleNo &&
       ((next.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isConjunctiveParticleShi(next.surface)) ||
        (next.extended_pos == core::ExtendedPOS::VerbRenyokei && grammar::isSuruRenyokeiSurface(next.surface)))) {
-    bonus += cost::kStrong;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrong);
   }
 
   // The honorific potential construction Noun+に+なれ+ます keeps the
@@ -74,7 +74,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // adjective stem plus passive auxiliary path can win before polite ます.
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase && grammar::isSingleHiragana(prev.surface, U'に') &&
       next.extended_pos == core::ExtendedPOS::VerbKateikei && next.lemma == "なる") {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   // A dictionary-backed godan renyokei of the progressive subsidiary after
@@ -84,7 +84,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isTeDeSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::AuxAspectIru && next.fromDictionary() &&
       isGodanRenyokeiOfLemma(next.surface, next.lemma)) {
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 
   // Demonstrative そう is a na-adjective before the polite copula.  The
@@ -92,7 +92,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // homographic adverb plus で+す path.
   if (prev.extended_pos == core::ExtendedPOS::AdjNaAdj && prev.lemma == "そう" &&
       next.extended_pos == core::ExtendedPOS::AuxCopulaDesu) {
-    bonus += cost::kDoubleVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kDoubleVeryStrongBonus);
   }
 
   // みたい immediately after a connective て/で is not the conjecture
@@ -100,21 +100,21 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // たい. This applies whether the competing connective edge was classified as a
   // particle or as a contracted aspect auxiliary.
   if (grammar::isTeDeSurface(prev.surface) && next.extended_pos == core::ExtendedPOS::AuxConjectureMitai) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // Progressive で+い+ます should use the auxiliary い, not the standalone verb いる.
   // The preceding で can be tagged as either a conjunction particle or a te-form
   // particle depending on the onbin path, so match by surface here.
   if (prev.surface == "で" && next.surface == "い" && next.extended_pos == core::ExtendedPOS::VerbRenyokei) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // Excessive-degree すぎ + て is ordinary connective て. Do not reinterpret it
   // as contracted progressive てる.
   if (prev.extended_pos == core::ExtendedPOS::AuxExcessive && next.surface == "て" &&
       next.extended_pos == core::ExtendedPOS::AuxAspectIru) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // The excessive subsidiary inflects before the past auxiliary. Restrict the
@@ -122,7 +122,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // て cannot be selected as a past form.
   if (prev.extended_pos == core::ExtendedPOS::AuxExcessive && next.extended_pos == core::ExtendedPOS::AuxTenseTa &&
       next.surface == "た") {
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 
   // If contracted-progressive て is followed by ordinary particles or content
@@ -135,7 +135,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
        next.pos == core::PartOfSpeech::Pronoun || next.pos == core::PartOfSpeech::Determiner ||
        next.pos == core::PartOfSpeech::Adverb || next.pos == core::PartOfSpeech::Conjunction ||
        next.pos == core::PartOfSpeech::Verb)) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // The colloquial progressive contraction permits the nominalizer directly
@@ -150,7 +150,8 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
                                        next.extended_pos == core::ExtendedPOS::ParticleNo;
   if (progressive_nominalizer) {
     const bool bare_te_homograph = grammar::isSingleHiragana(prev.surface, U'て');
-    bonus += cost::kDoubleVeryStrongBonus + (bare_te_homograph ? cost::kAlmostNever : cost::kNeutral);
+    SUZUME_CONNECTION_ADD(bonus,
+                          cost::kDoubleVeryStrongBonus + (bare_te_homograph ? cost::kAlmostNever : cost::kNeutral));
   }
 
   // The ん in a contracted progressive (〜てんだ) is the nominalizer の, not
@@ -159,7 +160,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   if (prev.extended_pos == core::ExtendedPOS::AuxAspectIru && grammar::isTeDeSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::AuxNegativeNu &&
       grammar::isContractedNegativeAuxiliaryLemma(next.lemma)) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // The regional ておる/でおる contractions retain Godan-ra inflection, so
@@ -169,7 +170,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   const bool is_dialectal_oru_contraction = grammar::isDialectalOruContractionLemma(prev.lemma);
   if ((prev.extended_pos == core::ExtendedPOS::AuxAspectIru || prev.extended_pos == core::ExtendedPOS::VerbKateikei) &&
       is_dialectal_oru_contraction && next.extended_pos == core::ExtendedPOS::ParticleConj) {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   // The negative dialectal contraction uses the mizenkei plus ん
@@ -177,13 +178,13 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // nominalizer only for the contracted おる paradigm.
   if (prev.extended_pos == core::ExtendedPOS::AuxAspectIru && is_dialectal_oru_contraction &&
       next.extended_pos == core::ExtendedPOS::AuxNegativeNu) {
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 
   // Dialectal/character-speech やで is particle + particle in the regression
   // corpus, not copula で.
   if (prev.surface == "や" && next.surface == "で" && next.extended_pos == core::ExtendedPOS::AuxCopulaDa) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // The attributive copula な cannot introduce the progressive/aspectual いる.
@@ -192,7 +193,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && grammar::isAttributiveCopulaNa(prev.surface)) {
     if (next.extended_pos == core::ExtendedPOS::AuxAspectIru || next.extended_pos == core::ExtendedPOS::AuxNegativeNu ||
         next.extended_pos == core::ExtendedPOS::AuxVolitional || next.pos == core::PartOfSpeech::Verb) {
-      bonus += cost::kAlmostNever;
+      SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
     }
   }
 
@@ -201,14 +202,14 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // negative-auxiliary homograph.
   if (prev.extended_pos == core::ExtendedPOS::AdjBasic && grammar::isIndependentNegativeAdjective(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::ParticleNo) {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   // The complete negative ない cannot itself take another negative ん. This
   // applies regardless of the provisional POS chosen for the homograph and
   // retains the nominalizer analysis in ないんだ.
   if (grammar::isIndependentNegativeAdjective(prev.surface) && next.extended_pos == core::ExtendedPOS::AuxNegativeNu) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // An onbin candidate that already includes the complete negative ない is
@@ -216,7 +217,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // whole-verb competitor in 知らないんだ, not ordinary onbin inflections.
   if (prev.extended_pos == core::ExtendedPOS::VerbOnbinkei && grammar::endsWithNegativeNai(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::AuxNegativeNu) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // である is the formal copula sequence. A case/conjunctive で followed by
@@ -224,14 +225,14 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // copula candidate before formal nouns such as 以上 and 場合.
   if (utf8::equalsAny(prev.surface, {"で"}) && utf8::equalsAny(next.surface, {"ある"}) &&
       next.extended_pos == core::ExtendedPOS::Determiner) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // In the copular negative でなく, なく is the adverbial adjective form of
   // ない. Keep the auxiliary reading for verbal 〜なく separate.
   if (utf8::equalsAny(prev.surface, {"で"}) && utf8::equalsAny(next.surface, {"なく"}) &&
       next.extended_pos == core::ExtendedPOS::AuxNegativeNai) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // Date + 付け + で is a formal-noun construction ("as of ..."), not the
@@ -240,13 +241,13 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
       next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       (utf8::endsWith(prev.surface, "日") || utf8::endsWith(prev.surface, "月") ||
        utf8::endsWith(prev.surface, "年"))) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // Keep the common na-adjective 複雑 together; the split 複 + 雑い is a false
   // i-adjective path.
   if (prev.surface == "複" && next.surface == "雑" && next.pos == core::PartOfSpeech::Adjective) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // Penalty for VerbOnbinkei/VerbRenyokei ending in いい → AuxTenseTa pattern
@@ -256,7 +257,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // Include VerbRenyokei since 願いい is sometimes assigned as renyokei of 願いう
   if ((prev.extended_pos == core::ExtendedPOS::VerbOnbinkei || prev.extended_pos == core::ExtendedPOS::VerbRenyokei) &&
       next.extended_pos == core::ExtendedPOS::AuxTenseTa && utf8::endsWith(prev.surface, "いい")) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // Penalty for ParticleAdverbial → single-mora hiragana VerbRenyokei.
@@ -272,7 +273,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   if (prev.extended_pos == core::ExtendedPOS::ParticleAdverbial &&
       next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.surface.size() == core::kJapaneseCharBytes &&
       normalize::classifyChar(utf8::decodeFirstChar(next.surface)) == normalize::CharType::Hiragana) {
-    bonus += cost::kStrong;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrong);
   }
 
   // Bonus for VerbRenyokei/VerbOnbinkei → VerbRenyokei (subsidiary verb patterns)
@@ -282,7 +283,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   if ((prev.extended_pos == core::ExtendedPOS::VerbRenyokei || prev.extended_pos == core::ExtendedPOS::VerbOnbinkei) &&
       next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       (grammar::isSubsidiaryHonorificRenyokei(next.surface) || grammar::isModalSubsidiaryRenyokei(next.surface))) {
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 
   // A humble auxiliary in renyokei productively takes the connective て
@@ -290,7 +291,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // coincidental auxiliary sequence at the beginning of a sentence.
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && grammar::isHumbleHonorificRenyokei(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(next.surface, {"て"})) {
-    bonus += cost::kModerateBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kModerateBonus);
   }
 
   // Bonus for honorific verb renyokei → AuxTenseMasu (ます)
@@ -298,7 +299,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // This helps いただき beat い+た+だき pattern
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AuxTenseMasu &&
       grammar::isHumbleHonorificRenyokei(prev.surface)) {
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 
   // Penalty for single い → AuxTenseTa pattern (いただきます problem)
@@ -308,7 +309,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // NOT when prev comes from て-form (VerbTeForm)
   if (prev.surface == "い" && prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       next.extended_pos == core::ExtendedPOS::AuxTenseTa) {
-    bonus += cost::kVeryRare;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryRare);
   }
 
   // Penalty for AuxTenseTa → い pattern (たい over-split prevention)
@@ -316,7 +317,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // た (AuxTenseTa) should not be followed by standalone い
   // This fixes the issue where VerbRenyokei→た bonus (-1.6) beats たい (-0.8)
   if (prev.extended_pos == core::ExtendedPOS::AuxTenseTa && next.surface == "い") {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // Penalty for だ(AuxTenseTa) after non-ん/non-い words
@@ -325,7 +326,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // because AuxAspectIru→AuxTenseTa bonus applies to both た and だ
   if (next.surface == "だ" && next.extended_pos == core::ExtendedPOS::AuxTenseTa &&
       !utf8::endsWith(prev.surface, "ん") && !utf8::endsWith(prev.surface, "い")) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   return bonus;

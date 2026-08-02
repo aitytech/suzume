@@ -71,14 +71,16 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   const bool exclusive_binding_negative = prev.extended_pos == core::ExtendedPOS::ParticleBinding &&
                                           utf8::equalsAny(prev.surface, {"しか"}) &&
                                           next.extended_pos == core::ExtendedPOS::AuxNegativeNai;
-  if (invalid_polite_hatsuon_volitional || contracted_negative_before_copula || marked_nominal_before_mimetic ||
-      long_chuu_nominal || exclusive_binding_negative) {
-    bonus += (invalid_polite_hatsuon_volitional ? cost::kAlmostNever : cost::kNeutral) +
-             (contracted_negative_before_copula ? cost::kAlmostNever : cost::kNeutral) +
-             (marked_nominal_before_mimetic ? cost::kDoubleVeryStrongBonus : cost::kNeutral) +
-             (long_chuu_nominal ? cost::kStrongBonus + cost::kModerateBonus : cost::kNeutral) +
-             (exclusive_binding_negative ? cost::kVeryStrongBonus : cost::kNeutral);
-  }
+  if (invalid_polite_hatsuon_volitional)
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
+  if (contracted_negative_before_copula)
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
+  if (marked_nominal_before_mimetic)
+    SUZUME_CONNECTION_ADD(bonus, cost::kDoubleVeryStrongBonus);
+  if (long_chuu_nominal)
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus + cost::kModerateBonus);
+  if (exclusive_binding_negative)
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
 
   // A topic particle cannot directly select the classical negative auxiliary.
   // In sequences such as 〜たはずだ, the apparent は+ず boundary is the formal
@@ -93,18 +95,19 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   const bool sahen_ichidan_irrealis = prev.extended_pos == core::ExtendedPOS::VerbRenyokei && prev.lemma == "する" &&
                                       next.extended_pos == core::ExtendedPOS::VerbMizenkei &&
                                       next.conj_type == dictionary::ConjugationType::Ichidan;
-  if (classical_negative_suru || topic_before_classical_negative || sahen_ichidan_irrealis) {
-    bonus += (classical_negative_suru ? cost::kVeryStrongBonus : cost::kNeutral) +
-             (topic_before_classical_negative ? cost::kProhibitive : cost::kNeutral) +
-             (sahen_ichidan_irrealis ? cost::kVeryStrongBonus : cost::kNeutral);
-  }
+  if (classical_negative_suru)
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
+  if (topic_before_classical_negative)
+    SUZUME_CONNECTION_ADD(bonus, cost::kProhibitive);
+  if (sahen_ichidan_irrealis)
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
 
   // The copula's conjunctive form is で; an emphatic small-tsu variant cannot
   // take connective て/で. In なっ+て the onbin belongs to lexical なる, so
   // prevent a generated emphatic AuxCopulaDa edge from replacing that verb.
   if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && utf8::endsWith(prev.surface, "っ") &&
       next.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isTeDeSurface(next.surface)) {
-    bonus += cost::kAlmostNever;
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // Bonus for dict VERB_連用 → ない/なく/なかっ/なけれ (negative auxiliary)
@@ -126,7 +129,7 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
     // The ExtendedPOS bigram already provides the primary grammatical
     // preference.  Keep this lexical tie-break modest: a full strong bonus
     // lets a verbal homograph erase an equally attested formal-noun reading.
-    bonus += cost::kMinorBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kMinorBonus);
   }
 
   // Bonus for ば(PART_接続) → なら/なり/なる/なれ(VERB) in -なければならない pattern
@@ -134,7 +137,7 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // over correct split ば(conditional) + なら(なる mizenkei)
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && prev.surface == "ば" &&
       next.pos == core::PartOfSpeech::Verb && utf8::equalsAny(next.surface, {"なら", "なり", "なる", "なれ", "なっ"})) {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   // Contracted obligation chains retain their grammatical boundaries:
@@ -142,7 +145,7 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // mizenkei + なきゃ/なけりゃ + なら + ない.
   if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNai && utf8::equalsAny(prev.surface, {"なく"}) &&
       next.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(next.surface, {"ちゃ"})) {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   // The change-of-state construction 〜なくなる retains なく as a negative
@@ -150,7 +153,7 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // remains appropriate (読まれなくて困る).
   if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNai && utf8::equalsAny(prev.surface, {"なく"}) &&
       next.extended_pos == core::ExtendedPOS::VerbShuushikei && utf8::equalsAny(next.surface, {"なる"})) {
-    bonus += cost::kExtremeBonus + cost::kMinorBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kExtremeBonus + cost::kMinorBonus);
   }
 
   // The case particle まで attaches directly to a terminal predicate
@@ -158,12 +161,12 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // leading mora can be absorbed into an unknown nominal candidate.
   if (prev.extended_pos == core::ExtendedPOS::VerbShuushikei && next.extended_pos == core::ExtendedPOS::ParticleCase &&
       utf8::equalsAny(next.surface, {"まで"})) {
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
   if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNai &&
       grammar::isColloquialConditionalNegativeSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::VerbMizenkei && utf8::equalsAny(next.surface, {"なら"})) {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
   if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNai &&
       grammar::isColloquialConditionalNegativeSurface(prev.surface) &&
@@ -171,7 +174,7 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
     // The lexical いける renyokei has a low candidate cost before ない. Give
     // this closed obligation connection a small additional preference so its
     // auxiliary analysis wins only after the contracted negative conditional.
-    bonus += cost::kVeryStrongBonus + cost::kMinorBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus + cost::kMinorBonus);
   }
   // The same obligation predicate follows the formal negative conditional
   // (なけれ+ば+いけ+ない) and the te-form topic construction
@@ -180,14 +183,14 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   if ((prev.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(prev.surface, {"ば"})) ||
       (prev.extended_pos == core::ExtendedPOS::ParticleTopic && utf8::equalsAny(prev.surface, {"は"}))) {
     if (next.extended_pos == core::ExtendedPOS::AuxPotential && utf8::equalsAny(next.surface, {"いけ"})) {
-      bonus += cost::kDoubleVeryStrongBonus;
+      SUZUME_CONNECTION_ADD(bonus, cost::kDoubleVeryStrongBonus);
     }
   }
   // じゃ is the voiced member of the same contracted pair as ちゃ (読ん+じゃ+いけ+ない).
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && utf8::equalsAny(prev.surface, {"ちゃ", "じゃ"}) &&
       ((next.extended_pos == core::ExtendedPOS::AuxPotential && utf8::equalsAny(next.surface, {"いけ"})) ||
        (next.extended_pos == core::ExtendedPOS::VerbMizenkei && utf8::equalsAny(next.surface, {"なら"})))) {
-    bonus += cost::kDoubleVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kDoubleVeryStrongBonus);
   }
 
   // Bonus for VERB_未然 → AUX_否定古(ず/ずに/ね) connection
@@ -201,7 +204,8 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // which skips mizenkei_zu generation when verb+ず is in the dictionary.
   if (prev.extended_pos == core::ExtendedPOS::VerbMizenkei && next.extended_pos == core::ExtendedPOS::AuxNegativeNu &&
       utf8::equalsAny(next.surface, {"ず", "ずに", "ざる", "ざれ", "ね"})) {
-    bonus += utf8::endsWith(next.surface, "に") ? cost::kDoubleVeryStrongBonus : cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus,
+                          utf8::endsWith(next.surface, "に") ? cost::kDoubleVeryStrongBonus : cost::kStrongBonus);
   }
 
   // Cancel the ichidan-oriented VerbRenyokei → AuxNegativeNu(ね) bonus (消えぬ pattern)
@@ -211,7 +215,7 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // otherwise hijack ね away from the sentence-final particle reading (行くね).
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AuxNegativeNu &&
       next.surface == "ね" && !grammar::endsWithRenyokeiMarker(prev.surface)) {
-    bonus += cost::kRare;
+    SUZUME_CONNECTION_ADD(bonus, cost::kRare);
   }
 
   // Bonus for AUX_否定古(ずに) → VERB connection
@@ -219,7 +223,7 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // Without this, split path ず+に+帰る wins due to PART_格→VERB having lower default cost
   if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNu && prev.surface == "ずに" &&
       (next.pos == core::PartOfSpeech::Verb || next.pos == core::PartOfSpeech::Adjective)) {
-    bonus += cost::kVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 
   // A nominalized predicate can attach to the continuative form of する.
@@ -227,7 +231,7 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // verbal-noun predicates, so prefer it over an unrelated lexical verb chain.
   if (prev.extended_pos == core::ExtendedPOS::Noun && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       grammar::isSuruRenyokeiSurface(next.surface)) {
-    bonus += cost::kStrongBonus + cost::kMinorBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus + cost::kMinorBonus);
   }
 
   // A derivational suffix can form the nominal base of する (重要+視+する,
@@ -235,7 +239,7 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // unknown noun before the regular suru continuative form.
   if (prev.pos == core::PartOfSpeech::Suffix && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       grammar::isSuruRenyokeiSurface(next.surface)) {
-    bonus += cost::kStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
   // An interrogative pronoun directly preceding the continuative し forms a
@@ -243,7 +247,7 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // general ban on interrogative-pronoun-to-verb attachment.
   if (prev.extended_pos == core::ExtendedPOS::PronounInterrogative &&
       next.extended_pos == core::ExtendedPOS::VerbRenyokei && grammar::isSuruRenyokeiSurface(next.surface)) {
-    bonus += cost::kDoubleVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kDoubleVeryStrongBonus);
   }
 
   // Interrogative pronouns take the comparative case particle directly
@@ -251,7 +255,7 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // final syllable.
   if (prev.extended_pos == core::ExtendedPOS::PronounInterrogative && utf8::equalsAny(prev.surface, {"なに"}) &&
       next.extended_pos == core::ExtendedPOS::ParticleCase && utf8::equalsAny(next.surface, {"より"})) {
-    bonus += cost::kDoubleVeryStrongBonus;
+    SUZUME_CONNECTION_ADD(bonus, cost::kDoubleVeryStrongBonus);
   }
 
   // Surface-based penalty for Noun → short VerbRenyokei (compound verb protection)
@@ -282,7 +286,7 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   if (prev.extended_pos == core::ExtendedPOS::Noun && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       !grammar::isSuruRenyokeiSurface(next.surface) && next.surface != "せ" && next.surface.size() <= 6 &&
       bare_kanji_host && !renyokei_has_okurigana) {
-    bonus += cost::kRare;  // Cancel the bigram bonus
+    SUZUME_CONNECTION_ADD(bonus, cost::kRare);  // Cancel the bigram bonus
   }
 
   // Penalty for Noun/ナ形容詞 → い (VerbRenyokei of いる); mirrors the
@@ -291,7 +295,7 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // E.g., 上手いし should be 上手い+し, not 上手+い+し. Must NOT block サ変+でき (外出+でき).
   if ((prev.extended_pos == core::ExtendedPOS::AdjNaAdj || prev.extended_pos == core::ExtendedPOS::Noun) &&
       next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.surface == "い") {
-    bonus += cost::kSevere;
+    SUZUME_CONNECTION_ADD(bonus, cost::kSevere);
   }
 
   // Partial cancel for single-kanji NOUN + し pattern
@@ -299,7 +303,7 @@ float computeNegativeAndNounVerbBonus(const core::LatticeEdge& prev, const core:
   // But 得+し (suru-verb renyokei) should still split
   if (prev.extended_pos == core::ExtendedPOS::Noun && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       grammar::isSuruRenyokeiSurface(next.surface) && normalize::utf8Length(prev.surface) == 1) {
-    bonus += cost::kUncommon;
+    SUZUME_CONNECTION_ADD(bonus, cost::kUncommon);
   }
 
   return bonus;
