@@ -599,18 +599,15 @@ bool startsKuruConditional(const std::vector<char32_t>& codepoints, size_t start
          codepoints[start_pos + 2] == U'ば';
 }
 
-}  // namespace
+struct ContextualDictionaryCandidateState {
+  bool has_attributive_temporal_ma{false};
+  bool starts_shortened_causative_passive{false};
+};
 
-void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view text,
-                                        const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
-                                        size_t start_pos, std::vector<dictionary::LookupResult>& lookup_results) const {
-  // Convert to byte position for dictionary lookup
-  size_t byte_pos = byteOffsetAt(byte_offsets, start_pos);
-
-  // Lookup in dictionary
-  dict_manager_.lookupInto(text, byte_pos, lookup_results);
-  const bool suppress_prefixed_noun_interior =
-      startsHonorificPrefixedNounWithVerbTail(dict_manager_, text, codepoints, byte_offsets, start_pos);
+ContextualDictionaryCandidateState addContextualDictionaryCandidates(
+    core::Lattice& lattice, const dictionary::DictionaryManager& dict_manager, std::string_view text,
+    const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets, size_t start_pos) {
+  ContextualDictionaryCandidateState state;
 
   if (startsLiteraryNitsukeAt(lattice, codepoints, start_pos)) {
     lattice.addEdge("につけ", static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 3),
@@ -639,9 +636,9 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
                     core::ExtendedPOS::Suffix, "deverbal_method_suffix");
   }
 
-  const bool has_attributive_temporal_ma =
+  state.has_attributive_temporal_ma =
       codepoints[start_pos] == U'間' && hasPrecedingAttributivePredicate(lattice, start_pos);
-  if (has_attributive_temporal_ma) {
+  if (state.has_attributive_temporal_ma) {
     constexpr auto temporal_epos = core::ExtendedPOS::NounFormal;
     lattice.addEdge("間", static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 1),
                     core::PartOfSpeech::Noun, getCategoryCost(temporal_epos),
@@ -650,11 +647,7 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
                     candidate::kDictionaryOriginConfidence, {}, temporal_epos, "attributive_temporal_ma");
   }
 
-  // Interrogative + か forms an indefinite pronoun (誰+か, 何+か,
-  // どこ+か). Generate the adverbial-particle homograph only at that
-  // verified boundary so a global one-mora entry cannot split lexical words
-  // containing か (かかる, 静か, うれしかった).
-  if (codepoints[start_pos] == U'か' && (hasInterrogativeEndingAt(dict_manager_, text, byte_offsets, start_pos) ||
+  if (codepoints[start_pos] == U'か' && (hasInterrogativeEndingAt(dict_manager, text, byte_offsets, start_pos) ||
                                          hasInterrogativeNominalPhraseEndingAt(lattice, start_pos))) {
     lattice.addEdge("か", static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 1),
                     core::PartOfSpeech::Particle, getCategoryCost(core::ExtendedPOS::ParticleAdverbial),
@@ -663,10 +656,8 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
                     core::ExtendedPOS::ParticleAdverbial, "indefinite_particle_ka");
   }
 
-  // In the closed interrogative frame か+どう+か, the first か is an
-  // adverbial choice particle after a finite predicate. Generate it
-  // contextually rather than
-  // admitting a global one-mora candidate inside arbitrary hiragana words.
+  // Keep the first/last か of a closed interrogative frame available when it
+  // follows a finite predicate (読めるかどうか).
   const bool opens_interrogative_frame = codepoints[start_pos] == U'か' && start_pos + 3 < codepoints.size() &&
                                          codepoints[start_pos + 1] == U'ど' && codepoints[start_pos + 2] == U'う' &&
                                          codepoints[start_pos + 3] == U'か' &&
@@ -683,18 +674,14 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
                     candidate::kDictionaryOriginConfidence, {}, frame_epos, "interrogative_frame_ka");
   }
 
-  // In the shortened causative-passive, the bound Godan-sa causative keeps
-  // its own mizenkei boundary (読ま+さ+れ+た). Surface さ is also the
-  // mizenkei of する, so emit this auxiliary homograph only when a lexical
-  // verb mizenkei ends on the left and the closed passive paradigm begins on
-  // the right. This also disambiguates hiragana やら from the list particle
-  // without admitting さ as a global auxiliary inside lexical words.
-  const bool starts_shortened_causative_passive =
+  // In shortened causative-passive, さ retains the lexical verb's mizenkei
+  // boundary (読ま + さ + れ + た), rather than becoming a global する form.
+  state.starts_shortened_causative_passive =
       codepoints[start_pos] == core::hiragana::kSa && start_pos + 1 < codepoints.size() &&
       codepoints[start_pos + 1] == U'れ' &&
       hasPrecedingExtendedPOS(lattice, start_pos, core::ExtendedPOS::VerbMizenkei) &&
       verb_helpers::isPassiveAuxContinuation(codepoints, start_pos + 2, /*strict_masu=*/true);
-  if (starts_shortened_causative_passive) {
+  if (state.starts_shortened_causative_passive) {
     lattice.addEdge(
         "さ", static_cast<uint32_t>(start_pos), static_cast<uint32_t>(start_pos + 1), core::PartOfSpeech::Auxiliary,
         getCategoryCost(core::ExtendedPOS::AuxCausative) + candidate::verb_cost::kShortenedCausativePassiveBonus,
@@ -702,6 +689,27 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
         dictionary::ConjugationType::GodanSa, core::CandidateOrigin::Dictionary, candidate::kDictionaryOriginConfidence,
         "shortened_causative_passive", core::ExtendedPOS::AuxCausative, "shortened_causative_passive");
   }
+
+  return state;
+}
+
+}  // namespace
+
+void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view text,
+                                        const std::vector<char32_t>& codepoints, const ByteOffsets& byte_offsets,
+                                        size_t start_pos, std::vector<dictionary::LookupResult>& lookup_results) const {
+  // Convert to byte position for dictionary lookup
+  size_t byte_pos = byteOffsetAt(byte_offsets, start_pos);
+
+  // Lookup in dictionary
+  dict_manager_.lookupInto(text, byte_pos, lookup_results);
+  const bool suppress_prefixed_noun_interior =
+      startsHonorificPrefixedNounWithVerbTail(dict_manager_, text, codepoints, byte_offsets, start_pos);
+
+  const ContextualDictionaryCandidateState contextual_candidates =
+      addContextualDictionaryCandidates(lattice, dict_manager_, text, codepoints, byte_offsets, start_pos);
+  const bool has_attributive_temporal_ma = contextual_candidates.has_attributive_temporal_ma;
+  const bool starts_shortened_causative_passive = contextual_candidates.starts_shortened_causative_passive;
 
   size_t longest_conjunction = 0;
   size_t longest_interjection = 0;
