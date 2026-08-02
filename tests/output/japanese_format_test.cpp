@@ -171,7 +171,7 @@ TEST(LemmatizerTest, DictionarySuruPassiveReturnsSuruLemma) {
   postprocess::Lemmatizer lemmatizer(&dict_manager);
   core::Morpheme morpheme;
   morpheme.pos = core::PartOfSpeech::Verb;
-  morpheme.is_from_dictionary = true;
+  morpheme.flags = core::EdgeFlags::FromDictionary;
 
   morpheme.surface = "処理される";
   morpheme.lemma = "処理される";

@@ -8,32 +8,10 @@
 #include <vector>
 
 #include "dictionary/dictionary.h"
+#include "edge_flags.h"
 #include "types.h"
 
 namespace suzume::core {
-
-/**
- * @brief Lattice edge flags
- */
-enum class EdgeFlags : uint8_t {
-  None = 0,
-  FromDictionary = 1 << 0,
-  FromUserDict = 1 << 1,
-  IsFormalNoun = 1 << 2,
-  // Note: bit 3 is reserved for the removed IsLowInfo flag. Low-information
-  // status is derived exclusively from ExtendedPOS.
-  // Note: bit 4 is reserved for kIsUnknown legacy constant
-  HasCustomCost = 1 << 6,  // Edge carries a deliberately tuned cost (distinguishes a genuine 0.0)
-  LemmaVerified = 1 << 7   // Lemma (base form) attested as a dictionary verb at generation time
-};
-
-inline EdgeFlags operator|(EdgeFlags lhs, EdgeFlags rhs) {
-  return static_cast<EdgeFlags>(static_cast<uint8_t>(lhs) | static_cast<uint8_t>(rhs));
-}
-
-inline bool hasFlag(EdgeFlags flags, EdgeFlags flag) {
-  return (static_cast<uint8_t>(flags) & static_cast<uint8_t>(flag)) != 0;
-}
 
 /**
  * @brief Lattice edge (morpheme candidate)
@@ -63,7 +41,7 @@ struct LatticeEdge {
   static constexpr uint8_t kFromDictionary = static_cast<uint8_t>(EdgeFlags::FromDictionary);
   static constexpr uint8_t kFromUserDict = static_cast<uint8_t>(EdgeFlags::FromUserDict);
   static constexpr uint8_t kIsFormalNoun = static_cast<uint8_t>(EdgeFlags::IsFormalNoun);
-  static constexpr uint8_t kIsUnknown = 1 << 4;
+  static constexpr uint8_t kIsUnknown = static_cast<uint8_t>(EdgeFlags::IsUnknown);
   static constexpr uint8_t kHasCustomCost = static_cast<uint8_t>(EdgeFlags::HasCustomCost);
   static constexpr uint8_t kLemmaVerified = static_cast<uint8_t>(EdgeFlags::LemmaVerified);
 
@@ -75,7 +53,7 @@ struct LatticeEdge {
   // A dictionary edge's lemma is dictionary-attested by definition, so OR in
   // fromDictionary(): consumers see a strict superset of the dictionary gate.
   bool lemmaVerified() const { return fromDictionary() || hasFlag(flags, EdgeFlags::LemmaVerified); }
-  bool isUnknown() const { return (static_cast<uint8_t>(flags) & kIsUnknown) != 0; }
+  bool isUnknown() const { return hasFlag(flags, EdgeFlags::IsUnknown); }
 };
 
 /**

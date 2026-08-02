@@ -198,7 +198,7 @@ void resolveNominalPredicateNai(std::vector<core::Morpheme>& result) {
     // its all-kanji, non-dictionary renyokei shape is unambiguously nominal.
     // Restore that reading before resolving the independent negative.
     if (idx >= 2 && predicate.pos == core::PartOfSpeech::Verb &&
-        predicate.extended_pos == core::ExtendedPOS::VerbRenyokei && !predicate.is_from_dictionary &&
+        predicate.extended_pos == core::ExtendedPOS::VerbRenyokei && !predicate.fromDictionary() &&
         grammar::isAllKanji(predicate.surface) && utf8::endsWith(predicate.lemma, "る")) {
       const auto& marker = result[idx - 2];
       if (marker.extended_pos == core::ExtendedPOS::ParticleCase && marker.surface == "に") {
@@ -647,7 +647,7 @@ void resolveSimilitudeYou(std::vector<core::Morpheme>& result) {
     }
     retag(purpose, core::PartOfSpeech::Noun, core::ExtendedPOS::NounFormal, "よう", dictionary::ConjugationType::None,
           grammar::ConjForm::Base);
-    purpose.features.is_formal_noun = true;
+    purpose.flags = purpose.flags | core::EdgeFlags::IsFormalNoun;
   }
 
   for (size_t idx = 0; idx + 1 < result.size(); ++idx) {

@@ -205,7 +205,7 @@ std::vector<core::Morpheme> Postprocessor::mergeNounCompounds(std::vector<core::
     const auto& current = morphemes[idx];
 
     // Check if this is a noun that can be merged
-    if (current.pos == core::PartOfSpeech::Noun && !current.features.is_formal_noun) {
+    if (current.pos == core::PartOfSpeech::Noun && !current.isFormalNoun()) {
       // Collect consecutive nouns
       core::Morpheme merged = current;
       size_t merge_end = idx + 1;
@@ -213,7 +213,7 @@ std::vector<core::Morpheme> Postprocessor::mergeNounCompounds(std::vector<core::
 
       while (merge_end < morphemes.size()) {
         const auto& next = morphemes[merge_end];
-        if (next.pos == core::PartOfSpeech::Noun && !next.features.is_formal_noun) {
+        if (next.pos == core::PartOfSpeech::Noun && !next.isFormalNoun()) {
           // Merge surface and lemma
           resolver::mergeInto(merged, next);
           if (!next.lemma.empty()) {
@@ -278,7 +278,7 @@ std::vector<core::Morpheme> Postprocessor::mergeVerbRenyokeiMono(std::vector<cor
     // e.g., 食べ+もの → 食べもの, 飲み+もの → 飲みもの, 乗り+もの → 乗りもの
     if (i + 1 < morphemes.size() && morphemes[i].pos == core::PartOfSpeech::Verb &&
         morphemes[i].conj_form == grammar::ConjForm::Renyokei && morphemes[i + 1].surface == "もの" &&
-        morphemes[i + 1].features.is_formal_noun) {
+        morphemes[i + 1].isFormalNoun()) {
       core::Morpheme merged = morphemes[i];
       resolver::mergeInto(merged, morphemes[i + 1]);
       resolver::retagNounSurface(merged);
@@ -305,8 +305,8 @@ std::vector<core::Morpheme> Postprocessor::mergeNounTemporalFormal(std::vector<c
   for (size_t idx = 0; idx < morphemes.size(); ++idx) {
     const bool is_bound_temporal_formal =
         idx + 1 < morphemes.size() && morphemes[idx].pos == core::PartOfSpeech::Noun &&
-        !morphemes[idx].features.is_formal_noun && morphemes[idx + 1].pos == core::PartOfSpeech::Noun &&
-        morphemes[idx + 1].features.is_formal_noun && morphemes[idx + 1].surface == "途中";
+        !morphemes[idx].isFormalNoun() && morphemes[idx + 1].pos == core::PartOfSpeech::Noun &&
+        morphemes[idx + 1].isFormalNoun() && morphemes[idx + 1].surface == "途中";
     if (!is_bound_temporal_formal) {
       result.push_back(std::move(morphemes[idx]));
       continue;
@@ -316,7 +316,7 @@ std::vector<core::Morpheme> Postprocessor::mergeNounTemporalFormal(std::vector<c
     resolver::mergeInto(merged, morphemes[idx + 1]);
     merged.lemma = merged.surface;
     merged.extended_pos = core::ExtendedPOS::Noun;
-    merged.features.is_formal_noun = false;
+    merged.flags = core::withoutFlag(merged.flags, core::EdgeFlags::IsFormalNoun);
     SUZUME_DEBUG_LOG("[POSTPROC] Merged noun+途中: \"" << morphemes[idx].surface << "\" + \"途中\" → \""
                                                        << merged.surface << "\"\n");
     result.push_back(std::move(merged));

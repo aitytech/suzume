@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "dictionary/dictionary.h"
+#include "edge_flags.h"
 #include "grammar/conjugation.h"
 #include "types.h"
 
@@ -26,21 +27,9 @@ struct Morpheme {
   std::string lemma;                                                         // Lemma (for verbs/adjectives)
   dictionary::ConjugationType conj_type{dictionary::ConjugationType::None};  // Conjugation type
   grammar::ConjForm conj_form{grammar::ConjForm::Base};                      // Conjugation form
-
-  // Aliases for compatibility
-  size_t start_pos = 0;             // Alias for start
-  size_t end_pos = 0;               // Alias for end
-  bool is_from_dictionary = false;  // Dictionary match flag
-  bool is_unknown = false;          // Unknown word flag
-
-  // Auxiliary information
-  struct Features {
-    bool is_dictionary = false;   // Dictionary match flag
-    bool is_user_dict = false;    // User dictionary match flag
-    bool is_formal_noun = false;  // Formal noun flag
-    bool is_low_info = false;     // Low information word flag
-    float score = 0.0F;           // Score
-  } features;
+  EdgeFlags flags{EdgeFlags::None};                                          // Candidate provenance and annotations
+  CandidateOrigin origin{CandidateOrigin::Unknown};                          // Candidate generator
+  float score{0.0F};                                                         // Candidate score/cost
 
   /**
    * @brief Get surface string length (UTF-8 character count)
@@ -52,14 +41,11 @@ struct Morpheme {
    */
   std::string_view getLemma() const { return lemma.empty() ? surface : lemma; }
 
-  /**
-   * @brief Sync alias fields after setting start/end
-   */
-  void syncPositions() {
-    start_pos = start;
-    end_pos = end;
-    is_from_dictionary = features.is_dictionary;
-  }
+  bool fromDictionary() const { return hasFlag(flags, EdgeFlags::FromDictionary); }
+  bool fromUserDict() const { return hasFlag(flags, EdgeFlags::FromUserDict); }
+  bool isFormalNoun() const { return hasFlag(flags, EdgeFlags::IsFormalNoun); }
+  bool isUnknown() const { return hasFlag(flags, EdgeFlags::IsUnknown); }
+  bool isLowInformation() const { return core::isLowInformation(extended_pos); }
 };
 
 /**

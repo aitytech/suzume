@@ -227,7 +227,6 @@ std::vector<core::Morpheme> Analyzer::analyzeWithPretokenizer(std::string_view t
       morpheme.pos = tok.pos;
       morpheme.extended_pos = core::posToExtendedPos(tok.pos);
       morpheme.lemma = tok.surface;
-      morpheme.start_pos = char_offset;
 
       // Calculate end char offset
       size_t end_byte = current_byte;
@@ -238,11 +237,8 @@ std::vector<core::Morpheme> Analyzer::analyzeWithPretokenizer(std::string_view t
         }
         ++end_byte;
       }
-      morpheme.end_pos = base_char_offset + end_char;
       morpheme.start = char_offset;
       morpheme.end = base_char_offset + end_char;
-      morpheme.is_from_dictionary = false;
-      morpheme.is_unknown = false;
       result.push_back(std::move(morpheme));
     } else {
       // Analyze span
@@ -313,8 +309,11 @@ std::vector<core::Morpheme> Analyzer::pathToMorphemes(const core::ViterbiResult&
   std::vector<core::Morpheme> morphemes;
   morphemes.reserve(result.path.size());
 
-  for (size_t edge_id : result.path) {
+  for (size_t path_index = 0; path_index < result.path.size(); ++path_index) {
+    const size_t edge_id = result.path[path_index];
     const core::LatticeEdge& edge = lattice.getEdge(edge_id);
+    const core::LatticeEdge* next_edge =
+        path_index + 1 < result.path.size() ? &lattice.getEdge(result.path[path_index + 1]) : nullptr;
 
     core::Morpheme morpheme;
     morpheme.surface = std::string(edge.surface);
@@ -322,8 +321,6 @@ std::vector<core::Morpheme> Analyzer::pathToMorphemes(const core::ViterbiResult&
     morpheme.extended_pos = edge.extended_pos;
     morpheme.start = base_char_offset + edge.start;
     morpheme.end = base_char_offset + edge.end;
-    morpheme.start_pos = base_char_offset + edge.start;
-    morpheme.end_pos = base_char_offset + edge.end;
 
     if (!edge.lemma.empty()) {
       morpheme.lemma = std::string(edge.lemma);
@@ -331,14 +328,16 @@ std::vector<core::Morpheme> Analyzer::pathToMorphemes(const core::ViterbiResult&
       morpheme.lemma = morpheme.surface;
     }
 
-    morpheme.features.is_dictionary = edge.fromDictionary();
-    morpheme.features.is_user_dict = edge.fromUserDict();
-    morpheme.features.is_formal_noun = edge.isFormalNoun();
-    morpheme.features.is_low_info = core::isLowInformation(edge.extended_pos);
-    morpheme.features.score = edge.cost;
-    morpheme.is_from_dictionary = edge.fromDictionary();
-    morpheme.is_unknown = edge.isUnknown();
+    morpheme.flags = edge.flags;
+    morpheme.origin = edge.origin;
+    morpheme.score = edge.cost;
     morpheme.conj_type = edge.conj_type;
+    const grammar::ConjForm form = grammar::conjFormFromExtendedPos(
+        edge.extended_pos, next_edge == nullptr ? core::ExtendedPOS::Unknown : next_edge->extended_pos,
+        next_edge == nullptr ? std::string_view{} : next_edge->lemma);
+    if (form != grammar::ConjForm::Count_) {
+      morpheme.conj_form = form;
+    }
 
     morphemes.push_back(std::move(morpheme));
   }

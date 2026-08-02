@@ -337,9 +337,8 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result, const dictio
     // A non-lexical noun candidate ending in い cannot take conjectural だろ
     // as an attributive noun marker. The closed follower licenses the finite
     // i-adjective reading (遠い+だろ+う) without touching lexical nouns.
-    if (!current.is_from_dictionary && current.pos == core::PartOfSpeech::Noun &&
-        utf8::endsWith(current.surface, "い") && next.extended_pos == core::ExtendedPOS::AuxCopulaDa &&
-        next.surface == "だろ") {
+    if (!current.fromDictionary() && current.pos == core::PartOfSpeech::Noun && utf8::endsWith(current.surface, "い") &&
+        next.extended_pos == core::ExtendedPOS::AuxCopulaDa && next.surface == "だろ") {
       resolver::retag(current, core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjBasic, current.surface,
                       dictionary::ConjugationType::IAdjective, grammar::ConjForm::Base);
     }
@@ -388,7 +387,7 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result, const dictio
     const auto& focus = result[idx + 1];
     const auto& suru = result[idx + 2];
     const auto& left_context = result[idx - 1];
-    if (stem.pos == core::PartOfSpeech::Noun && !stem.features.is_dictionary && grammar::containsKanji(stem.surface) &&
+    if (stem.pos == core::PartOfSpeech::Noun && !stem.fromDictionary() && grammar::containsKanji(stem.surface) &&
         left_context.pos == core::PartOfSpeech::Particle && focus.surface == "は" &&
         focus.pos == core::PartOfSpeech::Particle && suru.pos == core::PartOfSpeech::Verb && suru.lemma == "する") {
       resolver::retagGodanRenyokeiFromIRow(stem, true);
@@ -417,7 +416,7 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result, const dictio
   // nominal head only the attributive reading is grammatical.
   if (result.size() >= 2 && result[0].pos == core::PartOfSpeech::Interjection &&
       utf8::equalsAny(result[0].surface, {"あの", "その"}) &&
-      (result[1].pos == core::PartOfSpeech::Noun || result[1].features.is_formal_noun || result[0].surface == "その")) {
+      (result[1].pos == core::PartOfSpeech::Noun || result[1].isFormalNoun() || result[0].surface == "その")) {
     resolver::retag(result[0], core::PartOfSpeech::Determiner, core::ExtendedPOS::Determiner, result[0].surface,
                     dictionary::ConjugationType::None, grammar::ConjForm::Base);
   }

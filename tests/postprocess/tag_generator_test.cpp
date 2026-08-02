@@ -237,7 +237,7 @@ TEST(TagGeneratorTest, ExcludeFormalNouns) {
 
   std::vector<core::Morpheme> morphemes;
   core::Morpheme formal_noun = makeMorpheme("こと", core::PartOfSpeech::Noun);
-  formal_noun.features.is_formal_noun = true;
+  formal_noun.flags = formal_noun.flags | core::EdgeFlags::IsFormalNoun;
   morphemes.push_back(formal_noun);
   morphemes.push_back(makeMorpheme("東京", core::PartOfSpeech::Noun));
 
@@ -253,14 +253,14 @@ TEST(TagGeneratorTest, ExcludeLowInfoWords) {
   TagGenerator generator(options);
 
   std::vector<core::Morpheme> morphemes;
-  core::Morpheme low_info = makeMorpheme("ある", core::PartOfSpeech::Verb);
-  low_info.features.is_low_info = true;
+  core::Morpheme low_info = makeMorpheme("それ", core::PartOfSpeech::Pronoun);
+  low_info.extended_pos = core::ExtendedPOS::Pronoun;
   morphemes.push_back(low_info);
   morphemes.push_back(makeMorpheme("東京", core::PartOfSpeech::Noun));
 
   auto tags = generator.generate(morphemes);
   for (const auto& tag : tags) {
-    EXPECT_NE(tag.tag, "ある");
+    EXPECT_NE(tag.tag, "それ");
   }
 }
 

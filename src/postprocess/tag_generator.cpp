@@ -25,12 +25,12 @@ bool TagGenerator::shouldInclude(const core::Morpheme& morpheme) const {
   }
 
   // Exclude formal nouns
-  if (options_.exclude_formal_nouns && morpheme.features.is_formal_noun) {
+  if (options_.exclude_formal_nouns && morpheme.isFormalNoun()) {
     return false;
   }
 
   // Exclude low info words
-  if (options_.exclude_low_info && morpheme.features.is_low_info) {
+  if (options_.exclude_low_info && morpheme.isLowInformation()) {
     return false;
   }
 

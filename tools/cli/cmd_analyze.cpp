@@ -20,7 +20,7 @@ namespace {
 void outputMorphemes(std::ostream& output, const std::vector<core::Morpheme>& morphemes) {
   for (const auto& morpheme : morphemes) {
     output << tabEscape(morpheme.surface) << "\t" << core::posToString(morpheme.pos) << "\t"
-           << tabEscape(morpheme.lemma) << "\t" << morpheme.start_pos << "\t" << morpheme.end_pos << "\n";
+           << tabEscape(morpheme.lemma) << "\t" << morpheme.start << "\t" << morpheme.end << "\n";
   }
 }
 
@@ -43,15 +43,15 @@ void outputJson(const std::string& input, const std::string& normalized_text,
     std::cout << R"("surface": ")" << jsonEscape(mor.surface) << "\", ";
     std::cout << R"("pos": ")" << core::posToString(mor.pos) << "\", ";
     std::cout << R"("lemma": ")" << jsonEscape(mor.lemma) << "\", ";
-    std::cout << R"("start": )" << mor.start_pos << ", ";
-    std::cout << R"("end": )" << mor.end_pos << ", ";
+    std::cout << R"("start": )" << mor.start << ", ";
+    std::cout << R"("end": )" << mor.end << ", ";
     std::cout << R"("extended_pos": ")" << core::extendedPosToString(mor.extended_pos) << "\", ";
-    std::cout << R"("is_user_dict": )" << (mor.features.is_user_dict ? "true" : "false") << ", ";
-    std::cout << R"("is_formal_noun": )" << (mor.features.is_formal_noun ? "true" : "false") << ", ";
-    std::cout << R"("is_low_info": )" << (mor.features.is_low_info ? "true" : "false") << ", ";
-    std::cout << R"("is_unknown": )" << (mor.is_unknown ? "true" : "false") << ", ";
-    std::cout << R"("is_from_dictionary": )" << (mor.is_from_dictionary ? "true" : "false") << ", ";
-    std::cout << R"("score": )" << std::setprecision(std::numeric_limits<float>::max_digits10) << mor.features.score;
+    std::cout << R"("is_user_dict": )" << (mor.fromUserDict() ? "true" : "false") << ", ";
+    std::cout << R"("is_formal_noun": )" << (mor.isFormalNoun() ? "true" : "false") << ", ";
+    std::cout << R"("is_low_info": )" << (mor.isLowInformation() ? "true" : "false") << ", ";
+    std::cout << R"("is_unknown": )" << (mor.isUnknown() ? "true" : "false") << ", ";
+    std::cout << R"("is_from_dictionary": )" << (mor.fromDictionary() ? "true" : "false") << ", ";
+    std::cout << R"("score": )" << std::setprecision(std::numeric_limits<float>::max_digits10) << mor.score;
     std::cout << "}";
     if (idx + 1 < morphemes.size()) {
       std::cout << ",";
@@ -105,12 +105,12 @@ core::AnalysisMode parseMode(const std::string& mode_str) {
 
 bool sameStructure(const core::Morpheme& left, const core::Morpheme& right) {
   return left.surface == right.surface && left.pos == right.pos && left.lemma == right.lemma &&
-         left.start_pos == right.start_pos && left.end_pos == right.end_pos;
+         left.start == right.start && left.end == right.end;
 }
 
 void outputDiffMorpheme(std::ostream& output, std::string_view marker, size_t index, const core::Morpheme& morpheme) {
   output << marker << index << ": " << tabEscape(morpheme.surface) << "\t" << core::posToString(morpheme.pos) << "\t"
-         << tabEscape(morpheme.lemma) << "\t" << morpheme.start_pos << "\t" << morpheme.end_pos << "\n";
+         << tabEscape(morpheme.lemma) << "\t" << morpheme.start << "\t" << morpheme.end << "\n";
 }
 
 }  // namespace

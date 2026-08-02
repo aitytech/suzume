@@ -316,7 +316,7 @@ TEST_F(SuzumeApiTest, ProlongedSoundMergeKeepsSurfaceAndOffsetsConsistent) {
   for (const auto& morpheme : results) {
     if (morpheme.surface.find("ーー") != std::string::npos) {
       found = true;
-      EXPECT_EQ(morpheme.end_pos - morpheme.start_pos, normalize::utf8Length(morpheme.surface));
+      EXPECT_EQ(morpheme.end - morpheme.start, normalize::utf8Length(morpheme.surface));
     }
   }
   EXPECT_TRUE(found);
@@ -394,7 +394,7 @@ TEST_F(SuzumeApiTest, LowInformationCategoriesDriveTagExclusion) {
   auto morphemes = instance.analyze("それ");
   ASSERT_EQ(morphemes.size(), 1U);
   EXPECT_EQ(morphemes.front().extended_pos, core::ExtendedPOS::Pronoun);
-  EXPECT_TRUE(morphemes.front().features.is_low_info);
+  EXPECT_TRUE(morphemes.front().isLowInformation());
   EXPECT_TRUE(instance.generateTags("それ").empty());
 
   postprocess::TagGeneratorOptions options;
@@ -499,8 +499,8 @@ TEST_F(SuzumeApiTest, ProlongedMarkWidthProducesIdenticalAnalysis) {
     EXPECT_EQ(fullwidth[idx].surface, halfwidth[idx].surface);
     EXPECT_EQ(fullwidth[idx].lemma, halfwidth[idx].lemma);
     EXPECT_EQ(fullwidth[idx].pos, halfwidth[idx].pos);
-    EXPECT_EQ(fullwidth[idx].start_pos, halfwidth[idx].start_pos);
-    EXPECT_EQ(fullwidth[idx].end_pos, halfwidth[idx].end_pos);
+    EXPECT_EQ(fullwidth[idx].start, halfwidth[idx].start);
+    EXPECT_EQ(fullwidth[idx].end, halfwidth[idx].end);
   }
 }
 
@@ -532,7 +532,7 @@ TEST_F(SuzumeApiTest, SimilitudeYouRemainsAFormalNoun) {
     ASSERT_NE(iter, results.end()) << text;
     EXPECT_EQ(iter->pos, core::PartOfSpeech::Noun) << text;
     EXPECT_EQ(iter->extended_pos, core::ExtendedPOS::NounFormal) << text;
-    EXPECT_TRUE(iter->features.is_formal_noun) << text;
+    EXPECT_TRUE(iter->isFormalNoun()) << text;
   }
 
   auto volitional = instance.analyze("見よう");
@@ -541,7 +541,7 @@ TEST_F(SuzumeApiTest, SimilitudeYouRemainsAFormalNoun) {
   ASSERT_NE(iter, volitional.end());
   EXPECT_EQ(iter->pos, core::PartOfSpeech::Auxiliary);
   EXPECT_EQ(iter->extended_pos, core::ExtendedPOS::AuxVolitional);
-  EXPECT_FALSE(iter->features.is_formal_noun);
+  EXPECT_FALSE(iter->isFormalNoun());
 }
 
 TEST_F(SuzumeApiTest, FinalParticleQuotationUsesQuotativeExtendedPos) {
@@ -704,10 +704,10 @@ TEST_F(SuzumeApiTest, DebugAnalysisUsesTheProductionPretokenizerPipeline) {
     EXPECT_EQ(debug[index].surface, production[index].surface);
     EXPECT_EQ(debug[index].pos, production[index].pos);
     EXPECT_EQ(debug[index].lemma, production[index].lemma);
-    EXPECT_EQ(debug[index].start_pos, production[index].start_pos);
-    EXPECT_EQ(debug[index].end_pos, production[index].end_pos);
+    EXPECT_EQ(debug[index].start, production[index].start);
+    EXPECT_EQ(debug[index].end, production[index].end);
   }
-  EXPECT_LT(lattice.textLength(), production.back().end_pos);
+  EXPECT_LT(lattice.textLength(), production.back().end);
 }
 
 TEST_F(SuzumeApiTest, GenerateTagsReturnsResults) {
@@ -828,8 +828,8 @@ TEST_F(SuzumeApiTest, AnalyzeWithMergeCompoundsOption) {
   EXPECT_EQ(separate[1].surface, "2024");
   ASSERT_EQ(combined.size(), 1u);
   EXPECT_EQ(combined[0].surface, "東京2024");
-  EXPECT_EQ(combined[0].start_pos, separate.front().start_pos);
-  EXPECT_EQ(combined[0].end_pos, separate.back().end_pos);
+  EXPECT_EQ(combined[0].start, separate.front().start);
+  EXPECT_EQ(combined[0].end, separate.back().end);
 }
 
 TEST_F(SuzumeApiTest, LoadUserDictionaryFromInvalidPath) {
@@ -908,14 +908,14 @@ TEST_F(SuzumeApiTest, ClearUserDictionariesRemovesRuntimeSourceDictionary) {
 
   auto loaded = instance.analyze("東京テスト");
   ASSERT_TRUE(std::any_of(loaded.begin(), loaded.end(), [](const core::Morpheme& morpheme) {
-    return morpheme.surface == "東京テスト" && morpheme.features.is_user_dict;
+    return morpheme.surface == "東京テスト" && morpheme.fromUserDict();
   }));
 
   instance.clearUserDictionaries();
 
   auto cleared = instance.analyze("東京テスト");
   EXPECT_FALSE(std::any_of(cleared.begin(), cleared.end(),
-                           [](const core::Morpheme& morpheme) { return morpheme.features.is_user_dict; }));
+                           [](const core::Morpheme& morpheme) { return morpheme.fromUserDict(); }));
 }
 
 TEST_F(SuzumeApiTest, AutoDictionaryLoadWarningsAreRecorded) {

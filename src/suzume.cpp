@@ -42,12 +42,6 @@ struct LoadedSourceDictionary {
   std::vector<std::string> warnings;
 };
 
-void refreshLowInformationFlags(std::vector<core::Morpheme>& morphemes) {
-  for (core::Morpheme& morpheme : morphemes) {
-    morpheme.features.is_low_info = core::isLowInformation(morpheme.extended_pos);
-  }
-}
-
 core::Expected<LoadedSourceDictionary, core::Error> loadSourceDictionaryFromMemory(const char* data, size_t size) {
   if (data == nullptr || size == 0) {
     return core::makeUnexpected(core::Error(core::ErrorCode::InvalidInput, "Empty dictionary data"));
@@ -326,7 +320,6 @@ struct Suzume::Impl {
     }
     core::AnalysisOutput output = std::move(result.value());
     output.morphemes = postprocessor.process(std::move(output.morphemes));
-    refreshLowInformationFlags(output.morphemes);
     return output;
   }
 
@@ -438,7 +431,6 @@ core::Expected<core::AnalysisOutput, core::Error> Suzume::analyzeWithNormalizedT
 std::vector<core::Morpheme> Suzume::analyzeDebug(std::string_view text, core::Lattice* out_lattice) const {
   auto morphemes = impl_->analyzer.analyzeDebug(text, out_lattice);
   morphemes = impl_->postprocessor.process(std::move(morphemes));
-  refreshLowInformationFlags(morphemes);
   return morphemes;
 }
 

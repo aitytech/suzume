@@ -310,7 +310,7 @@ suzume_result_t* analyzeBytes(SuzumeHandle* handle, std::string_view text) {
     result->morphemes[idx].base_form = copyStringToArena(lemma, cursor);
     result->morphemes[idx].start = static_cast<uint32_t>(morph.start);
     result->morphemes[idx].end = static_cast<uint32_t>(morph.end);
-    result->morphemes[idx].score = morph.features.score;
+    result->morphemes[idx].score = morph.score;
     result->morphemes[idx].pos = static_cast<suzume_pos_t>(morph.pos);
     result->morphemes[idx].extended_pos = static_cast<suzume_extended_pos_t>(morph.extended_pos);
     result->morphemes[idx].conjugation_type = static_cast<suzume_conjugation_type_t>(morph.conj_type);
@@ -319,11 +319,11 @@ suzume_result_t* analyzeBytes(SuzumeHandle* handle, std::string_view text) {
                               morph.pos == suzume::core::PartOfSpeech::Adjective ||
                               morph.pos == suzume::core::PartOfSpeech::Auxiliary;
     result->morphemes[idx].flags =
-        static_cast<uint8_t>((morph.features.is_user_dict ? SUZUME_MORPHEME_USER_DICT : 0U) |
-                             (morph.features.is_formal_noun ? SUZUME_MORPHEME_FORMAL_NOUN : 0U) |
-                             (morph.features.is_low_info ? SUZUME_MORPHEME_LOW_INFO : 0U) |
-                             (morph.is_unknown ? SUZUME_MORPHEME_UNKNOWN : 0U) |
-                             (morph.is_from_dictionary ? SUZUME_MORPHEME_FROM_DICTIONARY : 0U) |
+        static_cast<uint8_t>((morph.fromUserDict() ? SUZUME_MORPHEME_USER_DICT : 0U) |
+                             (morph.isFormalNoun() ? SUZUME_MORPHEME_FORMAL_NOUN : 0U) |
+                             (morph.isLowInformation() ? SUZUME_MORPHEME_LOW_INFO : 0U) |
+                             (morph.isUnknown() ? SUZUME_MORPHEME_UNKNOWN : 0U) |
+                             (morph.fromDictionary() ? SUZUME_MORPHEME_FROM_DICTIONARY : 0U) |
                              (conjugatable ? SUZUME_MORPHEME_CONJUGATABLE : 0U));
     result->morphemes[idx].surface_size = morph.surface.size();
     result->morphemes[idx].base_form_size = lemma.size();

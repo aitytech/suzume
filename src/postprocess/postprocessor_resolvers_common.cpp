@@ -81,9 +81,8 @@ void retagNounSurface(core::Morpheme& morpheme) {
 void mergeInto(core::Morpheme& head, const core::Morpheme& tail) {
   head.surface += tail.surface;
   head.end = tail.end;
-  head.features.is_dictionary = false;
-  head.features.is_user_dict = false;
-  head.syncPositions();
+  head.flags = core::withoutFlag(head.flags, core::EdgeFlags::FromDictionary);
+  head.flags = core::withoutFlag(head.flags, core::EdgeFlags::FromUserDict);
 }
 
 bool followsTeFormConnective(const core::Morpheme& morpheme) {

@@ -91,7 +91,7 @@ void resolveDeverbalNominalSuffix(std::vector<core::Morpheme>& result) {
   for (size_t idx = 1; idx < result.size(); ++idx) {
     const auto& predecessor = result[idx - 1];
     auto& suffix = result[idx];
-    if (predecessor.extended_pos != core::ExtendedPOS::VerbRenyokei || !predecessor.is_from_dictionary ||
+    if (predecessor.extended_pos != core::ExtendedPOS::VerbRenyokei || !predecessor.fromDictionary() ||
         !grammar::isPureHiragana(predecessor.surface) || suffix.extended_pos != core::ExtendedPOS::NounFormal ||
         !grammar::isDeverbalNominalSuffix(suffix.surface)) {
       continue;
@@ -519,13 +519,11 @@ void splitFormalNounCopularDemo(std::vector<core::Morpheme>& result) {
     copula.surface = "で";
     copula.end = copula.start + 1;
     retagCopulaDa(copula);
-    copula.syncPositions();
 
     focus.surface = "も";
     focus.start = copula.end;
     retag(focus, core::PartOfSpeech::Particle, core::ExtendedPOS::ParticleTopic, "も",
           dictionary::ConjugationType::None, grammar::ConjForm::Base);
-    focus.syncPositions();
     result.insert(result.begin() + static_cast<std::ptrdiff_t>(idx + 1), focus);
     ++idx;
   }

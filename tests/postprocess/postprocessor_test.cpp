@@ -23,7 +23,6 @@ core::Morpheme makeMorpheme(std::string surface, core::PartOfSpeech pos, core::E
   morpheme.extended_pos = extended_pos;
   morpheme.start = start;
   morpheme.end = end;
-  morpheme.syncPositions();
   return morpheme;
 }
 
@@ -86,12 +85,9 @@ TEST(PostprocessorTest, VerbFallbackPrefersSpecificSuffixesAndNeverFabricatesERo
 
 TEST(PostprocessorTest, MergedNounCompoundClearsDictionaryProvenance) {
   auto first = makeMorpheme("東京", core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, 0, 2);
-  first.features.is_dictionary = true;
-  first.features.is_user_dict = true;
-  first.syncPositions();
+  first.flags = core::EdgeFlags::FromDictionary | core::EdgeFlags::FromUserDict;
   auto second = makeMorpheme("駅", core::PartOfSpeech::Noun, core::ExtendedPOS::Noun, 2, 3);
-  second.features.is_dictionary = true;
-  second.syncPositions();
+  second.flags = core::EdgeFlags::FromDictionary;
 
   PostprocessOptions options;
   options.merge_noun_compounds = true;
@@ -102,9 +98,8 @@ TEST(PostprocessorTest, MergedNounCompoundClearsDictionaryProvenance) {
   EXPECT_EQ(result[0].surface, "東京駅");
   EXPECT_EQ(result[0].start, 0U);
   EXPECT_EQ(result[0].end, 3U);
-  EXPECT_FALSE(result[0].features.is_dictionary);
-  EXPECT_FALSE(result[0].features.is_user_dict);
-  EXPECT_FALSE(result[0].is_from_dictionary);
+  EXPECT_FALSE(result[0].fromDictionary());
+  EXPECT_FALSE(result[0].fromUserDict());
 }
 
 TEST(PostprocessorTest, OverlappingSymbolSpanDoesNotTerminateTheProcess) {
@@ -153,7 +148,7 @@ TEST(PostprocessorTest, NominalizedVerbsClearConjugationMetadata) {
   stem.conj_type = dictionary::ConjugationType::GodanMa;
   stem.conj_form = grammar::ConjForm::Renyokei;
   auto formal_noun = makeMorpheme("もの", core::PartOfSpeech::Noun, core::ExtendedPOS::NounFormal, 2, 4);
-  formal_noun.features.is_formal_noun = true;
+  formal_noun.flags = formal_noun.flags | core::EdgeFlags::IsFormalNoun;
   auto merged_result = Postprocessor(options).process({stem, formal_noun});
 
   ASSERT_EQ(merged_result.size(), 1U);
