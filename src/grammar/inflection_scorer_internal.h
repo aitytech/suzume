@@ -4,6 +4,7 @@
 #include <string_view>
 
 #include "core/debug.h"
+#include "core/utf8_constants.h"
 #include "inflection_scorer.h"
 
 namespace suzume::grammar::inflection_score_detail {
@@ -25,15 +26,7 @@ inline void logConfidenceAdjustment(float amount, [[maybe_unused]] const char* r
   }
 }
 
-template <size_t N>
-bool isInArray(std::string_view value, const char* const (&values)[N]) {
-  for (size_t idx = 0; idx < N; ++idx) {
-    if (value == values[idx]) {
-      return true;
-    }
-  }
-  return false;
-}
+using ::utf8::equalsAny;
 
 float scoreStemAndIchidan(float base, const InflectionScoreContext& context);
 float scoreGodan(float base, const InflectionScoreContext& context);

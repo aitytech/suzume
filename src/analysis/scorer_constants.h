@@ -352,22 +352,12 @@ constexpr std::string_view kNegationPrefixKanji[] = {"非", "不", "無", "未"}
 
 /// True if the surface begins with a negation-prefix kanji (非/不/無/未).
 [[nodiscard]] inline bool startsWithNegationPrefix(std::string_view surface) {
-  for (std::string_view prefix : kNegationPrefixKanji) {
-    if (utf8::startsWith(surface, prefix)) {
-      return true;
-    }
-  }
-  return false;
+  return utf8::startsWithAny(surface, kNegationPrefixKanji);
 }
 
 /// True if the surface is exactly a negation-prefix kanji (非/不/無/未).
 [[nodiscard]] inline bool isNegationPrefix(std::string_view surface) {
-  for (std::string_view kanji : kNegationPrefixKanji) {
-    if (surface == kanji) {
-      return true;
-    }
-  }
-  return false;
+  return utf8::equalsAny(surface, kNegationPrefixKanji);
 }
 
 // =============================================================================

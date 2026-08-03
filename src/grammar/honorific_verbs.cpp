@@ -5,12 +5,11 @@
 
 #include "grammar/honorific_verbs.h"
 
-#include <cstddef>
-
 #include "core/utf8_constants.h"
 
 namespace suzume::grammar {
 
+using ::utf8::equalsAny;
 using ::utf8::startsWithAny;
 
 namespace {
@@ -40,44 +39,30 @@ constexpr std::string_view kBoundDerivationalSuffixVerbLemmas[] = {"ばる", "�
 // needs a host check for them.
 constexpr std::string_view kPersonalAddressSuffixes[] = {"さん", "ちゃん", "くん", "さま", "たん", "にゃん"};
 
-bool contains(const std::string_view* entries, size_t count, std::string_view value) {
-  for (size_t index = 0; index < count; ++index) {
-    const std::string_view entry = entries[index];
-    if (entry == value) {
-      return true;
-    }
-  }
-  return false;
-}
-
 }  // namespace
 
 bool isHumbleHonorificRenyokei(std::string_view surface) {
-  return contains(kHumbleHonorificRenyokei, sizeof(kHumbleHonorificRenyokei) / sizeof(kHumbleHonorificRenyokei[0]),
-                  surface);
+  return equalsAny(surface, kHumbleHonorificRenyokei);
 }
 
 bool isHumbleHonorificLemma(std::string_view lemma) {
-  return contains(kHumbleHonorificLemmas, sizeof(kHumbleHonorificLemmas) / sizeof(kHumbleHonorificLemmas[0]), lemma);
+  return equalsAny(lemma, kHumbleHonorificLemmas);
 }
 
 bool isPotentialBenefactiveLemma(std::string_view lemma) {
-  return contains(kPotentialBenefactiveLemmas,
-                  sizeof(kPotentialBenefactiveLemmas) / sizeof(kPotentialBenefactiveLemmas[0]), lemma);
+  return equalsAny(lemma, kPotentialBenefactiveLemmas);
 }
 
 bool isBenefactiveLemma(std::string_view lemma) {
-  return contains(kBenefactiveLemmas, sizeof(kBenefactiveLemmas) / sizeof(kBenefactiveLemmas[0]), lemma);
+  return equalsAny(lemma, kBenefactiveLemmas);
 }
 
 bool isSubsidiaryHonorificRenyokei(std::string_view surface) {
-  return isHumbleHonorificRenyokei(surface) ||
-         contains(kBenefactiveRenyokei, sizeof(kBenefactiveRenyokei) / sizeof(kBenefactiveRenyokei[0]), surface);
+  return isHumbleHonorificRenyokei(surface) || equalsAny(surface, kBenefactiveRenyokei);
 }
 
 bool isModalSubsidiaryRenyokei(std::string_view surface) {
-  return contains(kModalSubsidiaryRenyokei, sizeof(kModalSubsidiaryRenyokei) / sizeof(kModalSubsidiaryRenyokei[0]),
-                  surface);
+  return equalsAny(surface, kModalSubsidiaryRenyokei);
 }
 
 bool startsHonorificSubsidiaryVerb(std::string_view surface) {
@@ -85,18 +70,15 @@ bool startsHonorificSubsidiaryVerb(std::string_view surface) {
 }
 
 bool isAspectualSubsidiaryLemma(std::string_view lemma) {
-  return contains(kAspectualSubsidiaryLemmas,
-                  sizeof(kAspectualSubsidiaryLemmas) / sizeof(kAspectualSubsidiaryLemmas[0]), lemma);
+  return equalsAny(lemma, kAspectualSubsidiaryLemmas);
 }
 
 bool isBoundDerivationalSuffixVerbLemma(std::string_view lemma) {
-  return contains(kBoundDerivationalSuffixVerbLemmas,
-                  sizeof(kBoundDerivationalSuffixVerbLemmas) / sizeof(kBoundDerivationalSuffixVerbLemmas[0]), lemma);
+  return equalsAny(lemma, kBoundDerivationalSuffixVerbLemmas);
 }
 
 bool isPersonalAddressSuffix(std::string_view surface) {
-  return contains(kPersonalAddressSuffixes, sizeof(kPersonalAddressSuffixes) / sizeof(kPersonalAddressSuffixes[0]),
-                  surface);
+  return equalsAny(surface, kPersonalAddressSuffixes);
 }
 
 }  // namespace suzume::grammar

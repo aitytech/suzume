@@ -162,9 +162,9 @@ using suzume::core::kTwoJapaneseCharBytes;
 }
 
 /// Check a named fixed-size pattern table without maintaining a separate count.
-template <size_t Size>
-[[nodiscard]] bool containsAny(std::string_view s, const std::string_view (&patterns)[Size]) noexcept {
-  for (const auto pattern : patterns) {
+template <typename Entry, size_t Size>
+[[nodiscard]] bool containsAny(std::string_view s, const Entry (&patterns)[Size]) noexcept {
+  for (const std::string_view pattern : patterns) {
     if (s.find(pattern) != std::string_view::npos) {
       return true;
     }
@@ -185,6 +185,17 @@ template <size_t Size>
   return false;
 }
 
+/// Check a named fixed-size value table without maintaining a separate count.
+template <typename Entry, size_t Size>
+[[nodiscard]] bool equalsAny(std::string_view s, const Entry (&values)[Size]) noexcept {
+  for (const std::string_view value : values) {
+    if (s == value) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /// Check if string ends with any of the given suffixes
 /// @param s The string to check
 /// @param suffixes List of suffixes to check
@@ -198,12 +209,34 @@ template <size_t Size>
   return false;
 }
 
+/// Check a named fixed-size suffix table without maintaining a separate count.
+template <typename Entry, size_t Size>
+[[nodiscard]] bool endsWithAny(std::string_view s, const Entry (&suffixes)[Size]) noexcept {
+  for (const std::string_view suffix : suffixes) {
+    if (s.size() >= suffix.size() && s.substr(s.size() - suffix.size()) == suffix) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /// Check if string starts with any of the given prefixes
 /// @param s The string to check
 /// @param prefixes List of prefixes to check
 /// @return true if s starts with any of the prefixes
 [[nodiscard]] inline bool startsWithAny(std::string_view s, std::initializer_list<std::string_view> prefixes) noexcept {
   for (const auto& prefix : prefixes) {
+    if (s.size() >= prefix.size() && s.substr(0, prefix.size()) == prefix) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/// Check a named fixed-size prefix table without maintaining a separate count.
+template <typename Entry, size_t Size>
+[[nodiscard]] bool startsWithAny(std::string_view s, const Entry (&prefixes)[Size]) noexcept {
+  for (const std::string_view prefix : prefixes) {
     if (s.size() >= prefix.size() && s.substr(0, prefix.size()) == prefix) {
       return true;
     }

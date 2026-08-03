@@ -78,7 +78,7 @@ float scoreStemAndIchidan(float base, const InflectionScoreContext& context) {
     // EXCEPTION: すぎ (→ すぎる) is a legitimate Ichidan verb commonly used as auxiliary
     // Only apply penalty to stems that shouldn't be Ichidan (not E-row, not I-row)
     if (required_conn == conn::kVerbOnbinkei && !endsWithERow(stem) && !endsWithIRow(stem) &&
-        !isInArray(stem, inflection::kValidHiraganaStemExceptions)) {
+        !equalsAny(stem, inflection::kValidHiraganaStemExceptions)) {
       base -= inflection::kPenaltyIchidanOnbinInvalid;
       logConfidenceAdjustment(-inflection::kPenaltyIchidanOnbinInvalid, "ichidan_onbin_invalid");
     }
@@ -174,7 +174,7 @@ float scoreStemAndIchidan(float base, const InflectionScoreContext& context) {
         if (last_char == "て") {
           // Check if this is a known exception (捨て, 棄て)
           std::string_view stem_before_te = stem.substr(0, stem_len - core::kJapaneseCharBytes);
-          if (!isInArray(stem_before_te, inflection::kTeEndingStemExceptionKanji)) {
+          if (!equalsAny(stem_before_te, inflection::kTeEndingStemExceptionKanji)) {
             is_te_stem_in_base_context = true;
           }
         }
@@ -381,7 +381,7 @@ float scoreStemAndIchidan(float base, const InflectionScoreContext& context) {
   //   - Used after i-adjective stem: 高すぎる (too expensive)
   //   - Must be recognized as legitimate Ichidan verb
   // P5-3: Added exception for でき (from できる - to be able)
-  bool is_valid_hiragana_stem = isInArray(stem, inflection::kValidHiraganaStemExceptions);
+  bool is_valid_hiragana_stem = equalsAny(stem, inflection::kValidHiraganaStemExceptions);
   if (type == VerbType::Ichidan && stem_len >= core::kTwoJapaneseCharBytes && isPureHiragana(stem) &&
       !is_valid_hiragana_stem) {
     float pen = GET_OPT(penalty_pure_hiragana_stem, inflection::kPenaltyPureHiraganaStem);
@@ -512,7 +512,7 @@ float scoreGodan(float base, const InflectionScoreContext& context) {
   // E.g., くなかった should NOT be parsed as Ichidan く + なかった = くる
   // E.g., こなかった should NOT be parsed as Ichidan こ + なかった = こる
   if (type == VerbType::Ichidan && stem_len == core::kJapaneseCharBytes) {
-    if (isInArray(stem, inflection::kInvalidIchidanSingleStems)) {
+    if (equalsAny(stem, inflection::kInvalidIchidanSingleStems)) {
       float pen = GET_OPT(penalty_ichidan_irregular_stem, inflection::kPenaltyIchidanIrregularStem);
       base -= pen;
       logConfidenceAdjustment(-pen, "ichidan_irregular_stem");
@@ -526,7 +526,7 @@ float scoreGodan(float base, const InflectionScoreContext& context) {
   if (type == VerbType::Ichidan && stem_len == core::kJapaneseCharBytes && required_conn == conn::kVerbMizenkei &&
       !endsWithKanji(stem)) {
     // Check if stem is a common particle
-    if (isInArray(stem, inflection::kParticleStemList)) {
+    if (equalsAny(stem, inflection::kParticleStemList)) {
       float pen =
           GET_OPT(penalty_ichidan_single_hiragana_particle, inflection::kPenaltyIchidanSingleHiraganaParticleStem);
       base -= pen;
@@ -543,7 +543,7 @@ float scoreGodan(float base, const InflectionScoreContext& context) {
     std::string_view second = stem.substr(core::kJapaneseCharBytes);
     // If first char is a common particle and second is な, this is likely
     // a misparse of PARTICLE + ない(adjective/aux)
-    if (second == "な" && isInArray(first, inflection::kParticleStemList)) {
+    if (second == "な" && equalsAny(first, inflection::kParticleStemList)) {
       base -= inflection::kPenaltyGodanWaParticleNaStem;
       logConfidenceAdjustment(-inflection::kPenaltyGodanWaParticleNaStem, "godan_wa_particle_na_stem");
     }

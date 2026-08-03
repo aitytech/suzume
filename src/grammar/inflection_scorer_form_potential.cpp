@@ -98,7 +98,7 @@ float scoreAdjectiveAndForm(float base, const InflectionScoreContext& context) {
   // This prevents "勘違い" from being parsed as adjective
   if (type == VerbType::IAdjective && stem_len == core::kTwoJapaneseCharBytes && isAllKanji(stem)) {
     // Check if in valid exceptions list
-    bool is_valid_two_kanji = isInArray(stem, inflection::kValidTwoKanjiIAdjStems);
+    bool is_valid_two_kanji = equalsAny(stem, inflection::kValidTwoKanjiIAdjStems);
     if (!is_valid_two_kanji) {
       base -= inflection::kPenaltyIAdjTwoKanjiStem;
       logConfidenceAdjustment(-inflection::kPenaltyIAdjTwoKanjiStem, "i_adj_two_kanji_stem");
@@ -175,7 +175,7 @@ float scoreAdjectiveAndForm(float base, const InflectionScoreContext& context) {
       // E.g., やば (やばい), なさ (なさい with そう) are valid i-adjectives
       // Exception: つら (辛い), きら (嫌い) are valid i-adjective stems
       if (stem_len == core::kTwoJapaneseCharBytes && isPureHiragana(stem) && last == "ら" &&
-          !isInArray(stem, inflection::kValidIAdjRaStemExceptions)) {
+          !equalsAny(stem, inflection::kValidIAdjRaStemExceptions)) {
         base -= inflection::kPenaltyIAdjMizenkeiPattern;
         logConfidenceAdjustment(-inflection::kPenaltyIAdjMizenkeiPattern, "i_adj_2char_ra_stem");
       }
