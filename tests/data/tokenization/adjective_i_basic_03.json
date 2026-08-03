@@ -433,6 +433,33 @@
       ],
       "id": "namonono_wanai",
       "input": "便利なものの使わない。"
+    },
+    {
+      "description": "Complete adjective and nominalizer are not absorbed by a fabricated compound verb",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高い"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        },
+        {
+          "lemma": "ね",
+          "pos": "Particle",
+          "surface": "ね"
+        }
+      ],
+      "id": "inokane",
+      "input": "高いのかね"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional (part 3/3)",

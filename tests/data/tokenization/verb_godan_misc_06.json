@@ -1507,6 +1507,268 @@
       ],
       "id": "sa_renyokei_closed_auxiliary_control",
       "input": "荒らした。"
+    },
+    {
+      "description": "L2 evidence restores a kana noun split as an irrealis verb plus auxiliary",
+      "expected": [
+        {
+          "lemma": "みず",
+          "pos": "Noun",
+          "surface": "みず"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲む"
+        }
+      ],
+      "id": "mizuwo_mu",
+      "input": "みずを飲む"
+    },
+    {
+      "description": "L2 evidence restores a kana noun split through multiple closed-class homographs",
+      "expected": [
+        {
+          "lemma": "てがみ",
+          "pos": "Noun",
+          "surface": "てがみ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        }
+      ],
+      "id": "tegamiwo_mu",
+      "input": "てがみを読む"
+    },
+    {
+      "description": "L2 evidence restores a two-mora kana noun before a case particle",
+      "expected": [
+        {
+          "lemma": "にわ",
+          "pos": "Noun",
+          "surface": "にわ"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "出る",
+          "pos": "Verb",
+          "surface": "出る"
+        }
+      ],
+      "id": "niwani_ru",
+      "input": "にわに出る"
+    },
+    {
+      "description": "Pure-hiragana Godan continuative before classical adnominal auxiliary",
+      "expected": [
+        {
+          "lemma": "雲",
+          "pos": "Noun",
+          "surface": "雲"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "たなびく",
+          "pos": "Verb",
+          "surface": "たなびき"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たる"
+        }
+      ],
+      "id": "notanabikitaru",
+      "input": "雲のたなびきたる。"
+    },
+    {
+      "description": "Pure-hiragana continuative retains its final mora before classical auxiliary",
+      "expected": [
+        {
+          "lemma": "鐘",
+          "pos": "Noun",
+          "surface": "鐘"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "音",
+          "pos": "Noun",
+          "surface": "音"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "ひびく",
+          "pos": "Verb",
+          "surface": "ひびき"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たる"
+        }
+      ],
+      "id": "no_nohibikitaru",
+      "input": "鐘の音のひびきたる"
+    },
+    {
+      "description": "Kanji-led continuative control before classical adnominal auxiliary",
+      "expected": [
+        {
+          "lemma": "花",
+          "pos": "Noun",
+          "surface": "花"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "咲く",
+          "pos": "Verb",
+          "surface": "咲き"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たる"
+        }
+      ],
+      "id": "no_kitaru",
+      "input": "花の咲きたる。"
+    },
+    {
+      "description": "Kana noun before accusative particle is not split as attributive copula",
+      "expected": [
+        {
+          "lemma": "ひらがな",
+          "pos": "Noun",
+          "surface": "ひらがな"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        }
+      ],
+      "id": "hiraganawo_ku",
+      "input": "ひらがなを書く"
+    },
+    {
+      "description": "L2 hiragana noun remains whole across grammatical frames",
+      "expected": [
+        {
+          "lemma": "くだもの",
+          "pos": "Noun",
+          "surface": "くだもの"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べる"
+        }
+      ],
+      "id": "kudamonowo_beru",
+      "input": "くだものを食べる"
+    },
+    {
+      "description": "Duration suffix boundary remains before a following verb",
+      "expected": [
+        {
+          "lemma": "三日間",
+          "pos": "Noun",
+          "surface": "三日間"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待つ"
+        }
+      ],
+      "id": "tsu_2",
+      "input": "三日間待つ"
+    },
+    {
+      "description": "Duration noun followed by an independent verb control",
+      "expected": [
+        {
+          "lemma": "一週間",
+          "pos": "Noun",
+          "surface": "一週間"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかる"
+        }
+      ],
+      "id": "kakaru_5",
+      "input": "一週間かかる"
+    },
+    {
+      "description": "Verb nominalizer and sentence-final particles control",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        },
+        {
+          "lemma": "な",
+          "pos": "Particle",
+          "surface": "な"
+        }
+      ],
+      "id": "kunokana",
+      "input": "行くのかな"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",

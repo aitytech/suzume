@@ -2060,6 +2060,40 @@
       ],
       "id": "d4_final_sa_hiragana_noun_control",
       "input": "あさひが昇る。"
+    },
+    {
+      "description": "A standalone L2 noun containing a topic-particle homograph stays whole",
+      "expected": [
+        {
+          "lemma": "はにわ",
+          "pos": "Noun",
+          "surface": "はにわ"
+        }
+      ],
+      "id": "haniwa",
+      "input": "はにわ"
+    },
+    {
+      "description": "Sentence-final hiragana noun ending in particle homograph",
+      "expected": [
+        {
+          "lemma": "春",
+          "pos": "Noun",
+          "surface": "春"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "あけぼの",
+          "pos": "Noun",
+          "surface": "あけぼの"
+        }
+      ],
+      "id": "haakebono",
+      "input": "春はあけぼの"
     }
   ],
   "description": "General nouns (part 3/3)",

@@ -2476,6 +2476,65 @@
       ],
       "id": "besouna",
       "input": "食べそうな人"
+    },
+    {
+      "description": "Topic particle remains separate before an L2 kana noun and copula",
+      "expected": [
+        {
+          "lemma": "そこ",
+          "pos": "Pronoun",
+          "surface": "そこ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "にわ",
+          "pos": "Noun",
+          "surface": "にわ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "sokohaniwadattta",
+      "input": "そこはにわだった"
+    },
+    {
+      "description": "Topic particle remains separate before a multicell L2 kana noun",
+      "expected": [
+        {
+          "lemma": "ここ",
+          "pos": "Pronoun",
+          "surface": "ここ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "いりぐち",
+          "pos": "Noun",
+          "surface": "いりぐち"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "kokohairiguchida",
+      "input": "ここはいりぐちだ"
     }
   ],
   "description": "Modality auxiliaries (たい、そう、らしい)",

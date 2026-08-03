@@ -2327,6 +2327,60 @@
       ],
       "id": "mikandatttara",
       "input": "みかんだったら"
+    },
+    {
+      "description": "L2 hiragana noun remains whole across grammatical frames",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "くだもの",
+          "pos": "Noun",
+          "surface": "くだもの"
+        }
+      ],
+      "id": "korehakudamono",
+      "input": "これはくだもの"
+    },
+    {
+      "description": "Hiragana noun ending in shi remains nominal before the copula",
+      "expected": [
+        {
+          "lemma": "ゆうべ",
+          "pos": "Noun",
+          "surface": "ゆうべ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "あらし",
+          "pos": "Noun",
+          "surface": "あらし"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "hiragana_noun_shi_before_copula",
+      "input": "ゆうべはあらしだった"
     }
   ],
   "description": "Copula patterns (だ、です、である)",
