@@ -63,6 +63,109 @@
       ],
       "id": "wo_mubekinari_2",
       "input": "水を飲むべきなり。"
+    },
+    {
+      "description": "紙は美しかり。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "美しい",
+          "pos": "Adjective",
+          "surface": "美しかり"
+        }
+      ],
+      "id": "ha_shikari",
+      "input": "紙は美しかり。"
+    },
+    {
+      "description": "水は高からむ。 - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高から"
+        },
+        {
+          "lemma": "む",
+          "pos": "Auxiliary",
+          "surface": "む"
+        }
+      ],
+      "id": "ha_karamu",
+      "input": "水は高からむ。"
+    },
+    {
+      "description": "資料は多かれど。 - regression test",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "多い",
+          "pos": "Adjective",
+          "surface": "多かれ"
+        },
+        {
+          "lemma": "ど",
+          "pos": "Particle",
+          "surface": "ど"
+        }
+      ],
+      "id": "ha_karedo",
+      "input": "資料は多かれど。"
+    },
+    {
+      "description": "資料は難しからず。 - regression test",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しから"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        }
+      ],
+      "id": "ha_shikarazu",
+      "input": "資料は難しからず。"
     }
   ],
   "description": "literary_classic tests (part 2/2)",

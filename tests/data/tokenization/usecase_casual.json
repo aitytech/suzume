@@ -1126,6 +1126,77 @@
       "tags": [
         "colloquial"
       ]
+    },
+    {
+      "description": "A complete kana Godan terminal after a case particle remains one predicate.",
+      "expected": [
+        {
+          "lemma": "犬",
+          "pos": "Noun",
+          "surface": "犬"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "はしる",
+          "pos": "Verb",
+          "surface": "はしる"
+        }
+      ],
+      "id": "c3_case_particle_hiragana_godan",
+      "input": "犬とはしる。"
+    },
+    {
+      "description": "A kana terminal with an internal particle homograph remains one predicate.",
+      "expected": [
+        {
+          "lemma": "家",
+          "pos": "Noun",
+          "surface": "家"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "もどる",
+          "pos": "Verb",
+          "surface": "もどる"
+        }
+      ],
+      "id": "c3_case_particle_internal_particle_homograph",
+      "input": "家にもどる。"
+    },
+    {
+      "description": "An ambiguous e-row nominal stem remains separate before a formal noun.",
+      "expected": [
+        {
+          "lemma": "たて",
+          "pos": "Noun",
+          "surface": "たて"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "もの"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "見える",
+          "pos": "Verb",
+          "surface": "見える"
+        }
+      ],
+      "id": "c3_formal_noun_boundary",
+      "input": "たてものが見える。"
     }
   ],
   "version": "1.0"

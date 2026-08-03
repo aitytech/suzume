@@ -863,6 +863,254 @@
       ],
       "id": "wo_ri_man",
       "input": "友を送り込まん"
+    },
+    {
+      "description": "風の吹きたる。 - regression test",
+      "expected": [
+        {
+          "lemma": "風",
+          "pos": "Noun",
+          "surface": "風"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "吹く",
+          "pos": "Verb",
+          "surface": "吹き"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たる"
+        }
+      ],
+      "id": "no_kitaru_2",
+      "input": "風の吹きたる。"
+    },
+    {
+      "description": "雨の降りたるは。 - regression test",
+      "expected": [
+        {
+          "lemma": "雨",
+          "pos": "Noun",
+          "surface": "雨"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "降りる",
+          "pos": "Verb",
+          "surface": "降り"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たる"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        }
+      ],
+      "id": "no_ritaruha",
+      "input": "雨の降りたるは。"
+    },
+    {
+      "description": "雪が降りたる。 - regression test",
+      "expected": [
+        {
+          "lemma": "雪",
+          "pos": "Noun",
+          "surface": "雪"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "降りる",
+          "pos": "Verb",
+          "surface": "降り"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たる"
+        }
+      ],
+      "id": "ga_ritaru",
+      "input": "雪が降りたる。"
+    },
+    {
+      "description": "彼の連ねたる言葉。 - regression test",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "連ねる",
+          "pos": "Verb",
+          "surface": "連ね"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たる"
+        },
+        {
+          "lemma": "言葉",
+          "pos": "Noun",
+          "surface": "言葉"
+        }
+      ],
+      "id": "no_netaru",
+      "input": "彼の連ねたる言葉。"
+    },
+    {
+      "description": "紙のごとく薄し。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "ごとし",
+          "pos": "Auxiliary",
+          "surface": "ごとく"
+        },
+        {
+          "lemma": "薄い",
+          "pos": "Adjective",
+          "surface": "薄し"
+        }
+      ],
+      "id": "nogotoku_shi",
+      "input": "紙のごとく薄し。"
+    },
+    {
+      "description": "水のごとし。 - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "ごとし",
+          "pos": "Auxiliary",
+          "surface": "ごとし"
+        }
+      ],
+      "id": "nogotoshi",
+      "input": "水のごとし。"
+    },
+    {
+      "description": "紙のように薄い。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Noun",
+          "surface": "よう"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "薄い",
+          "pos": "Adjective",
+          "surface": "薄い"
+        }
+      ],
+      "id": "noyouni_i",
+      "input": "紙のように薄い。"
+    },
+    {
+      "description": "資料こそ重要なれ。 - regression test",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "こそ",
+          "pos": "Particle",
+          "surface": "こそ"
+        },
+        {
+          "lemma": "重要",
+          "pos": "Adjective",
+          "surface": "重要"
+        },
+        {
+          "lemma": "なり",
+          "pos": "Auxiliary",
+          "surface": "なれ"
+        }
+      ],
+      "id": "koso_nare",
+      "input": "資料こそ重要なれ。"
+    },
+    {
+      "description": "重要なれば。 - regression test",
+      "expected": [
+        {
+          "lemma": "重要",
+          "pos": "Adjective",
+          "surface": "重要"
+        },
+        {
+          "lemma": "なり",
+          "pos": "Auxiliary",
+          "surface": "なれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "nareba",
+      "input": "重要なれば。"
     }
   ],
   "description": "auxiliary_classical tests",

@@ -1829,6 +1829,147 @@
       ],
       "id": "tech_doc_documentation_spec",
       "input": "結果は成功時に0を返す"
+    },
+    {
+      "description": "問題が複数見つかったため、見直す。 - regression test",
+      "expected": [
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "複数",
+          "pos": "Noun",
+          "surface": "複数"
+        },
+        {
+          "lemma": "見つかる",
+          "pos": "Verb",
+          "surface": "見つかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "ため",
+          "pos": "Noun",
+          "surface": "ため"
+        },
+        {
+          "lemma": "見直す",
+          "pos": "Verb",
+          "surface": "見直す"
+        }
+      ],
+      "id": "ga_tsukatttatame_su",
+      "input": "問題が複数見つかったため、見直す。"
+    },
+    {
+      "description": "問題が複数見つかった。 - regression test",
+      "expected": [
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "複数",
+          "pos": "Noun",
+          "surface": "複数"
+        },
+        {
+          "lemma": "見つかる",
+          "pos": "Verb",
+          "surface": "見つかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ga_tsukattta",
+      "input": "問題が複数見つかった。"
+    },
+    {
+      "description": "当初想定していなかった問題が複数見つかった。 - regression test",
+      "expected": [
+        {
+          "lemma": "当初",
+          "pos": "Noun",
+          "surface": "当初"
+        },
+        {
+          "lemma": "想定",
+          "pos": "Noun",
+          "surface": "想定"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "い"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "複数",
+          "pos": "Noun",
+          "surface": "複数"
+        },
+        {
+          "lemma": "見つかる",
+          "pos": "Verb",
+          "surface": "見つかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shiteinakattta_ga_tsukattta",
+      "input": "当初想定していなかった問題が複数見つかった。"
     }
   ],
   "version": "1.0"

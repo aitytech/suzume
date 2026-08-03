@@ -1,0 +1,181 @@
+{
+  "cases": [
+    {
+      "description": "注意を要するもの。 - regression test",
+      "expected": [
+        {
+          "lemma": "注意",
+          "pos": "Noun",
+          "surface": "注意"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "要する",
+          "pos": "Verb",
+          "surface": "要する"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "もの"
+        }
+      ],
+      "id": "wo_surumono",
+      "input": "注意を要するもの。"
+    },
+    {
+      "description": "注意を要する。 - regression test",
+      "expected": [
+        {
+          "lemma": "注意",
+          "pos": "Noun",
+          "surface": "注意"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "要する",
+          "pos": "Verb",
+          "surface": "要する"
+        }
+      ],
+      "id": "wo_suru_5",
+      "input": "注意を要する。"
+    },
+    {
+      "description": "注意を要する場合。 - regression test",
+      "expected": [
+        {
+          "lemma": "注意",
+          "pos": "Noun",
+          "surface": "注意"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "要する",
+          "pos": "Verb",
+          "surface": "要する"
+        },
+        {
+          "lemma": "場合",
+          "pos": "Noun",
+          "surface": "場合"
+        }
+      ],
+      "id": "wo_suru_6",
+      "input": "注意を要する場合。"
+    },
+    {
+      "description": "注意を要します。 - regression test",
+      "expected": [
+        {
+          "lemma": "注意",
+          "pos": "Noun",
+          "surface": "注意"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "要す",
+          "pos": "Verb",
+          "surface": "要し"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "wo_shimasu",
+      "input": "注意を要します。"
+    },
+    {
+      "description": "資する。 - regression test",
+      "expected": [
+        {
+          "lemma": "資する",
+          "pos": "Verb",
+          "surface": "資する"
+        }
+      ],
+      "id": "suru_14",
+      "input": "資する。"
+    },
+    {
+      "description": "反する。 - regression test",
+      "expected": [
+        {
+          "lemma": "反する",
+          "pos": "Verb",
+          "surface": "反する"
+        }
+      ],
+      "id": "suru_15",
+      "input": "反する。"
+    },
+    {
+      "description": "面する。 - regression test",
+      "expected": [
+        {
+          "lemma": "面する",
+          "pos": "Verb",
+          "surface": "面する"
+        }
+      ],
+      "id": "suru_16",
+      "input": "面する。"
+    },
+    {
+      "description": "属する。 - regression test",
+      "expected": [
+        {
+          "lemma": "属する",
+          "pos": "Verb",
+          "surface": "属する"
+        }
+      ],
+      "id": "suru_17",
+      "input": "属する。"
+    },
+    {
+      "description": "適する。 - regression test",
+      "expected": [
+        {
+          "lemma": "適する",
+          "pos": "Verb",
+          "surface": "適する"
+        }
+      ],
+      "id": "suru_18",
+      "input": "適する。"
+    },
+    {
+      "description": "達する。 - regression test",
+      "expected": [
+        {
+          "lemma": "達する",
+          "pos": "Verb",
+          "surface": "達する"
+        }
+      ],
+      "id": "suru_19",
+      "input": "達する。"
+    }
+  ],
+  "description": "verb_sahen tests",
+  "version": "1.0"
+}

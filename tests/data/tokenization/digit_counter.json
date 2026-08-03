@@ -629,6 +629,145 @@
       ],
       "id": "ninaru",
       "input": "一人前になる"
+    },
+    {
+      "description": "Comma-grouped numeral keeps its counter boundary",
+      "expected": [
+        {
+          "lemma": "1,000",
+          "pos": "Noun",
+          "surface": "1,000"
+        },
+        {
+          "lemma": "人",
+          "pos": "Suffix",
+          "surface": "人"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "参加",
+          "pos": "Noun",
+          "surface": "参加"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "comma_thousand_people",
+      "input": "1,000人が参加した。"
+    },
+    {
+      "description": "Comma-grouped numeral keeps its counter boundary",
+      "expected": [
+        {
+          "lemma": "1,050",
+          "pos": "Noun",
+          "surface": "1,050"
+        },
+        {
+          "lemma": "人",
+          "pos": "Suffix",
+          "surface": "人"
+        }
+      ],
+      "id": "comma_thousand_people_variant",
+      "input": "1,050人"
+    },
+    {
+      "description": "Comma-grouped numeral keeps its counter boundary",
+      "expected": [
+        {
+          "lemma": "1,200",
+          "pos": "Noun",
+          "surface": "1,200"
+        },
+        {
+          "lemma": "人",
+          "pos": "Suffix",
+          "surface": "人"
+        }
+      ],
+      "id": "comma_twelve_hundred_people",
+      "input": "1,200人"
+    },
+    {
+      "description": "Comma-grouped numeral keeps its counter boundary",
+      "expected": [
+        {
+          "lemma": "3,000",
+          "pos": "Noun",
+          "surface": "3,000"
+        },
+        {
+          "lemma": "部",
+          "pos": "Suffix",
+          "surface": "部"
+        }
+      ],
+      "id": "comma_thousand_counter",
+      "input": "3,000部"
+    },
+    {
+      "description": "Comma-grouped numeral keeps its counter boundary",
+      "expected": [
+        {
+          "lemma": "1,000円",
+          "pos": "Noun",
+          "surface": "1,000円"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "comma_thousand_yen",
+      "input": "1,000円だ。"
+    },
+    {
+      "description": "Comma-grouped numeral keeps its counter boundary",
+      "expected": [
+        {
+          "lemma": "2,000円",
+          "pos": "Noun",
+          "surface": "2,000円"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "comma_two_thousand_yen",
+      "input": "2,000円だ。"
+    },
+    {
+      "description": "Comma-grouped numeral keeps its counter boundary",
+      "expected": [
+        {
+          "lemma": "10,000円",
+          "pos": "Noun",
+          "surface": "10,000円"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "comma_ten_thousand_yen",
+      "input": "10,000円だ。"
     }
   ],
   "description": "digit_counter tests",

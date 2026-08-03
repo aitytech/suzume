@@ -1140,6 +1140,109 @@
       ],
       "id": "monodake_ttte_ku",
       "input": "ものだけ持って行く"
+    },
+    {
+      "description": "Keep the closed focus particle intact after a hiragana noun.",
+      "expected": [
+        {
+          "lemma": "りんご",
+          "pos": "Noun",
+          "surface": "りんご"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買う"
+        }
+      ],
+      "id": "d3_dake_hiragana_noun",
+      "input": "りんごだけ買う。"
+    },
+    {
+      "description": "Keep stacked closed focus particles intact after a hiragana noun.",
+      "expected": [
+        {
+          "lemma": "りんご",
+          "pos": "Noun",
+          "surface": "りんご"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "でも",
+          "pos": "Particle",
+          "surface": "でも"
+        },
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買う"
+        }
+      ],
+      "id": "d3_dake_demo_hiragana_noun",
+      "input": "りんごだけでも買う。"
+    },
+    {
+      "description": "Kanji-host focus-particle control.",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "でも",
+          "pos": "Particle",
+          "surface": "でも"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        }
+      ],
+      "id": "d3_dake_kanji_control",
+      "input": "本だけでも読む。"
+    },
+    {
+      "description": "Second kanji-host focus-particle control.",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        },
+        {
+          "lemma": "でも",
+          "pos": "Particle",
+          "surface": "でも"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲む"
+        }
+      ],
+      "id": "d3_dake_kanji_control_water",
+      "input": "水だけでも飲む。"
     }
   ],
   "description": "particle_adverbial tests",

@@ -1879,6 +1879,187 @@
       ],
       "id": "sonomono",
       "input": "そのもの"
+    },
+    {
+      "description": "Keep a noun-forming suffix attached after a productive prefix.",
+      "expected": [
+        {
+          "lemma": "各担当者",
+          "pos": "Noun",
+          "surface": "各担当者"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ni_suru_4",
+      "input": "各担当者に確認する。"
+    },
+    {
+      "description": "Apply the same prefix-plus-noun-suffix recovery across prefixes.",
+      "expected": [
+        {
+          "lemma": "元担当者",
+          "pos": "Noun",
+          "surface": "元担当者"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞く"
+        }
+      ],
+      "id": "ni_ku_3",
+      "input": "元担当者に聞く。"
+    },
+    {
+      "description": "語末さを持つ未知名詞が感動詞と接尾辞に分割されない",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "うわさ",
+          "pos": "Noun",
+          "surface": "うわさ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "d4_interjection_final_sa_clause",
+      "input": "行くとのうわさだ。"
+    },
+    {
+      "description": "語末さを持つ未知名詞がコピュラ前で保たれる",
+      "expected": [
+        {
+          "lemma": "うわさ",
+          "pos": "Noun",
+          "surface": "うわさ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "d4_interjection_final_sa_copula",
+      "input": "うわさだ。"
+    },
+    {
+      "description": "語末さを持つ未知名詞が格助詞前で保たれる",
+      "expected": [
+        {
+          "lemma": "うわさ",
+          "pos": "Noun",
+          "surface": "うわさ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞く"
+        }
+      ],
+      "id": "d4_interjection_final_sa_case",
+      "input": "うわさを聞く。"
+    },
+    {
+      "description": "実在する形容詞語幹のさを含む形容動詞は保たれる",
+      "expected": [
+        {
+          "lemma": "ささやか",
+          "pos": "Adjective",
+          "surface": "ささやか"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "会",
+          "pos": "Noun",
+          "surface": "会"
+        }
+      ],
+      "id": "d4_adjective_nominalizer_control",
+      "input": "ささやかな会。"
+    },
+    {
+      "description": "語末さを持たないひらがな名詞は保たれる",
+      "expected": [
+        {
+          "lemma": "うわべ",
+          "pos": "Noun",
+          "surface": "うわべ"
+        },
+        {
+          "lemma": "だけ",
+          "pos": "Particle",
+          "surface": "だけ"
+        }
+      ],
+      "id": "d4_nonfinal_sa_control",
+      "input": "うわべだけ。"
+    },
+    {
+      "description": "語末さ以外のひらがな名詞は保たれる",
+      "expected": [
+        {
+          "lemma": "あさひ",
+          "pos": "Noun",
+          "surface": "あさひ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "昇る",
+          "pos": "Verb",
+          "surface": "昇る"
+        }
+      ],
+      "id": "d4_final_sa_hiragana_noun_control",
+      "input": "あさひが昇る。"
     }
   ],
   "description": "General nouns (part 3/3)",

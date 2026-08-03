@@ -21,6 +21,81 @@
       ],
       "id": "zukashigaranai",
       "input": "恥ずかしがらない"
+    },
+    {
+      "description": "Lexical i-adjective adverbial remains one token.",
+      "expected": [
+        {
+          "lemma": "そこはかとない",
+          "pos": "Adjective",
+          "surface": "そこはかとなく"
+        },
+        {
+          "lemma": "感じる",
+          "pos": "Verb",
+          "surface": "感じる"
+        }
+      ],
+      "id": "c2_sokohakatonaku_adverbial",
+      "input": "そこはかとなく感じる。"
+    },
+    {
+      "description": "Dialectal intensifier is an adverb.",
+      "expected": [
+        {
+          "lemma": "どえりゃー",
+          "pos": "Adverb",
+          "surface": "どえりゃー"
+        },
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高い"
+        }
+      ],
+      "id": "c2_dialectal_intensifier_pos",
+      "input": "どえりゃー高い。"
+    },
+    {
+      "description": "Existing adverbial control.",
+      "expected": [
+        {
+          "lemma": "なんとなく",
+          "pos": "Adverb",
+          "surface": "なんとなく"
+        }
+      ],
+      "id": "c2_adverbial_control_nantonaku",
+      "input": "なんとなく"
+    },
+    {
+      "description": "Negative auxiliary boundary control.",
+      "expected": [
+        {
+          "lemma": "さりげ",
+          "pos": "Noun",
+          "surface": "さりげ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なく"
+        }
+      ],
+      "id": "c2_adverbial_control_sarigenaku",
+      "input": "さりげなく"
+    },
+    {
+      "description": "I-adjective continuative control.",
+      "expected": [
+        {
+          "lemma": "はかない",
+          "pos": "Adjective",
+          "surface": "はかなく"
+        }
+      ],
+      "id": "c2_adverbial_control_hakanaku",
+      "input": "はかなく"
     }
   ],
   "description": "adjective_inflection tests",

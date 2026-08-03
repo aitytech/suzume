@@ -158,6 +158,107 @@
       ],
       "id": "atode_beru",
       "input": "あとで食べる"
+    },
+    {
+      "description": "Contracted preparative auxiliary volitional boundary.",
+      "expected": [
+        {
+          "lemma": "りんご",
+          "pos": "Noun",
+          "surface": "りんご"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買っ"
+        },
+        {
+          "lemma": "とく",
+          "pos": "Auxiliary",
+          "surface": "とこ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "c5_toku_volitional",
+      "input": "りんごを買っとこう。"
+    },
+    {
+      "description": "Uncontracted preparative auxiliary volitional control.",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "おく",
+          "pos": "Auxiliary",
+          "surface": "おこ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "c5_toku_uncontracted_control",
+      "input": "本を買っておこう。"
+    },
+    {
+      "description": "Contracted preparative auxiliary terminal-form control.",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "用意",
+          "pos": "Noun",
+          "surface": "用意"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "とく",
+          "pos": "Auxiliary",
+          "surface": "とく"
+        }
+      ],
+      "id": "c5_toku_terminal_control",
+      "input": "資料を用意しとく。"
     }
   ],
   "description": "colloquial_contracted tests",

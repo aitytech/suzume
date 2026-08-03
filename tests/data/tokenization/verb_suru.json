@@ -2472,6 +2472,85 @@
       ],
       "id": "shite_ru_2",
       "input": "損して帰る"
+    },
+    {
+      "description": "Keep fixed parallel and adverbial particles as one unit.",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "とか",
+          "pos": "Particle",
+          "surface": "とか"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "とか",
+          "pos": "Particle",
+          "surface": "とか"
+        }
+      ],
+      "id": "shitatokashinaitoka",
+      "input": "確認したとかしないとか。"
+    },
+    {
+      "description": "Keep concessive tomo as one particle after a volitional auxiliary.",
+      "expected": [
+        {
+          "lemma": "たとえ",
+          "pos": "Adverb",
+          "surface": "たとえ"
+        },
+        {
+          "lemma": "失敗",
+          "pos": "Noun",
+          "surface": "失敗"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "しよ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "とも",
+          "pos": "Particle",
+          "surface": "とも"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "tatoe_shiyoutomo_mu",
+      "input": "たとえ失敗しようとも進む。"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",

@@ -97,6 +97,443 @@
       ],
       "id": "benkyou_shi_hajimeru",
       "input": "勉強し始める"
+    },
+    {
+      "description": "漢字連内部から始まる未検証動詞分割を防ぐ",
+      "expected": [
+        {
+          "lemma": "提出",
+          "pos": "Noun",
+          "surface": "提出"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "す"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べから"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        }
+      ],
+      "id": "e1_internal_kanji_verb_root",
+      "input": "提出すべからず。"
+    },
+    {
+      "description": "漢字連内部から始まる未検証動詞分割を防ぐ",
+      "expected": [
+        {
+          "lemma": "提出",
+          "pos": "Noun",
+          "surface": "提出"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "す"
+        }
+      ],
+      "id": "e1_internal_kanji_verb_bare",
+      "input": "提出す"
+    },
+    {
+      "description": "漢字連内部から始まる未検証動詞分割を防ぐ",
+      "expected": [
+        {
+          "lemma": "提示",
+          "pos": "Noun",
+          "surface": "提示"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "す"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べし"
+        }
+      ],
+      "id": "e1_internal_kanji_verb_variant",
+      "input": "提示すべし"
+    },
+    {
+      "description": "漢字連内部から始まる未検証動詞分割を防ぐ",
+      "expected": [
+        {
+          "lemma": "外出",
+          "pos": "Noun",
+          "surface": "外出"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "す"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べし"
+        }
+      ],
+      "id": "e1_internal_kanji_verb_prefix_variant",
+      "input": "外出すべし"
+    },
+    {
+      "description": "漢字連内部から始まる未検証動詞分割を防ぐ",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買う"
+        }
+      ],
+      "id": "e1_particleless_noun_verb_control",
+      "input": "本買う。"
+    },
+    {
+      "description": "検討しさえすればよい。 - regression test",
+      "expected": [
+        {
+          "lemma": "検討",
+          "pos": "Noun",
+          "surface": "検討"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "さえ",
+          "pos": "Particle",
+          "surface": "さえ"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "すれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よい"
+        }
+      ],
+      "id": "shisaesurebayoi",
+      "input": "検討しさえすればよい。"
+    },
+    {
+      "description": "報告しさえすればよい。 - regression test",
+      "expected": [
+        {
+          "lemma": "報告",
+          "pos": "Noun",
+          "surface": "報告"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "さえ",
+          "pos": "Particle",
+          "surface": "さえ"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "すれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よい"
+        }
+      ],
+      "id": "shisaesurebayoi_2",
+      "input": "報告しさえすればよい。"
+    },
+    {
+      "description": "認識しさえすればよい。 - regression test",
+      "expected": [
+        {
+          "lemma": "認識",
+          "pos": "Noun",
+          "surface": "認識"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "さえ",
+          "pos": "Particle",
+          "surface": "さえ"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "すれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よい"
+        }
+      ],
+      "id": "shisaesurebayoi_3",
+      "input": "認識しさえすればよい。"
+    },
+    {
+      "description": "掃除しさえすればよい。 - regression test",
+      "expected": [
+        {
+          "lemma": "掃除",
+          "pos": "Noun",
+          "surface": "掃除"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "さえ",
+          "pos": "Particle",
+          "surface": "さえ"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "すれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よい"
+        }
+      ],
+      "id": "shisaesurebayoi_4",
+      "input": "掃除しさえすればよい。"
+    },
+    {
+      "description": "確認してもよい。 - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "よい",
+          "pos": "Adjective",
+          "surface": "よい"
+        }
+      ],
+      "id": "shitemoyoi",
+      "input": "確認してもよい。"
+    },
+    {
+      "description": "確認しては困る。 - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "困る",
+          "pos": "Verb",
+          "surface": "困る"
+        }
+      ],
+      "id": "shiteha_ru",
+      "input": "確認しては困る。"
+    },
+    {
+      "description": "確認しながら進む。 - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ながら",
+          "pos": "Particle",
+          "surface": "ながら"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "shinagara_mu",
+      "input": "確認しながら進む。"
+    },
+    {
+      "description": "確認しつつ進む。 - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "つつ",
+          "pos": "Particle",
+          "surface": "つつ"
+        },
+        {
+          "lemma": "進む",
+          "pos": "Verb",
+          "surface": "進む"
+        }
+      ],
+      "id": "shitsutsu_mu",
+      "input": "確認しつつ進む。"
+    },
+    {
+      "description": "確認しはじめる。 - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "はじめる",
+          "pos": "Auxiliary",
+          "surface": "はじめる"
+        }
+      ],
+      "id": "shihajimeru",
+      "input": "確認しはじめる。"
+    },
+    {
+      "description": "確認しない。 - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "shinai_2",
+      "input": "確認しない。"
+    },
+    {
+      "description": "確認した。 - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "shita_8",
+      "input": "確認した。"
     }
   ],
   "description": "sahen_verb tests",

@@ -380,6 +380,43 @@
       ],
       "id": "honorific_noun_ni_predicate_boundary",
       "input": "お役に立った。"
+    },
+    {
+      "description": "Honorific nominal plus receptive auxiliary remains a complete search unit",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "目通す",
+          "pos": "Verb",
+          "surface": "目通し"
+        },
+        {
+          "lemma": "いただける",
+          "pos": "Auxiliary",
+          "surface": "いただけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "幸い",
+          "pos": "Adjective",
+          "surface": "幸い"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "honorific_metooshi_itadakereba",
+      "input": "お目通しいただければ幸いです。"
     }
   ],
   "description": "honorific tests",

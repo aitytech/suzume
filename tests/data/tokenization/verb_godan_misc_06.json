@@ -1232,6 +1232,281 @@
       ],
       "id": "wakewakaranakattta",
       "input": "わけわからなかった"
+    },
+    {
+      "description": "Keep a lexical word exception from replacing an inflected verb.",
+      "expected": [
+        {
+          "lemma": "日程",
+          "pos": "Noun",
+          "surface": "日程"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "打ち合わせる",
+          "pos": "Verb",
+          "surface": "打ち合わせる"
+        }
+      ],
+      "id": "wo_chi_waseru",
+      "input": "日程を打ち合わせる。"
+    },
+    {
+      "description": "Keep an L2 noun from starting inside a case-particle boundary.",
+      "expected": [
+        {
+          "lemma": "先生",
+          "pos": "Noun",
+          "surface": "先生"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "gao_mininaru",
+      "input": "先生がお読みになる。"
+    },
+    {
+      "description": "Prefer an inflection-backed honorific continuative over a nominalization.",
+      "expected": [
+        {
+          "lemma": "部長",
+          "pos": "Noun",
+          "surface": "部長"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "見える",
+          "pos": "Verb",
+          "surface": "見え"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "gao_eninaru",
+      "input": "部長がお見えになる。"
+    },
+    {
+      "description": "Keep a noun-derived Godan-ru verb intact across the sokuon past form.",
+      "expected": [
+        {
+          "lemma": "ミスる",
+          "pos": "Verb",
+          "surface": "ミスっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ttta_5",
+      "input": "ミスった。"
+    },
+    {
+      "description": "Split a lexicalized productive causative-su verb at its inflection boundary.",
+      "expected": [
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待た"
+        },
+        {
+          "lemma": "す",
+          "pos": "Auxiliary",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "tasareta",
+      "input": "待たされた。"
+    },
+    {
+      "description": "Split a lexicalized productive causative-su verb at its inflection boundary.",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行か"
+        },
+        {
+          "lemma": "す",
+          "pos": "Auxiliary",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kasareta",
+      "input": "行かされた。"
+    },
+    {
+      "description": "Keep the i-adjective continuative plus naru boundary.",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "無い",
+          "pos": "Adjective",
+          "surface": "無く"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ga_kunattta",
+      "input": "資料が無くなった。"
+    },
+    {
+      "description": "Keep fixed parallel and adverbial particles as one unit.",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "ん"
+        },
+        {
+          "lemma": "だって",
+          "pos": "Particle",
+          "surface": "だって"
+        }
+      ],
+      "id": "kundattte",
+      "input": "行くんだって。"
+    },
+    {
+      "description": "Keep concessive tomo as one particle after a volitional auxiliary.",
+      "expected": [
+        {
+          "lemma": "雨",
+          "pos": "Noun",
+          "surface": "雨"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "降る",
+          "pos": "Verb",
+          "surface": "降ろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "とも",
+          "pos": "Particle",
+          "surface": "とも"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        }
+      ],
+      "id": "ga_routomo_ku",
+      "input": "雨が降ろうとも行く。"
+    },
+    {
+      "description": "閉じた助動詞同形の五段サ行音便を保持する対照",
+      "expected": [
+        {
+          "lemma": "荒らす",
+          "pos": "Verb",
+          "surface": "荒らし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "sa_renyokei_closed_auxiliary_control",
+      "input": "荒らした。"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",

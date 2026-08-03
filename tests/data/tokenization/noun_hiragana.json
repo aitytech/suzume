@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "description": "あけぼのの空。 - regression test",
+      "expected": [
+        {
+          "lemma": "あけぼの",
+          "pos": "Noun",
+          "surface": "あけぼの"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "空",
+          "pos": "Noun",
+          "surface": "空"
+        }
+      ],
+      "id": "akebonono",
+      "input": "あけぼのの空。"
+    }
+  ],
+  "description": "noun_hiragana tests",
+  "version": "1.0"
+}

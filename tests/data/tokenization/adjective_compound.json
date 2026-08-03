@@ -706,6 +706,140 @@
       ],
       "id": "i_i",
       "input": "罪深い行い"
+    },
+    {
+      "description": "会議がだるすぎる。 - regression test",
+      "expected": [
+        {
+          "lemma": "会議",
+          "pos": "Noun",
+          "surface": "会議"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "だるい",
+          "pos": "Adjective",
+          "surface": "だる"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        }
+      ],
+      "id": "gadarusugiru",
+      "input": "会議がだるすぎる。"
+    },
+    {
+      "description": "ゆるすぎる。 - regression test",
+      "expected": [
+        {
+          "lemma": "ゆるい",
+          "pos": "Adjective",
+          "surface": "ゆる"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        }
+      ],
+      "id": "yurusugiru",
+      "input": "ゆるすぎる。"
+    },
+    {
+      "description": "きつすぎる。 - regression test",
+      "expected": [
+        {
+          "lemma": "きつい",
+          "pos": "Adjective",
+          "surface": "きつ"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        }
+      ],
+      "id": "kitsusugiru",
+      "input": "きつすぎる。"
+    },
+    {
+      "description": "だるすぎた。 - regression test",
+      "expected": [
+        {
+          "lemma": "だるい",
+          "pos": "Adjective",
+          "surface": "だる"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "darusugita",
+      "input": "だるすぎた。"
+    },
+    {
+      "description": "だるさ。 - regression test",
+      "expected": [
+        {
+          "lemma": "だるい",
+          "pos": "Adjective",
+          "surface": "だる"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        }
+      ],
+      "id": "darusa",
+      "input": "だるさ。"
+    },
+    {
+      "description": "高すぎる。 - regression test",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        }
+      ],
+      "id": "sugiru",
+      "input": "高すぎる。"
+    },
+    {
+      "description": "眠すぎる。 - regression test",
+      "expected": [
+        {
+          "lemma": "眠い",
+          "pos": "Adjective",
+          "surface": "眠"
+        },
+        {
+          "lemma": "すぎる",
+          "pos": "Verb",
+          "surface": "すぎる"
+        }
+      ],
+      "id": "sugiru_2",
+      "input": "眠すぎる。"
     }
   ],
   "description": "Compound adjectives (〜やすい、〜にくい、〜すぎる)",

@@ -508,6 +508,11 @@
           "surface": "天気"
         },
         {
+          "lemma": "😀",
+          "pos": "Other",
+          "surface": "😀"
+        },
+        {
           "lemma": "です",
           "pos": "Auxiliary",
           "surface": "です"
@@ -535,6 +540,11 @@
           "surface": "犬"
         },
         {
+          "lemma": "🐕",
+          "pos": "Other",
+          "surface": "🐕"
+        },
+        {
           "lemma": "です",
           "pos": "Auxiliary",
           "surface": "でし"
@@ -560,6 +570,11 @@
           "lemma": "は",
           "pos": "Particle",
           "surface": "は"
+        },
+        {
+          "lemma": "◎",
+          "pos": "Other",
+          "surface": "◎"
         },
         {
           "lemma": "です",

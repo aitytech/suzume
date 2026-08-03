@@ -235,6 +235,400 @@
       ],
       "id": "dano_dano",
       "input": "確認だの対応だの"
+    },
+    {
+      "description": "高いのに買った。 - regression test",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高い"
+        },
+        {
+          "lemma": "のに",
+          "pos": "Particle",
+          "surface": "のに"
+        },
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "inoni_ttta",
+      "input": "高いのに買った。"
+    },
+    {
+      "description": "行くのに時間がかかる。 - regression test",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "時間",
+          "pos": "Noun",
+          "surface": "時間"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかる"
+        }
+      ],
+      "id": "kunoni_gakakaru",
+      "input": "行くのに時間がかかる。"
+    },
+    {
+      "description": "毎日読むのに覚えられない。 - regression test",
+      "expected": [
+        {
+          "lemma": "毎日",
+          "pos": "Noun",
+          "surface": "毎日"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読む"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "覚える",
+          "pos": "Verb",
+          "surface": "覚え"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "munoni_erarenai_2",
+      "input": "毎日読むのに覚えられない。"
+    },
+    {
+      "description": "高いのに気づく。 - regression test",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高い"
+        },
+        {
+          "lemma": "のに",
+          "pos": "Particle",
+          "surface": "のに"
+        },
+        {
+          "lemma": "気づく",
+          "pos": "Verb",
+          "surface": "気づく"
+        }
+      ],
+      "id": "inoni_duku",
+      "input": "高いのに気づく。"
+    },
+    {
+      "description": "高いのに慣れる。 - regression test",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高い"
+        },
+        {
+          "lemma": "のに",
+          "pos": "Particle",
+          "surface": "のに"
+        },
+        {
+          "lemma": "慣れる",
+          "pos": "Verb",
+          "surface": "慣れる"
+        }
+      ],
+      "id": "inoni_reru",
+      "input": "高いのに慣れる。"
+    },
+    {
+      "description": "水が足りないのに驚いた。 - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "足りる",
+          "pos": "Verb",
+          "surface": "足り"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "のに",
+          "pos": "Particle",
+          "surface": "のに"
+        },
+        {
+          "lemma": "驚く",
+          "pos": "Verb",
+          "surface": "驚い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ga_rinainoni_ita",
+      "input": "水が足りないのに驚いた。"
+    },
+    {
+      "description": "資料に目を通していない。 - regression test",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "目",
+          "pos": "Noun",
+          "surface": "目"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "通す",
+          "pos": "Verb",
+          "surface": "通し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "い"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ni_wo_shiteinai",
+      "input": "資料に目を通していない。"
+    },
+    {
+      "description": "資料に目を通している。 - regression test",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "目",
+          "pos": "Noun",
+          "surface": "目"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "通す",
+          "pos": "Verb",
+          "surface": "通し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "ni_wo_shiteiru",
+      "input": "資料に目を通している。"
+    },
+    {
+      "description": "資料に目を通した。 - regression test",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "目",
+          "pos": "Noun",
+          "surface": "目"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "通す",
+          "pos": "Verb",
+          "surface": "通し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ni_wo_shita",
+      "input": "資料に目を通した。"
+    },
+    {
+      "description": "窓を通して見る。 - regression test",
+      "expected": [
+        {
+          "lemma": "窓",
+          "pos": "Noun",
+          "surface": "窓"
+        },
+        {
+          "lemma": "を通して",
+          "pos": "Particle",
+          "surface": "を通して"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        }
+      ],
+      "id": "wo_shite_ru",
+      "input": "窓を通して見る。"
+    },
+    {
+      "description": "経験を通して学ぶ。 - regression test",
+      "expected": [
+        {
+          "lemma": "経験",
+          "pos": "Noun",
+          "surface": "経験"
+        },
+        {
+          "lemma": "を通して",
+          "pos": "Particle",
+          "surface": "を通して"
+        },
+        {
+          "lemma": "学ぶ",
+          "pos": "Verb",
+          "surface": "学ぶ"
+        }
+      ],
+      "id": "wo_shite_bu",
+      "input": "経験を通して学ぶ。"
+    },
+    {
+      "description": "内容についている。 - regression test",
+      "expected": [
+        {
+          "lemma": "内容",
+          "pos": "Noun",
+          "surface": "内容"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "つく",
+          "pos": "Verb",
+          "surface": "つい"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "nitsuiteiru",
+      "input": "内容についている。"
     }
   ],
   "description": "particle_compound tests",

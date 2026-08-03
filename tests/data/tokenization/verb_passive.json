@@ -717,6 +717,165 @@
       ],
       "id": "godan_passive_negative_renyokei",
       "input": "読まれなくなる、書かれなくなる、読まれなくて困る、書かれなくて困る"
+    },
+    {
+      "description": "Pure-hiragana Ichidan passive negative.",
+      "expected": [
+        {
+          "lemma": "やめる",
+          "pos": "Verb",
+          "surface": "やめ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "c2_hiragana_passive_negative",
+      "input": "やめられない。"
+    },
+    {
+      "description": "Pure-hiragana Ichidan passive polite negative.",
+      "expected": [
+        {
+          "lemma": "やめる",
+          "pos": "Verb",
+          "surface": "やめ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ませ"
+        },
+        {
+          "lemma": "ん",
+          "pos": "Auxiliary",
+          "surface": "ん"
+        }
+      ],
+      "id": "c2_hiragana_passive_polite_negative",
+      "input": "やめられません。"
+    },
+    {
+      "description": "Kanji Ichidan passive control.",
+      "expected": [
+        {
+          "lemma": "止める",
+          "pos": "Verb",
+          "surface": "止め"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "c2_passive_control_kanji",
+      "input": "止められない"
+    },
+    {
+      "description": "Pure-hiragana passive terminal control.",
+      "expected": [
+        {
+          "lemma": "やめる",
+          "pos": "Verb",
+          "surface": "やめ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られる"
+        }
+      ],
+      "id": "c2_passive_control_terminal",
+      "input": "やめられる"
+    },
+    {
+      "description": "Pure-hiragana passive past-negative control.",
+      "expected": [
+        {
+          "lemma": "やめる",
+          "pos": "Verb",
+          "surface": "やめ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "c2_passive_control_past_negative",
+      "input": "やめられなかった"
+    },
+    {
+      "description": "Pure-hiragana Ichidan passive control.",
+      "expected": [
+        {
+          "lemma": "たべる",
+          "pos": "Verb",
+          "surface": "たべ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "c2_passive_control_taberu",
+      "input": "たべられない"
+    },
+    {
+      "description": "Pure-hiragana Ichidan passive control.",
+      "expected": [
+        {
+          "lemma": "つづける",
+          "pos": "Verb",
+          "surface": "つづけ"
+        },
+        {
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "c2_passive_control_tsuzukeru",
+      "input": "つづけられない"
     }
   ],
   "description": "Passive voice verbs (受身形) - MeCab-compatible split format",

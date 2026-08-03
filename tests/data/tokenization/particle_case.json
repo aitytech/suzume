@@ -869,6 +869,50 @@
       ],
       "id": "noaru",
       "input": "人気のある店"
+    },
+    {
+      "description": "Case particle must not be absorbed by a suffix homograph.",
+      "expected": [
+        {
+          "lemma": "雲",
+          "pos": "Noun",
+          "surface": "雲"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "たなびく",
+          "pos": "Verb",
+          "surface": "たなびく"
+        }
+      ],
+      "id": "d1_case_particle_suffix",
+      "input": "雲がたなびく。"
+    },
+    {
+      "description": "Case-particle-plus-predicate control.",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "たたずむ",
+          "pos": "Verb",
+          "surface": "たたずむ"
+        }
+      ],
+      "id": "d1_suffix_negative_control",
+      "input": "彼がたたずむ"
     }
   ],
   "description": "Case particles (が、を、に、で)",

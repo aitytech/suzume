@@ -1858,14 +1858,9 @@
           "surface": "う"
         },
         {
-          "lemma": "と",
+          "lemma": "とも",
           "pos": "Particle",
-          "surface": "と"
-        },
-        {
-          "lemma": "も",
-          "pos": "Particle",
-          "surface": "も"
+          "surface": "とも"
         },
         {
           "lemma": "許す",

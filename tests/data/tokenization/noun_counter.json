@@ -102,6 +102,173 @@
       ],
       "id": "3_wo_mu",
       "input": "3行目を読む"
+    },
+    {
+      "description": "二件残っている。 - regression test",
+      "expected": [
+        {
+          "lemma": "二件",
+          "pos": "Noun",
+          "surface": "二件"
+        },
+        {
+          "lemma": "残る",
+          "pos": "Verb",
+          "surface": "残っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "ttteiru",
+      "input": "二件残っている。"
+    },
+    {
+      "description": "二冊残っている。 - regression test",
+      "expected": [
+        {
+          "lemma": "二冊",
+          "pos": "Noun",
+          "surface": "二冊"
+        },
+        {
+          "lemma": "残る",
+          "pos": "Verb",
+          "surface": "残っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "ttteiru_2",
+      "input": "二冊残っている。"
+    },
+    {
+      "description": "誤りが複数残っている。 - regression test",
+      "expected": [
+        {
+          "lemma": "誤り",
+          "pos": "Noun",
+          "surface": "誤り"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "複数",
+          "pos": "Noun",
+          "surface": "複数"
+        },
+        {
+          "lemma": "残る",
+          "pos": "Verb",
+          "surface": "残っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "riga_ttteiru",
+      "input": "誤りが複数残っている。"
+    },
+    {
+      "description": "資料が二件残っている。 - regression test",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "二件",
+          "pos": "Noun",
+          "surface": "二件"
+        },
+        {
+          "lemma": "残る",
+          "pos": "Verb",
+          "surface": "残っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "ga_ttteiru",
+      "input": "資料が二件残っている。"
+    },
+    {
+      "description": "二件ある。 - regression test",
+      "expected": [
+        {
+          "lemma": "二件",
+          "pos": "Noun",
+          "surface": "二件"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "aru",
+      "input": "二件ある。"
+    },
+    {
+      "description": "三件見つかった。 - regression test",
+      "expected": [
+        {
+          "lemma": "三件",
+          "pos": "Noun",
+          "surface": "三件"
+        },
+        {
+          "lemma": "見つかる",
+          "pos": "Verb",
+          "surface": "見つかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "tsukattta_2",
+      "input": "三件見つかった。"
     }
   ],
   "description": "noun_counter tests",

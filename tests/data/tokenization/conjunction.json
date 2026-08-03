@@ -1711,6 +1711,87 @@
       ],
       "id": "sorenara_suru",
       "input": "それなら確認する"
+    },
+    {
+      "description": "Conjunction boundary regression.",
+      "expected": [
+        {
+          "lemma": "古い",
+          "pos": "Adjective",
+          "surface": "古い"
+        },
+        {
+          "lemma": "しかも",
+          "pos": "Conjunction",
+          "surface": "しかも"
+        },
+        {
+          "lemma": "間違う",
+          "pos": "Verb",
+          "surface": "間違っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "d2_shikamo_progressive",
+      "input": "古い。しかも間違っている。"
+    },
+    {
+      "description": "Conjunction boundary regression.",
+      "expected": [
+        {
+          "lemma": "しかも",
+          "pos": "Conjunction",
+          "surface": "しかも"
+        },
+        {
+          "lemma": "間違う",
+          "pos": "Verb",
+          "surface": "間違っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "d2_shikamo_bare",
+      "input": "しかも間違っている。"
+    },
+    {
+      "description": "Conjunction boundary regression.",
+      "expected": [
+        {
+          "lemma": "しかも",
+          "pos": "Conjunction",
+          "surface": "しかも"
+        },
+        {
+          "lemma": "間違える",
+          "pos": "Verb",
+          "surface": "間違え"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "d2_shikamo_past",
+      "input": "しかも間違えた"
     }
   ],
   "description": "conjunction tests",

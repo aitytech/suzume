@@ -2482,6 +2482,79 @@
       ],
       "id": "fusagaru_2",
       "input": "ふさがる"
+    },
+    {
+      "description": "すぐに事故る可能性がある。 - regression test",
+      "expected": [
+        {
+          "lemma": "すぐ",
+          "pos": "Adverb",
+          "surface": "すぐ"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "事故る",
+          "pos": "Verb",
+          "surface": "事故る"
+        },
+        {
+          "lemma": "可能性",
+          "pos": "Noun",
+          "surface": "可能性"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "suguni_ru_gaaru",
+      "input": "すぐに事故る可能性がある。"
+    },
+    {
+      "description": "テンパる。 - regression test",
+      "expected": [
+        {
+          "lemma": "テンパる",
+          "pos": "Verb",
+          "surface": "テンパる"
+        }
+      ],
+      "id": "ru_6",
+      "input": "テンパる。"
+    },
+    {
+      "description": "バグる。 - regression test",
+      "expected": [
+        {
+          "lemma": "バグる",
+          "pos": "Verb",
+          "surface": "バグる"
+        }
+      ],
+      "id": "ru_7",
+      "input": "バグる。"
+    },
+    {
+      "description": "サボる。 - regression test",
+      "expected": [
+        {
+          "lemma": "サボる",
+          "pos": "Verb",
+          "surface": "サボる"
+        }
+      ],
+      "id": "ru_8",
+      "input": "サボる。"
     }
   ],
   "description": "Godan Ra-row verbs (五段ラ行動詞) - verbs ending in る",

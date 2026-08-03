@@ -812,6 +812,141 @@
       ],
       "id": "t21_registered_noun_copula_conjunctive_control",
       "input": "学生だが忙しい"
+    },
+    {
+      "description": "Keep the quotative particle separate from an unverified katakana noun.",
+      "expected": [
+        {
+          "lemma": "リセット",
+          "pos": "Noun",
+          "surface": "リセット"
+        },
+        {
+          "lemma": "って",
+          "pos": "Particle",
+          "surface": "って"
+        },
+        {
+          "lemma": "おく",
+          "pos": "Auxiliary",
+          "surface": "おい"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "c1_katakana_quotative_boundary",
+      "input": "リセットっておいて。"
+    },
+    {
+      "description": "Keep the past auxiliary and following quotative particle separate.",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "届く",
+          "pos": "Verb",
+          "surface": "届い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "って",
+          "pos": "Particle",
+          "surface": "って"
+        }
+      ],
+      "id": "c1_past_quotative_boundary",
+      "input": "資料が届いたって。"
+    },
+    {
+      "description": "Keep the polite copula and quotative particle intact.",
+      "expected": [
+        {
+          "lemma": "終わる",
+          "pos": "Verb",
+          "surface": "終わっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "ん"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        },
+        {
+          "lemma": "って",
+          "pos": "Particle",
+          "surface": "って"
+        }
+      ],
+      "id": "c1_polite_copula_quotative_boundary",
+      "input": "終わったんですって。"
+    },
+    {
+      "description": "Control: retain a verified past plus quotative sequence.",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "って",
+          "pos": "Particle",
+          "surface": "って"
+        }
+      ],
+      "id": "c1_past_quote_control_1",
+      "input": "書いたって。"
+    },
+    {
+      "description": "Control: retain a sokuon past plus quotative sequence.",
+      "expected": [
+        {
+          "lemma": "終わる",
+          "pos": "Verb",
+          "surface": "終わっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "って",
+          "pos": "Particle",
+          "surface": "って"
+        }
+      ],
+      "id": "c1_past_quote_control_2",
+      "input": "終わったって。"
     }
   ],
   "description": "Quotative patterns (という, といって, etc.)",

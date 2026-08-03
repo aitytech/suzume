@@ -347,6 +347,406 @@
       ],
       "id": "polite_clause_formal_noun_you",
       "input": "お待ちくださいますようお願いします"
+    },
+    {
+      "description": "お渡しいただければ幸いです。 - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "渡す",
+          "pos": "Verb",
+          "surface": "渡し"
+        },
+        {
+          "lemma": "いただける",
+          "pos": "Auxiliary",
+          "surface": "いただけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "幸い",
+          "pos": "Adjective",
+          "surface": "幸い"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "o_shiitadakereba_idesu",
+      "input": "お渡しいただければ幸いです。"
+    },
+    {
+      "description": "お話しいただければ幸いです。 - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話し"
+        },
+        {
+          "lemma": "いただける",
+          "pos": "Auxiliary",
+          "surface": "いただけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "幸い",
+          "pos": "Adjective",
+          "surface": "幸い"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "o_shiitadakereba_idesu_2",
+      "input": "お話しいただければ幸いです。"
+    },
+    {
+      "description": "お知らせいただければ幸いです。 - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "知らせる",
+          "pos": "Verb",
+          "surface": "知らせ"
+        },
+        {
+          "lemma": "いただける",
+          "pos": "Auxiliary",
+          "surface": "いただけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "幸い",
+          "pos": "Adjective",
+          "surface": "幸い"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "o_raseitadakereba_idesu",
+      "input": "お知らせいただければ幸いです。"
+    },
+    {
+      "description": "お貸しいただければ幸いです。 - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "貸す",
+          "pos": "Verb",
+          "surface": "貸し"
+        },
+        {
+          "lemma": "いただける",
+          "pos": "Auxiliary",
+          "surface": "いただけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "幸い",
+          "pos": "Adjective",
+          "surface": "幸い"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "o_shiitadakereba_idesu_3",
+      "input": "お貸しいただければ幸いです。"
+    },
+    {
+      "description": "お試しいただければ幸いです。 - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "試す",
+          "pos": "Verb",
+          "surface": "試し"
+        },
+        {
+          "lemma": "いただける",
+          "pos": "Auxiliary",
+          "surface": "いただけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "幸い",
+          "pos": "Adjective",
+          "surface": "幸い"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "o_shiitadakereba_idesu_4",
+      "input": "お試しいただければ幸いです。"
+    },
+    {
+      "description": "お召し上がりいただければ幸いです。 - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "召し上がる",
+          "pos": "Verb",
+          "surface": "召し上がり"
+        },
+        {
+          "lemma": "いただける",
+          "pos": "Auxiliary",
+          "surface": "いただけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "幸い",
+          "pos": "Adjective",
+          "surface": "幸い"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "o_shi_gariitadakereba_idesu",
+      "input": "お召し上がりいただければ幸いです。"
+    },
+    {
+      "description": "お伺いしてもよろしいでしょうか。 - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "伺う",
+          "pos": "Verb",
+          "surface": "伺い"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "よろしい",
+          "pos": "Adjective",
+          "surface": "よろしい"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "でしょ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "o_ishitemoyoroshiideshi_uka",
+      "input": "お伺いしてもよろしいでしょうか。"
+    },
+    {
+      "description": "お伺いして。 - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "伺う",
+          "pos": "Verb",
+          "surface": "伺い"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "o_ishite",
+      "input": "お伺いして。"
+    },
+    {
+      "description": "お待ちしてもよろしいですか。 - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待ち"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "よろしい",
+          "pos": "Adjective",
+          "surface": "よろしい"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "o_chishitemoyoroshiidesuka",
+      "input": "お待ちしてもよろしいですか。"
+    },
+    {
+      "description": "お尋ねしてもよろしいでしょうか。 - regression test",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "尋ねる",
+          "pos": "Verb",
+          "surface": "尋ね"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "よろしい",
+          "pos": "Adjective",
+          "surface": "よろしい"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "でしょ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "o_neshitemoyoroshiideshi_uka",
+      "input": "お尋ねしてもよろしいでしょうか。"
     }
   ],
   "description": "auxiliary_honorific tests",

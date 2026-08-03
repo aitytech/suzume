@@ -581,6 +581,97 @@
       ],
       "id": "vowel_repeat_kita",
       "input": "きたああああ"
+    },
+    {
+      "description": "全部読んでもうた。 - regression test",
+      "expected": [
+        {
+          "lemma": "全部",
+          "pos": "Noun",
+          "surface": "全部"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ん"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "しまう",
+          "pos": "Auxiliary",
+          "surface": "もう"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ndemouta",
+      "input": "全部読んでもうた。"
+    },
+    {
+      "description": "東京に行ってもうた。 - regression test",
+      "expected": [
+        {
+          "lemma": "東京",
+          "pos": "Noun",
+          "surface": "東京"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行っ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "しまう",
+          "pos": "Auxiliary",
+          "surface": "もう"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ni_tttemouta",
+      "input": "東京に行ってもうた。"
+    },
+    {
+      "description": "もう終わった。 - regression test",
+      "expected": [
+        {
+          "lemma": "もう",
+          "pos": "Adverb",
+          "surface": "もう"
+        },
+        {
+          "lemma": "終わる",
+          "pos": "Verb",
+          "surface": "終わっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "mou_wattta",
+      "input": "もう終わった。"
     }
   ],
   "description": "Colloquial and slang patterns",

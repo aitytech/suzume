@@ -1337,6 +1337,102 @@
       ],
       "id": "wonoseru",
       "input": "荷物をのせる"
+    },
+    {
+      "description": "Kana compound V2 te-form keeps the compound continuative boundary.",
+      "expected": [
+        {
+          "lemma": "疲れはてる",
+          "pos": "Verb",
+          "surface": "疲れはて"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "眠る",
+          "pos": "Verb",
+          "surface": "眠っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "c3_hiragana_compound_hateru_te",
+      "input": "疲れはてて眠った。"
+    },
+    {
+      "description": "Kanji V2 spelling retains the ordinary morpheme boundary.",
+      "expected": [
+        {
+          "lemma": "彼",
+          "pos": "Pronoun",
+          "surface": "彼"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "疲れる",
+          "pos": "Verb",
+          "surface": "疲れ"
+        },
+        {
+          "lemma": "果てる",
+          "pos": "Verb",
+          "surface": "果て"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "眠る",
+          "pos": "Verb",
+          "surface": "眠っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "c3_kanji_compound_negative_control",
+      "input": "彼は疲れ果てて眠った。"
+    },
+    {
+      "description": "本は錆びない。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "錆びる",
+          "pos": "Verb",
+          "surface": "錆び"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ha_binai",
+      "input": "本は錆びない。"
     }
   ],
   "description": "Ichidan verbs (一段動詞) (part 2/2)",

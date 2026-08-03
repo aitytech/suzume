@@ -58,6 +58,178 @@
       ],
       "id": "mitara_kakunin_suru",
       "input": "見たら確認する"
+    },
+    {
+      "description": "過去たの後のり始まり未知名詞を並立助詞に吸収しない",
+      "expected": [
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "りんご",
+          "pos": "Noun",
+          "surface": "りんご"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        }
+      ],
+      "id": "d5_past_tari_hiragana_noun_clause",
+      "input": "買ったりんごを見る。"
+    },
+    {
+      "description": "過去たの後のり始まり未知名詞を文末で保つ",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "りんご",
+          "pos": "Noun",
+          "surface": "りんご"
+        }
+      ],
+      "id": "d5_past_tari_hiragana_noun_bare",
+      "input": "食べたりんご"
+    },
+    {
+      "description": "並立助詞たりは後続動詞の前で保つ",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Particle",
+          "surface": "たり"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "d5_listing_tari_control",
+      "input": "食べたりする。"
+    },
+    {
+      "description": "音便形の並立助詞だり・たりを保つ",
+      "expected": [
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲ん"
+        },
+        {
+          "lemma": "だり",
+          "pos": "Particle",
+          "surface": "だり"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Particle",
+          "surface": "たり"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "d5_listing_tari_onbin_control",
+      "input": "飲んだり食べたりする。"
+    },
+    {
+      "description": "過去たの後のカタカナ名詞を保つ",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "パン",
+          "pos": "Noun",
+          "surface": "パン"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "古い",
+          "pos": "Adjective",
+          "surface": "古い"
+        }
+      ],
+      "id": "d5_past_ta_katakana_control",
+      "input": "食べたパンは古い。"
+    },
+    {
+      "description": "過去たの後のり以外のひらがな名詞を保つ",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "ゆめ",
+          "pos": "Adverb",
+          "surface": "ゆめ"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        }
+      ],
+      "id": "d5_past_ta_nonri_control",
+      "input": "見たゆめの話。"
     }
   ],
   "description": "verb_ta_form tests",

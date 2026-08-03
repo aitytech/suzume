@@ -348,6 +348,322 @@
       ],
       "id": "ri_mewosuru",
       "input": "取り決めをする"
+    },
+    {
+      "description": "内部統制報告制度の運用。 - regression test",
+      "expected": [
+        {
+          "lemma": "内部統制報告制度",
+          "pos": "Noun",
+          "surface": "内部統制報告制度"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "運用",
+          "pos": "Noun",
+          "surface": "運用"
+        }
+      ],
+      "id": "no_18",
+      "input": "内部統制報告制度の運用。"
+    },
+    {
+      "description": "内部統制報告制度。 - regression test",
+      "expected": [
+        {
+          "lemma": "内部統制報告制度",
+          "pos": "Noun",
+          "surface": "内部統制報告制度"
+        }
+      ],
+      "id": "unnamed_26",
+      "input": "内部統制報告制度。"
+    },
+    {
+      "description": "遺伝子組換え作物の規制。 - regression test",
+      "expected": [
+        {
+          "lemma": "遺伝子",
+          "pos": "Noun",
+          "surface": "遺伝子"
+        },
+        {
+          "lemma": "組換え",
+          "pos": "Noun",
+          "surface": "組換え"
+        },
+        {
+          "lemma": "作物",
+          "pos": "Noun",
+          "surface": "作物"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "規制",
+          "pos": "Noun",
+          "surface": "規制"
+        }
+      ],
+      "id": "e_no",
+      "input": "遺伝子組換え作物の規制。"
+    },
+    {
+      "description": "遺伝子組換え。 - regression test",
+      "expected": [
+        {
+          "lemma": "遺伝子",
+          "pos": "Noun",
+          "surface": "遺伝子"
+        },
+        {
+          "lemma": "組換え",
+          "pos": "Noun",
+          "surface": "組換え"
+        }
+      ],
+      "id": "e",
+      "input": "遺伝子組換え。"
+    },
+    {
+      "description": "報告制度を見直す。 - regression test",
+      "expected": [
+        {
+          "lemma": "報告制度",
+          "pos": "Noun",
+          "surface": "報告制度"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見直す",
+          "pos": "Verb",
+          "surface": "見直す"
+        }
+      ],
+      "id": "wo_su_2",
+      "input": "報告制度を見直す。"
+    },
+    {
+      "description": "内部統制を強化する。 - regression test",
+      "expected": [
+        {
+          "lemma": "内部統制",
+          "pos": "Noun",
+          "surface": "内部統制"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "強化",
+          "pos": "Noun",
+          "surface": "強化"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "wo_suru_4",
+      "input": "内部統制を強化する。"
+    },
+    {
+      "description": "組換えを行う。 - regression test",
+      "expected": [
+        {
+          "lemma": "組換え",
+          "pos": "Noun",
+          "surface": "組換え"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "行う",
+          "pos": "Verb",
+          "surface": "行う"
+        }
+      ],
+      "id": "ewo_u",
+      "input": "組換えを行う。"
+    },
+    {
+      "description": "遺伝子を調べる。 - regression test",
+      "expected": [
+        {
+          "lemma": "遺伝子",
+          "pos": "Noun",
+          "surface": "遺伝子"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "調べる",
+          "pos": "Verb",
+          "surface": "調べる"
+        }
+      ],
+      "id": "wo_beru_3",
+      "input": "遺伝子を調べる。"
+    },
+    {
+      "description": "山暮らしを始めた。 - regression test",
+      "expected": [
+        {
+          "lemma": "山",
+          "pos": "Noun",
+          "surface": "山"
+        },
+        {
+          "lemma": "暮らし",
+          "pos": "Noun",
+          "surface": "暮らし"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "始める",
+          "pos": "Verb",
+          "surface": "始め"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "rashiwo_meta",
+      "input": "山暮らしを始めた。"
+    },
+    {
+      "description": "その日暮らしだ。 - regression test",
+      "expected": [
+        {
+          "lemma": "その",
+          "pos": "Determiner",
+          "surface": "その"
+        },
+        {
+          "lemma": "日",
+          "pos": "Noun",
+          "surface": "日"
+        },
+        {
+          "lemma": "暮らし",
+          "pos": "Noun",
+          "surface": "暮らし"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "sono_rashida",
+      "input": "その日暮らしだ。"
+    },
+    {
+      "description": "一人暮らしを始めた。 - regression test",
+      "expected": [
+        {
+          "lemma": "一人暮らし",
+          "pos": "Noun",
+          "surface": "一人暮らし"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "始める",
+          "pos": "Verb",
+          "surface": "始め"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "rashiwo_meta_2",
+      "input": "一人暮らしを始めた。"
+    },
+    {
+      "description": "田舎暮らしが長い。 - regression test",
+      "expected": [
+        {
+          "lemma": "田舎",
+          "pos": "Noun",
+          "surface": "田舎"
+        },
+        {
+          "lemma": "暮らし",
+          "pos": "Noun",
+          "surface": "暮らし"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "長い",
+          "pos": "Adjective",
+          "surface": "長い"
+        }
+      ],
+      "id": "rashiga_i",
+      "input": "田舎暮らしが長い。"
+    },
+    {
+      "description": "都会暮らしを続ける。 - regression test",
+      "expected": [
+        {
+          "lemma": "都会",
+          "pos": "Noun",
+          "surface": "都会"
+        },
+        {
+          "lemma": "暮らし",
+          "pos": "Noun",
+          "surface": "暮らし"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "続ける",
+          "pos": "Verb",
+          "surface": "続ける"
+        }
+      ],
+      "id": "rashiwo_keru",
+      "input": "都会暮らしを続ける。"
     }
   ],
   "description": "noun_compounds tests",

@@ -1842,6 +1842,296 @@
       ],
       "id": "kunodemonai",
       "input": "行くのでもない"
+    },
+    {
+      "description": "足りないという指摘。 - regression test",
+      "expected": [
+        {
+          "lemma": "足りる",
+          "pos": "Verb",
+          "surface": "足り"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        },
+        {
+          "lemma": "指摘",
+          "pos": "Noun",
+          "surface": "指摘"
+        }
+      ],
+      "id": "rinaitoiu",
+      "input": "足りないという指摘。"
+    },
+    {
+      "description": "できないという報告があった。 - regression test",
+      "expected": [
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "でき"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        },
+        {
+          "lemma": "報告",
+          "pos": "Noun",
+          "surface": "報告"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "dekinaitoiu_gaattta",
+      "input": "できないという報告があった。"
+    },
+    {
+      "description": "見えないという苦情。 - regression test",
+      "expected": [
+        {
+          "lemma": "見える",
+          "pos": "Verb",
+          "surface": "見え"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        },
+        {
+          "lemma": "苦情",
+          "pos": "Noun",
+          "surface": "苦情"
+        }
+      ],
+      "id": "enaitoiu",
+      "input": "見えないという苦情。"
+    },
+    {
+      "description": "水が足りない。 - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "足りる",
+          "pos": "Verb",
+          "surface": "足り"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ga_rinai",
+      "input": "水が足りない。"
+    },
+    {
+      "description": "紙が足りないと思う。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "足りる",
+          "pos": "Verb",
+          "surface": "足り"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思う"
+        }
+      ],
+      "id": "ga_rinaito_u",
+      "input": "紙が足りないと思う。"
+    },
+    {
+      "description": "頼りない。 - regression test",
+      "expected": [
+        {
+          "lemma": "頼り",
+          "pos": "Noun",
+          "surface": "頼り"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "rinai_3",
+      "input": "頼りない。"
+    },
+    {
+      "description": "本が古いという指摘。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "古い",
+          "pos": "Adjective",
+          "surface": "古い"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        },
+        {
+          "lemma": "指摘",
+          "pos": "Noun",
+          "surface": "指摘"
+        }
+      ],
+      "id": "ga_itoiu",
+      "input": "本が古いという指摘。"
+    },
+    {
+      "description": "知らないという話。 - regression test",
+      "expected": [
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知ら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        }
+      ],
+      "id": "ranaitoiu",
+      "input": "知らないという話。"
+    },
+    {
+      "description": "読まないという選択。 - regression test",
+      "expected": [
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        },
+        {
+          "lemma": "選択",
+          "pos": "Noun",
+          "surface": "選択"
+        }
+      ],
+      "id": "manaitoiu",
+      "input": "読まないという選択。"
+    },
+    {
+      "description": "行かないという結論。 - regression test",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行か"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        },
+        {
+          "lemma": "結論",
+          "pos": "Noun",
+          "surface": "結論"
+        }
+      ],
+      "id": "kanaitoiu",
+      "input": "行かないという結論。"
     }
   ],
   "description": "Negation auxiliaries (ない、ぬ)",

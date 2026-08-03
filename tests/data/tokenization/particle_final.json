@@ -141,6 +141,138 @@
       ],
       "id": "migaaru",
       "input": "重みがある"
+    },
+    {
+      "description": "Keep the past auxiliary and regional final particle distinct.",
+      "expected": [
+        {
+          "lemma": "会議",
+          "pos": "Noun",
+          "surface": "会議"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "終わる",
+          "pos": "Verb",
+          "surface": "終わっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "ばい",
+          "pos": "Particle",
+          "surface": "ばい"
+        }
+      ],
+      "id": "d3_bai_clause",
+      "input": "会議は終わったばい。"
+    },
+    {
+      "description": "Keep a nominal predicate separate from the regional final particle.",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "ばい",
+          "pos": "Particle",
+          "surface": "ばい"
+        }
+      ],
+      "id": "d3_bai_nominal",
+      "input": "本ばい。"
+    },
+    {
+      "description": "Terminal past-plus-final-particle control.",
+      "expected": [
+        {
+          "lemma": "終わる",
+          "pos": "Verb",
+          "surface": "終わっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "ばい",
+          "pos": "Particle",
+          "surface": "ばい"
+        }
+      ],
+      "id": "d3_bai_terminal_control",
+      "input": "終わったばい。"
+    },
+    {
+      "description": "Adjective-plus-final-particle control.",
+      "expected": [
+        {
+          "lemma": "うまい",
+          "pos": "Adjective",
+          "surface": "うまい"
+        },
+        {
+          "lemma": "ばい",
+          "pos": "Particle",
+          "surface": "ばい"
+        }
+      ],
+      "id": "d3_bai_adjective_control",
+      "input": "うまいばい。"
+    },
+    {
+      "description": "Keep a hiragana noun separate from the closed particle.",
+      "expected": [
+        {
+          "lemma": "りんご",
+          "pos": "Noun",
+          "surface": "りんご"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買う"
+        }
+      ],
+      "id": "d3_ba_hiragana_noun",
+      "input": "りんごば買う。"
+    },
+    {
+      "description": "Kanji-host particle control.",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "飲む",
+          "pos": "Verb",
+          "surface": "飲む"
+        }
+      ],
+      "id": "d3_ba_kanji_control",
+      "input": "水ば飲む。"
     }
   ],
   "description": "particle_final tests",

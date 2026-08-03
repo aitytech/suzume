@@ -58,6 +58,11 @@
           "lemma": "東京",
           "pos": "Noun",
           "surface": "東京"
+        },
+        {
+          "lemma": "👨‍👩‍👧",
+          "pos": "Other",
+          "surface": "👨‍👩‍👧"
         }
       ],
       "id": "emoji_zwj_family_filter",
@@ -98,6 +103,211 @@
       ],
       "id": "ideographic_variation_selector",
       "input": "葛󠄀城市"
+    },
+    {
+      "description": "Unicode content symbol remains an OTHER token",
+      "expected": [
+        {
+          "lemma": "温度",
+          "pos": "Noun",
+          "surface": "温度"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "25",
+          "pos": "Noun",
+          "surface": "25"
+        },
+        {
+          "lemma": "℃",
+          "pos": "Other",
+          "surface": "℃"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "unicode_text_symbol",
+      "input": "温度は25℃だった。"
+    },
+    {
+      "description": "Unicode content symbol remains an OTHER token",
+      "expected": [
+        {
+          "lemma": "①",
+          "pos": "Other",
+          "surface": "①"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "enclosed_numeral",
+      "input": "①を確認する。"
+    },
+    {
+      "description": "Unicode content symbol remains an OTHER token",
+      "expected": [
+        {
+          "lemma": "あ",
+          "pos": "Other",
+          "surface": "あ"
+        },
+        {
+          "lemma": "→",
+          "pos": "Other",
+          "surface": "→"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Verb",
+          "surface": "い"
+        }
+      ],
+      "id": "arrow_symbol",
+      "input": "あ→い"
+    },
+    {
+      "description": "Unicode content symbol remains an OTHER token",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "★",
+          "pos": "Other",
+          "surface": "★"
+        }
+      ],
+      "id": "symbol_after_punctuation",
+      "input": "紙。★"
+    },
+    {
+      "description": "Unicode content symbol remains an OTHER token",
+      "expected": [
+        {
+          "lemma": "価格",
+          "pos": "Noun",
+          "surface": "価格"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "€",
+          "pos": "Other",
+          "surface": "€"
+        },
+        {
+          "lemma": "10",
+          "pos": "Noun",
+          "surface": "10"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "currency_symbol",
+      "input": "価格は€10だ。"
+    },
+    {
+      "description": "Unicode content symbol remains an OTHER token",
+      "expected": [
+        {
+          "lemma": "👨",
+          "pos": "Other",
+          "surface": "👨"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "笑う",
+          "pos": "Verb",
+          "surface": "笑う"
+        }
+      ],
+      "id": "emoji_other",
+      "input": "👨が笑う。"
+    },
+    {
+      "description": "Unicode content symbol remains an OTHER token",
+      "expected": [
+        {
+          "lemma": "㎡",
+          "pos": "Other",
+          "surface": "㎡"
+        }
+      ],
+      "id": "square_meter_other",
+      "input": "㎡"
+    },
+    {
+      "description": "Unicode content symbol remains an OTHER token",
+      "expected": [
+        {
+          "lemma": "㎏",
+          "pos": "Other",
+          "surface": "㎏"
+        }
+      ],
+      "id": "kilogram_other",
+      "input": "㎏"
+    },
+    {
+      "description": "Unicode content symbol remains an OTHER token",
+      "expected": [
+        {
+          "lemma": "㈱",
+          "pos": "Other",
+          "surface": "㈱"
+        }
+      ],
+      "id": "enclosed_company_other",
+      "input": "㈱"
+    },
+    {
+      "description": "Unicode content symbol remains an OTHER token",
+      "expected": [
+        {
+          "lemma": "㊙",
+          "pos": "Other",
+          "surface": "㊙"
+        }
+      ],
+      "id": "enclosed_mark_other",
+      "input": "㊙"
     }
   ],
   "description": "unicode_edge_cases tests",

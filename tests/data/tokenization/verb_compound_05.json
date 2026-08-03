@@ -570,6 +570,202 @@
       ],
       "id": "motttekureba",
       "input": "もってくれば"
+    },
+    {
+      "description": "長い間話し込んだ。 - regression test",
+      "expected": [
+        {
+          "lemma": "長い",
+          "pos": "Adjective",
+          "surface": "長い"
+        },
+        {
+          "lemma": "間",
+          "pos": "Noun",
+          "surface": "間"
+        },
+        {
+          "lemma": "話し込む",
+          "pos": "Verb",
+          "surface": "話し込ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "i_shi_nda",
+      "input": "長い間話し込んだ。"
+    },
+    {
+      "description": "長い間話した。 - regression test",
+      "expected": [
+        {
+          "lemma": "長い",
+          "pos": "Adjective",
+          "surface": "長い"
+        },
+        {
+          "lemma": "間",
+          "pos": "Noun",
+          "surface": "間"
+        },
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "i_shita",
+      "input": "長い間話した。"
+    },
+    {
+      "description": "一年間話し込んだ。 - regression test",
+      "expected": [
+        {
+          "lemma": "一年間",
+          "pos": "Noun",
+          "surface": "一年間"
+        },
+        {
+          "lemma": "話し込む",
+          "pos": "Verb",
+          "surface": "話し込ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "shi_nda",
+      "input": "一年間話し込んだ。"
+    },
+    {
+      "description": "この間話した。 - regression test",
+      "expected": [
+        {
+          "lemma": "この間",
+          "pos": "Noun",
+          "surface": "この間"
+        },
+        {
+          "lemma": "話す",
+          "pos": "Verb",
+          "surface": "話し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kono_shita",
+      "input": "この間話した。"
+    },
+    {
+      "description": "時間話し込んだ。 - regression test",
+      "expected": [
+        {
+          "lemma": "時間",
+          "pos": "Noun",
+          "surface": "時間"
+        },
+        {
+          "lemma": "話し込む",
+          "pos": "Verb",
+          "surface": "話し込ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "shi_nda_2",
+      "input": "時間話し込んだ。"
+    },
+    {
+      "description": "部屋で話し込んだ。 - regression test",
+      "expected": [
+        {
+          "lemma": "部屋",
+          "pos": "Noun",
+          "surface": "部屋"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "話し込む",
+          "pos": "Verb",
+          "surface": "話し込ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "de_shi_nda",
+      "input": "部屋で話し込んだ。"
+    },
+    {
+      "description": "駅を通り過ぎる。 - regression test",
+      "expected": [
+        {
+          "lemma": "駅",
+          "pos": "Noun",
+          "surface": "駅"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "通り過ぎる",
+          "pos": "Verb",
+          "surface": "通り過ぎる"
+        }
+      ],
+      "id": "wo_ri_giru",
+      "input": "駅を通り過ぎる。"
+    },
+    {
+      "description": "本を読み過ぎる。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "過ぎる",
+          "pos": "Auxiliary",
+          "surface": "過ぎる"
+        }
+      ],
+      "id": "wo_mi_giru",
+      "input": "本を読み過ぎる。"
     }
   ],
   "description": "Compound verbs (part 5/5)",

@@ -2733,6 +2733,70 @@
       ],
       "id": "dakenara",
       "input": "確認だけなら"
+    },
+    {
+      "description": "確認しさえすればいい。 - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "さえ",
+          "pos": "Particle",
+          "surface": "さえ"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "すれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "いい",
+          "pos": "Adjective",
+          "surface": "いい"
+        }
+      ],
+      "id": "shisaesurebaii",
+      "input": "確認しさえすればいい。"
+    },
+    {
+      "description": "確認しこそすれ。 - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "こそ",
+          "pos": "Particle",
+          "surface": "こそ"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "すれ"
+        }
+      ],
+      "id": "shikososure",
+      "input": "確認しこそすれ。"
     }
   ],
   "description": "Binding and adverbial particles (は、も、だけ)",

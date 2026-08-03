@@ -1,0 +1,48 @@
+{
+  "cases": [
+    {
+      "description": "来るの意志形に譲歩のともが続く",
+      "expected": [
+        {
+          "lemma": "誰",
+          "pos": "Pronoun",
+          "surface": "誰"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来よ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "とも",
+          "pos": "Particle",
+          "surface": "とも"
+        },
+        {
+          "lemma": "構う",
+          "pos": "Verb",
+          "surface": "構わ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ga_youtomo_wanai",
+      "input": "誰が来ようとも構わない。"
+    }
+  ],
+  "description": "verb_kuru tests",
+  "version": "1.0"
+}

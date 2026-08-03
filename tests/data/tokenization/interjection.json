@@ -209,6 +209,38 @@
       ],
       "id": "ga_nda_2",
       "input": "彼が微笑んだ"
+    },
+    {
+      "description": "いやー、参りましたね。 - regression test",
+      "expected": [
+        {
+          "lemma": "いやー",
+          "pos": "Interjection",
+          "surface": "いやー"
+        },
+        {
+          "lemma": "参る",
+          "pos": "Verb",
+          "surface": "参り"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "ね",
+          "pos": "Particle",
+          "surface": "ね"
+        }
+      ],
+      "id": "iya_rimashitane",
+      "input": "いやー、参りましたね。"
     }
   ],
   "description": "Interjections and greetings (感動詞・挨拶)",

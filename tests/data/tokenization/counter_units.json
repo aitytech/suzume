@@ -136,6 +136,301 @@
       ],
       "id": "nete_ku",
       "input": "三枚重ねて置く"
+    },
+    {
+      "description": "会議は十時三十分に始まる - regression test",
+      "expected": [
+        {
+          "lemma": "会議",
+          "pos": "Noun",
+          "surface": "会議"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "十時三十分",
+          "pos": "Noun",
+          "surface": "十時三十分"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "始まる",
+          "pos": "Verb",
+          "surface": "始まる"
+        }
+      ],
+      "id": "ha_ni_maru",
+      "input": "会議は十時三十分に始まる"
+    },
+    {
+      "description": "二泊三日だ - regression test",
+      "expected": [
+        {
+          "lemma": "二泊三日",
+          "pos": "Noun",
+          "surface": "二泊三日"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "da_7",
+      "input": "二泊三日だ"
+    },
+    {
+      "description": "一泊二日の旅行 - regression test",
+      "expected": [
+        {
+          "lemma": "一泊二日",
+          "pos": "Noun",
+          "surface": "一泊二日"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "旅行",
+          "pos": "Noun",
+          "surface": "旅行"
+        }
+      ],
+      "id": "no_19",
+      "input": "一泊二日の旅行"
+    },
+    {
+      "description": "三泊四日に変更 - regression test",
+      "expected": [
+        {
+          "lemma": "三泊四日",
+          "pos": "Noun",
+          "surface": "三泊四日"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "変更",
+          "pos": "Noun",
+          "surface": "変更"
+        }
+      ],
+      "id": "ni_3",
+      "input": "三泊四日に変更"
+    },
+    {
+      "description": "三割五分の確率 - regression test",
+      "expected": [
+        {
+          "lemma": "三割五分",
+          "pos": "Noun",
+          "surface": "三割五分"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "確率",
+          "pos": "Noun",
+          "surface": "確率"
+        }
+      ],
+      "id": "no_20",
+      "input": "三割五分の確率"
+    },
+    {
+      "description": "会議は一時間くらいだ。 - regression test",
+      "expected": [
+        {
+          "lemma": "会議",
+          "pos": "Noun",
+          "surface": "会議"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "一時間",
+          "pos": "Noun",
+          "surface": "一時間"
+        },
+        {
+          "lemma": "くらい",
+          "pos": "Particle",
+          "surface": "くらい"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ha_kuraida",
+      "input": "会議は一時間くらいだ。"
+    },
+    {
+      "description": "十時三十分 - regression test",
+      "expected": [
+        {
+          "lemma": "十時三十分",
+          "pos": "Noun",
+          "surface": "十時三十分"
+        }
+      ],
+      "id": "unnamed_27",
+      "input": "十時三十分"
+    },
+    {
+      "description": "十時三十分開始 - regression test",
+      "expected": [
+        {
+          "lemma": "十時三十分",
+          "pos": "Noun",
+          "surface": "十時三十分"
+        },
+        {
+          "lemma": "開始",
+          "pos": "Noun",
+          "surface": "開始"
+        }
+      ],
+      "id": "unnamed_28",
+      "input": "十時三十分開始"
+    },
+    {
+      "description": "二泊三日 - regression test",
+      "expected": [
+        {
+          "lemma": "二泊三日",
+          "pos": "Noun",
+          "surface": "二泊三日"
+        }
+      ],
+      "id": "unnamed_29",
+      "input": "二泊三日"
+    },
+    {
+      "description": "三割五分 - regression test",
+      "expected": [
+        {
+          "lemma": "三割五分",
+          "pos": "Noun",
+          "surface": "三割五分"
+        }
+      ],
+      "id": "unnamed_30",
+      "input": "三割五分"
+    },
+    {
+      "description": "一時間かかる。 - regression test",
+      "expected": [
+        {
+          "lemma": "一時間",
+          "pos": "Noun",
+          "surface": "一時間"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかる"
+        }
+      ],
+      "id": "kakaru_3",
+      "input": "一時間かかる。"
+    },
+    {
+      "description": "二時間かかる。 - regression test",
+      "expected": [
+        {
+          "lemma": "二時間",
+          "pos": "Noun",
+          "surface": "二時間"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかる"
+        }
+      ],
+      "id": "kakaru_4",
+      "input": "二時間かかる。"
+    },
+    {
+      "description": "一時間半。 - regression test",
+      "expected": [
+        {
+          "lemma": "一時間",
+          "pos": "Noun",
+          "surface": "一時間"
+        },
+        {
+          "lemma": "半",
+          "pos": "Suffix",
+          "surface": "半"
+        }
+      ],
+      "id": "unnamed_31",
+      "input": "一時間半。"
+    },
+    {
+      "description": "一時的な措置 - regression test",
+      "expected": [
+        {
+          "lemma": "一時的",
+          "pos": "Adjective",
+          "surface": "一時的"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "措置",
+          "pos": "Noun",
+          "surface": "措置"
+        }
+      ],
+      "id": "na_8",
+      "input": "一時的な措置"
+    },
+    {
+      "description": "割合の数量連鎖が格助詞前で分割されない回帰",
+      "expected": [
+        {
+          "lemma": "三割五分",
+          "pos": "Noun",
+          "surface": "三割五分"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "確率",
+          "pos": "Noun",
+          "surface": "確率"
+        }
+      ],
+      "id": "no_fractional_rate",
+      "input": "三割五分の確率。"
     }
   ],
   "description": "counter_units tests",

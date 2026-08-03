@@ -688,6 +688,60 @@
       ],
       "id": "shi_geru_1",
       "input": "新商品し上げる"
+    },
+    {
+      "description": "敬語助動詞はるを複合動詞に統合しない",
+      "expected": [
+        {
+          "lemma": "先生",
+          "pos": "Noun",
+          "surface": "先生"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来"
+        },
+        {
+          "lemma": "はる",
+          "pos": "Auxiliary",
+          "surface": "はる"
+        }
+      ],
+      "id": "ga_haru",
+      "input": "先生が来はる。"
+    },
+    {
+      "description": "敬語助動詞はるを複合動詞に統合しない",
+      "expected": [
+        {
+          "lemma": "先生",
+          "pos": "Noun",
+          "surface": "先生"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "はる",
+          "pos": "Auxiliary",
+          "surface": "はる"
+        }
+      ],
+      "id": "ga_beharu",
+      "input": "先生が食べはる。"
     }
   ],
   "description": "Honorific verbs (敬語動詞)",

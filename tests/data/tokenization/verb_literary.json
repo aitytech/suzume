@@ -58,6 +58,72 @@
       ],
       "id": "literary_awate_zu",
       "input": "慌てずに進む"
+    },
+    {
+      "description": "記録し終へぬ。 - regression test",
+      "expected": [
+        {
+          "lemma": "記録",
+          "pos": "Noun",
+          "surface": "記録"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "終ふ",
+          "pos": "Verb",
+          "surface": "終へ"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        }
+      ],
+      "id": "shi_henu",
+      "input": "記録し終へぬ。"
+    },
+    {
+      "description": "書き終へぬ。 - regression test",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書き"
+        },
+        {
+          "lemma": "終ふ",
+          "pos": "Verb",
+          "surface": "終へ"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ぬ"
+        }
+      ],
+      "id": "ki_henu",
+      "input": "書き終へぬ。"
+    },
+    {
+      "description": "終へた。 - regression test",
+      "expected": [
+        {
+          "lemma": "終ふ",
+          "pos": "Verb",
+          "surface": "終へ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "heta",
+      "input": "終へた。"
     }
   ],
   "description": "verb_literary tests",
