@@ -13,14 +13,7 @@
 namespace suzume::grammar::inflection_score_detail {
 
 float scoreStemAndIchidan(float base, const InflectionScoreContext& context) {
-  [[maybe_unused]] const VerbType type = context.type;
-  [[maybe_unused]] const std::string_view stem = context.stem;
-  [[maybe_unused]] const size_t aux_total_len = context.aux_total_len;
-  [[maybe_unused]] const size_t aux_count = context.aux_count;
-  [[maybe_unused]] const uint16_t required_conn = context.required_conn;
-  [[maybe_unused]] const size_t suffix_len = context.suffix_len;
-  [[maybe_unused]] const InflectionScorerOptions* opts = context.opts;
-  const size_t stem_len = stem.size();
+  SUZUME_UNPACK_INFLECTION_CONTEXT(context);
 
   // Stem length penalties/bonuses
   // Very long stems are suspicious (likely wrong analysis)
@@ -393,15 +386,7 @@ float scoreStemAndIchidan(float base, const InflectionScoreContext& context) {
 }
 
 float scoreGodan(float base, const InflectionScoreContext& context) {
-  [[maybe_unused]] const VerbType type = context.type;
-  [[maybe_unused]] const std::string_view stem = context.stem;
-  [[maybe_unused]] const size_t aux_total_len = context.aux_total_len;
-  [[maybe_unused]] const size_t aux_count = context.aux_count;
-  [[maybe_unused]] const uint16_t required_conn = context.required_conn;
-  [[maybe_unused]] const size_t suffix_len = context.suffix_len;
-  [[maybe_unused]] const bool first_aux_starts_with_te_de = context.first_aux_starts_with_te_de;
-  [[maybe_unused]] const InflectionScorerOptions* opts = context.opts;
-  const size_t stem_len = stem.size();
+  SUZUME_UNPACK_INFLECTION_CONTEXT(context);
 
   // GodanRa validation: single-hiragana stems are typically Ichidan, not GodanRa
   // Verbs like みる (to see), きる (to cut/wear), にる (to boil) are Ichidan

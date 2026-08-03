@@ -28,6 +28,21 @@ inline void logConfidenceAdjustment(float amount, [[maybe_unused]] const char* r
 
 using ::utf8::equalsAny;
 
+/// Bind every InflectionScoreContext field, plus the stem length every scoring
+/// body needs, as locals so the bodies below read as plain expressions.
+/// Adding a field to the context is then a single edit here, and no body can
+/// drift by binding a different subset.
+#define SUZUME_UNPACK_INFLECTION_CONTEXT(ctx)                                                  \
+  [[maybe_unused]] const VerbType type = (ctx).type;                                           \
+  [[maybe_unused]] const std::string_view stem = (ctx).stem;                                   \
+  [[maybe_unused]] const size_t aux_total_len = (ctx).aux_total_len;                           \
+  [[maybe_unused]] const size_t aux_count = (ctx).aux_count;                                   \
+  [[maybe_unused]] const uint16_t required_conn = (ctx).required_conn;                         \
+  [[maybe_unused]] const size_t suffix_len = (ctx).suffix_len;                                 \
+  [[maybe_unused]] const bool first_aux_starts_with_te_de = (ctx).first_aux_starts_with_te_de; \
+  [[maybe_unused]] const InflectionScorerOptions* opts = (ctx).opts;                           \
+  [[maybe_unused]] const size_t stem_len = stem.size()
+
 float scoreStemAndIchidan(float base, const InflectionScoreContext& context);
 float scoreGodan(float base, const InflectionScoreContext& context);
 float scoreAdjectiveAndForm(float base, const InflectionScoreContext& context);

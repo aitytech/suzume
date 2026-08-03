@@ -13,14 +13,7 @@
 namespace suzume::grammar::inflection_score_detail {
 
 float scoreAdjectiveAndForm(float base, const InflectionScoreContext& context) {
-  [[maybe_unused]] const VerbType type = context.type;
-  [[maybe_unused]] const std::string_view stem = context.stem;
-  [[maybe_unused]] const size_t aux_total_len = context.aux_total_len;
-  [[maybe_unused]] const size_t aux_count = context.aux_count;
-  [[maybe_unused]] const uint16_t required_conn = context.required_conn;
-  [[maybe_unused]] const size_t suffix_len = context.suffix_len;
-  [[maybe_unused]] const InflectionScorerOptions* opts = context.opts;
-  const size_t stem_len = stem.size();
+  SUZUME_UNPACK_INFLECTION_CONTEXT(context);
 
   // Single-kanji stems like 書い (from mismatched 書く) are usually wrong
   if (type == VerbType::IAdjective && stem_len == core::kJapaneseCharBytes) {
@@ -333,14 +326,7 @@ float scoreAdjectiveAndForm(float base, const InflectionScoreContext& context) {
 }
 
 float scorePotentialAndSuru(float base, const InflectionScoreContext& context) {
-  [[maybe_unused]] const VerbType type = context.type;
-  [[maybe_unused]] const std::string_view stem = context.stem;
-  [[maybe_unused]] const size_t aux_total_len = context.aux_total_len;
-  [[maybe_unused]] const size_t aux_count = context.aux_count;
-  [[maybe_unused]] const uint16_t required_conn = context.required_conn;
-  [[maybe_unused]] const size_t suffix_len = context.suffix_len;
-  [[maybe_unused]] const InflectionScorerOptions* opts = context.opts;
-  const size_t stem_len = stem.size();
+  SUZUME_UNPACK_INFLECTION_CONTEXT(context);
 
   // Godan potential form boost: 書けない → 書く is more likely than 書ける
   // Potential forms of Godan verbs behave like Ichidan, creating ambiguity
