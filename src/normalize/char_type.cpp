@@ -206,6 +206,22 @@ bool isUnicodePunctuationOrSymbol(char32_t codepoint) {
          (codepoint >= 0xFFF0 && codepoint <= 0xFFFF);
 }
 
+// These Unicode blocks carry text content (currency, units, technical marks,
+// arrows, enclosed characters, and geometric signs).  They are distinct from
+// sentence punctuation: callers must retain them as searchable OTHER tokens
+// instead of allowing the default symbol filter to erase their offsets.
+bool isRetainedTextSymbol(char32_t codepoint) {
+  return (codepoint == U'$' || codepoint == 0x00A5 || codepoint == 0x00A7 || codepoint == 0x00A9 ||
+          codepoint == 0x00B0 || codepoint == 0x00B1 || codepoint == 0x00D7 || codepoint == 0x00F7) ||
+         // Latin-1 text symbols
+         (codepoint >= 0x20A0 && codepoint <= 0x20CF) ||  // currency symbols
+         (codepoint >= 0x2100 && codepoint <= 0x214F) ||  // letterlike symbols
+         (codepoint >= 0x2190 && codepoint <= 0x22FF) ||  // arrows and math
+         (codepoint >= 0x2300 && codepoint <= 0x24FF) ||  // technical/enclosed
+         (codepoint >= 0x2500 && codepoint <= 0x2BFF) ||  // geometric/dingbats
+         (codepoint >= 0xFFE0 && codepoint <= 0xFFEE);    // full-width symbols
+}
+
 }  // namespace
 
 CharType classifyChar(char32_t codepoint) {
@@ -275,7 +291,11 @@ CharType classifyChar(char32_t codepoint) {
     return CharType::Digit;
   }
 
-  // Controls, spacing characters, common punctuation, and symbols. Classify
+  if (isRetainedTextSymbol(codepoint)) {
+    return CharType::Unknown;
+  }
+
+  // Controls, spacing characters, and common punctuation. Classify
   // them together so remove_symbols treats every non-word separator
   // consistently instead of preserving TAB/CR/NBSP as unknown text.
   if (isUnicodeControlOrSpace(codepoint) ||
@@ -289,7 +309,8 @@ CharType classifyChar(char32_t codepoint) {
     return CharType::Symbol;
   }
 
-  // Emoji ranges (comprehensive, Unicode 15.0+)
+  // Emoji ranges (comprehensive, Unicode 15.0+). Unknown-word generation
+  // retains these as OTHER tokens rather than filtering them as punctuation.
   if ((codepoint >= 0x1F600 && codepoint <= 0x1F64F) ||  // Emoticons
       (codepoint >= 0x1F300 && codepoint <= 0x1F5FF) ||  // Misc Symbols and Pictographs
       (codepoint >= 0x1F680 && codepoint <= 0x1F6FF) ||  // Transport and Map

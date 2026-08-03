@@ -230,7 +230,7 @@ describe('C API: create_with_extended_options', () => {
     module = await getModule();
   });
 
-  it('should preserve emoji when preserveSymbols is enabled', () => {
+  it('keeps emoji as text-bearing OTHER when preserveSymbols is enabled', () => {
     const initOptions = module.cwrap('suzume_init_extended_options', null, ['number']) as (
       optionsPtr: number,
     ) => void;
@@ -258,13 +258,13 @@ describe('C API: create_with_extended_options', () => {
     const morphemes = parseMorphemes(module, resultPtr);
     expect(morphemes.length).toBe(2);
     expect(morphemes[1].surface).toBe('😊');
-    expect(morphemes[1].pos).toBe('SYMBOL');
+    expect(morphemes[1].pos).toBe('OTHER');
 
     resultFree(resultPtr);
     destroy(h);
   });
 
-  it('should remove emoji by default', () => {
+  it('keeps emoji by default for full offset coverage', () => {
     const create = module.cwrap('suzume_create', 'number', []) as () => number;
     const analyze = module.cwrap('suzume_analyze', 'number', ['number', 'number']) as (
       h: number,
@@ -279,7 +279,9 @@ describe('C API: create_with_extended_options', () => {
     module._free(textPtr);
 
     const morphemes = parseMorphemes(module, resultPtr);
-    expect(morphemes.length).toBe(1);
+    expect(morphemes.length).toBe(2);
+    expect(morphemes[1].surface).toBe('😊');
+    expect(morphemes[1].pos).toBe('OTHER');
 
     resultFree(resultPtr);
     destroy(h);

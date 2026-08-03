@@ -530,8 +530,12 @@ core::PartOfSpeech UnknownWordGenerator::getPosForType(normalize::CharType ctype
       return core::PartOfSpeech::Noun;
     case normalize::CharType::Hiragana:
       return core::PartOfSpeech::Other;
-    case normalize::CharType::Symbol:
     case normalize::CharType::Emoji:
+      // Emoji are text-bearing input and therefore remain OTHER for full
+      // offset coverage. preserve_symbols controls punctuation-like SYMBOL
+      // tokens; it must not make emoji disappear by default.
+      return core::PartOfSpeech::Other;
+    case normalize::CharType::Symbol:
       return core::PartOfSpeech::Symbol;
     case normalize::CharType::Unknown:
     default:

@@ -445,6 +445,28 @@ TEST_F(SuzumeApiTest, DefaultOptionsPreserveUnicodeLettersAndUnclassifiedText) {
   }
 }
 
+TEST_F(SuzumeApiTest, DefaultOptionsPreserveUnicodeSymbolsAndEmojiWithFullOffsetCoverage) {
+  Suzume instance(makeTestOptions());
+
+  for (const std::string_view text :
+       {"温度25℃", "①を確認", "あ→い", "価格€", "番号№", "連絡℡", "紙★", "👨", "￥", "$", "§", "°", "±", "™", "©"}) {
+    const auto results = instance.analyze(text);
+    std::string reconstructed;
+    size_t next_offset = 0;
+    for (const auto& morpheme : results) {
+      reconstructed += morpheme.surface;
+      EXPECT_EQ(morpheme.start, next_offset) << text;
+      next_offset = morpheme.end;
+    }
+    EXPECT_EQ(reconstructed, text) << text;
+    EXPECT_EQ(next_offset, normalize::toCodepoints(text).size()) << text;
+    EXPECT_NE(std::find_if(results.begin(), results.end(),
+                           [](const auto& morpheme) { return morpheme.pos == core::PartOfSpeech::Other; }),
+              results.end())
+        << text;
+  }
+}
+
 TEST_F(SuzumeApiTest, ControlCharactersAreRemovableSymbolBoundaries) {
   Suzume instance(makeTestOptions());
   const auto results = instance.analyze("東京\tみかん\r大阪\u00A0りんご");
@@ -460,15 +482,20 @@ TEST_F(SuzumeApiTest, ControlCharactersAreRemovableSymbolBoundaries) {
   EXPECT_EQ(citrus->pos, core::PartOfSpeech::Noun);
 }
 
-TEST_F(SuzumeApiTest, PreservedNonWordCodepointsFormOneMaximalRun) {
+TEST_F(SuzumeApiTest, PreservedNonWordCodepointsRetainSurfaceAcrossPunctuationBoundaries) {
   SuzumeOptions options = makeTestOptions();
   options.remove_symbols = false;
   Suzume instance(options);
 
   const auto results = instance.analyze("○×（￣▽￣）");
-  ASSERT_EQ(results.size(), 1u);
-  EXPECT_EQ(results.front().surface, "○×(￣▽￣)");
-  EXPECT_EQ(results.front().pos, core::PartOfSpeech::Symbol);
+  std::string reconstructed;
+  for (const auto& morpheme : results) {
+    reconstructed += morpheme.surface;
+  }
+  EXPECT_EQ(reconstructed, "○×(￣▽￣)");
+  EXPECT_NE(std::find_if(results.begin(), results.end(),
+                         [](const auto& morpheme) { return morpheme.pos == core::PartOfSpeech::Other; }),
+            results.end());
 }
 
 TEST_F(SuzumeApiTest, IdeographicVariationSelectorStaysWithItsWord) {

@@ -138,8 +138,8 @@ TEST(CharTypeTest, ClassifyUnicodeAlphabeticBlocks) {
   EXPECT_EQ(classifyChar(0xA720), CharType::Alphabet);   // Latin Extended-D
   EXPECT_EQ(classifyChar(0x1E030), CharType::Alphabet);  // Cyrillic Extended-D
 
-  EXPECT_EQ(classifyChar(U'×'), CharType::Symbol);
-  EXPECT_EQ(classifyChar(U'÷'), CharType::Symbol);
+  EXPECT_EQ(classifyChar(U'×'), CharType::Unknown);
+  EXPECT_EQ(classifyChar(U'÷'), CharType::Unknown);
   EXPECT_EQ(classifyChar(0x0387), CharType::Unknown);  // Greek ano teleia
   EXPECT_EQ(classifyChar(0x03F6), CharType::Unknown);  // Greek reversed lunate epsilon symbol
   EXPECT_EQ(classifyChar(0x0E5A), CharType::Unknown);  // Thai punctuation
@@ -188,9 +188,9 @@ TEST(CharTypeTest, ClassifyControlsSpacesAndUnicodeSymbols) {
     EXPECT_EQ(classifyChar(codepoint), CharType::Symbol) << static_cast<uint32_t>(codepoint);
   }
   for (const char32_t codepoint : {U'×', U'÷', U'￣', U'→', U'∑'}) {
-    EXPECT_EQ(classifyChar(codepoint), CharType::Symbol) << static_cast<uint32_t>(codepoint);
+    EXPECT_EQ(classifyChar(codepoint), CharType::Unknown) << static_cast<uint32_t>(codepoint);
   }
-  EXPECT_EQ(classifyChar(U'□'), CharType::Emoji);
+  EXPECT_EQ(classifyChar(U'□'), CharType::Unknown);
 }
 
 TEST(CharTypeTest, ClassifyVariationSelectorsAsModifiers) {
@@ -207,12 +207,13 @@ TEST(CharTypeTest, ClassifyEmoji) {
   EXPECT_EQ(classifyChar(0x1F600), CharType::Emoji);  // Grinning face
   EXPECT_EQ(classifyChar(0x1F4A9), CharType::Emoji);  // Misc symbols
   EXPECT_EQ(classifyChar(0x1F680), CharType::Emoji);  // Rocket
-  EXPECT_EQ(classifyChar(0x2615), CharType::Emoji);   // Hot beverage
-  EXPECT_EQ(classifyChar(0x25CE), CharType::Emoji);   // Bullseye
-  EXPECT_EQ(classifyChar(0x2B50), CharType::Emoji);   // Star
-  EXPECT_EQ(classifyChar(0x231A), CharType::Emoji);   // Watch
-  EXPECT_EQ(classifyChar(0x1F1E6), CharType::Emoji);  // Regional indicator A
-  EXPECT_EQ(classifyChar(0x1F3FB), CharType::Emoji);  // Skin tone modifier
+  // These content symbols are searchable OTHER tokens, not removable emoji.
+  EXPECT_EQ(classifyChar(0x2615), CharType::Unknown);  // Hot beverage
+  EXPECT_EQ(classifyChar(0x25CE), CharType::Unknown);  // Bullseye
+  EXPECT_EQ(classifyChar(0x2B50), CharType::Unknown);  // Star
+  EXPECT_EQ(classifyChar(0x231A), CharType::Unknown);  // Watch
+  EXPECT_EQ(classifyChar(0x1F1E6), CharType::Emoji);   // Regional indicator A
+  EXPECT_EQ(classifyChar(0x1F3FB), CharType::Emoji);   // Skin tone modifier
 }
 
 TEST(CharTypeTest, ClassifyUnknown) {

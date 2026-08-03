@@ -212,7 +212,7 @@ typedef struct {
 typedef struct {
   uint8_t preserve_vu;             /**< Preserve ヴ (don't normalize to ビ etc.) */
   uint8_t preserve_case;           /**< Preserve case (don't lowercase ASCII) */
-  uint8_t preserve_symbols;        /**< Preserve symbols/emoji (don't remove from output) */
+  uint8_t preserve_symbols;        /**< Preserve punctuation-like SYMBOL tokens (emoji remain OTHER) */
   uint8_t mode;                    /**< 0=normal, 1=search, 2=split */
   uint8_t lemmatize;               /**< Replace source lemmas with corrected lemmas; annotations are always computed */
   uint8_t merge_compounds;         /**< Merge consecutive noun compounds */
