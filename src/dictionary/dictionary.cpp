@@ -210,15 +210,28 @@ core::Expected<size_t, core::Error> DictionaryManager::loadUserBinaryDictionaryR
   return loadUserBinaryDictionaryResultInto(path, user_binary_dicts_);
 }
 
-core::Expected<size_t, core::Error> DictionaryManager::loadUserBinaryDictionaryResultInto(
-    const std::string& path, std::vector<std::unique_ptr<BinaryDictionary>>& dictionaries) {
+namespace {
+
+// A dictionary only joins the list once its own load succeeded, so a rejected
+// file or buffer leaves the manager exactly as it was.
+template <typename Load>
+core::Expected<size_t, core::Error> appendLoadedDictionary(std::vector<std::unique_ptr<BinaryDictionary>>& dictionaries,
+                                                           Load load) {
   auto dictionary = std::make_unique<BinaryDictionary>();
-  auto result = dictionary->loadFromFile(path);
+  auto result = load(*dictionary);
   if (!result.hasValue()) {
     return core::makeUnexpected(result.error());
   }
   dictionaries.push_back(std::move(dictionary));
   return result.value();
+}
+
+}  // namespace
+
+core::Expected<size_t, core::Error> DictionaryManager::loadUserBinaryDictionaryResultInto(
+    const std::string& path, std::vector<std::unique_ptr<BinaryDictionary>>& dictionaries) {
+  return appendLoadedDictionary(dictionaries,
+                                [&path](BinaryDictionary& dictionary) { return dictionary.loadFromFile(path); });
 }
 
 bool DictionaryManager::loadUserBinaryDictionaryFromMemory(const uint8_t* data, size_t size) {
@@ -232,13 +245,8 @@ core::Expected<size_t, core::Error> DictionaryManager::loadUserBinaryDictionaryF
 
 core::Expected<size_t, core::Error> DictionaryManager::loadUserBinaryDictionaryFromMemoryResultInto(
     const uint8_t* data, size_t size, std::vector<std::unique_ptr<BinaryDictionary>>& dictionaries) {
-  auto dictionary = std::make_unique<BinaryDictionary>();
-  auto result = dictionary->loadFromMemory(data, size);
-  if (!result.hasValue()) {
-    return core::makeUnexpected(result.error());
-  }
-  dictionaries.push_back(std::move(dictionary));
-  return result.value();
+  return appendLoadedDictionary(
+      dictionaries, [data, size](BinaryDictionary& dictionary) { return dictionary.loadFromMemory(data, size); });
 }
 
 core::Expected<size_t, core::Error> DictionaryManager::loadBundledUserBinaryDictionaryResult(const std::string& path) {
