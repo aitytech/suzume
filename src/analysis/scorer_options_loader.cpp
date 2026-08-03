@@ -325,6 +325,38 @@ class ConfigReader {
   bool read();
 
  private:
+  /**
+   * @brief Consume the members of the object starting at the current position
+   * @param on_member Called with each member key, having consumed the ':';
+   *        it reads that member's value and reports whether it was accepted
+   * @note The caller has already established that the current character is '{'.
+   */
+  template <typename OnMember>
+  bool forEachObjectMember(OnMember on_member) {
+    ++pos_;  // '{'
+    skipWhitespace();
+    if (match('}')) {
+      return true;
+    }
+    while (true) {
+      std::string key;
+      if (!readSectionKeyValue(key)) {
+        return false;
+      }
+      if (!on_member(key)) {
+        return false;
+      }
+      skipWhitespace();
+      if (match('}')) {
+        return true;
+      }
+      if (!match(',')) {
+        return failParse("Expected ',' or '}' in object");
+      }
+      skipWhitespace();
+    }
+  }
+
   bool readRootObject();
   bool readCandidates();
   bool readOptionSection(const SectionSpec& section);
@@ -575,16 +607,7 @@ bool ConfigReader::readOptionSection(const SectionSpec& section) {
   if (!enterSection(section.path)) {
     return false;
   }
-  ++pos_;  // '{'
-  skipWhitespace();
-  if (match('}')) {
-    return true;
-  }
-  while (true) {
-    std::string name;
-    if (!readSectionKeyValue(name)) {
-      return false;
-    }
+  return forEachObjectMember([&](const std::string& name) {
     const OptionSpec* option = findOption(section, name);
     if (option == nullptr) {
       return fail("Unknown scorer option: " + std::string(section.path) + "." + name);
@@ -594,31 +617,15 @@ bool ConfigReader::readOptionSection(const SectionSpec& section) {
       return false;
     }
     optionAt(staged_, section.base + option->offset) = value;
-    skipWhitespace();
-    if (match('}')) {
-      return true;
-    }
-    if (!match(',')) {
-      return failParse("Expected ',' or '}' in object");
-    }
-    skipWhitespace();
-  }
+    return true;
+  });
 }
 
 bool ConfigReader::readBigramSection() {
   if (!enterSection("bigram")) {
     return false;
   }
-  ++pos_;  // '{'
-  skipWhitespace();
-  if (match('}')) {
-    return true;
-  }
-  while (true) {
-    std::string name;
-    if (!readSectionKeyValue(name)) {
-      return false;
-    }
+  return forEachObjectMember([&](const std::string& name) {
     const BigramOverrideSpec* override_spec = nullptr;
     for (const BigramOverrideSpec& spec : kBigramOverrideSpecs) {
       if (name == spec.name) {
@@ -634,86 +641,37 @@ bool ConfigReader::readBigramSection() {
       return false;
     }
     staged_.bigram.*(override_spec->value) = value;
-    skipWhitespace();
-    if (match('}')) {
-      return true;
-    }
-    if (!match(',')) {
-      return failParse("Expected ',' or '}' in object");
-    }
-    skipWhitespace();
-  }
+    return true;
+  });
 }
 
 bool ConfigReader::readCandidates() {
   if (!enterSection("candidates")) {
     return false;
   }
-  ++pos_;  // '{'
-  skipWhitespace();
-  if (match('}')) {
-    return true;
-  }
-  while (true) {
-    std::string key;
-    if (!readSectionKeyValue(key)) {
-      return false;
-    }
+  return forEachObjectMember([&](const std::string& key) {
     const SectionSpec* section = findSection(kCandidateSections.data(), kCandidateSections.size(), key);
     if (section == nullptr) {
       return fail("Unknown scorer section: candidates." + key);
     }
-    if (!readOptionSection(*section)) {
-      return false;
-    }
-    skipWhitespace();
-    if (match('}')) {
-      return true;
-    }
-    if (!match(',')) {
-      return failParse("Expected ',' or '}' in object");
-    }
-    skipWhitespace();
-  }
+    return readOptionSection(*section);
+  });
 }
 
 bool ConfigReader::readRootObject() {
-  ++pos_;  // '{'
-  skipWhitespace();
-  if (match('}')) {
-    return true;
-  }
-  while (true) {
-    std::string key;
-    if (!readSectionKeyValue(key)) {
-      return false;
-    }
+  return forEachObjectMember([&](const std::string& key) {
     if (key == "candidates") {
-      if (!readCandidates()) {
-        return false;
-      }
-    } else if (key == "bigram") {
-      if (!readBigramSection()) {
-        return false;
-      }
-    } else {
-      const SectionSpec* section = findSection(kRootOptionSections.data(), kRootOptionSections.size(), key);
-      if (section == nullptr) {
-        return fail("Unknown scorer section: " + key);
-      }
-      if (!readOptionSection(*section)) {
-        return false;
-      }
+      return readCandidates();
     }
-    skipWhitespace();
-    if (match('}')) {
-      return true;
+    if (key == "bigram") {
+      return readBigramSection();
     }
-    if (!match(',')) {
-      return failParse("Expected ',' or '}' in object");
+    const SectionSpec* section = findSection(kRootOptionSections.data(), kRootOptionSections.size(), key);
+    if (section == nullptr) {
+      return fail("Unknown scorer section: " + key);
     }
-    skipWhitespace();
-  }
+    return readOptionSection(*section);
+  });
 }
 
 bool ConfigReader::read() {
