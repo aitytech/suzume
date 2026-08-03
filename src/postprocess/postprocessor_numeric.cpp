@@ -170,7 +170,25 @@ std::vector<core::Morpheme> Postprocessor::mergeNumericExpressions(std::vector<c
     // before; only the identical merge/output path is shared.
     if (current.pos == core::PartOfSpeech::Noun && isNumericExpression(current.surface) && idx + 1 < morphemes.size()) {
       const auto& next = morphemes[idx + 1];
-      const bool is_number_unit = endsWithDigit(current.surface) && looksLikeUnit(next.surface) && next.surface != "対";
+      const bool comma_grouped = current.surface.find(',') != std::string::npos;
+      if (comma_grouped && next.pos == core::PartOfSpeech::Noun && looksLikeUnit(next.surface)) {
+        // The pretokenizer deliberately isolates a grouped numeral from its
+        // counter.  Preserve that search boundary while giving the dependent
+        // counter its grammatical suffix tag.
+        core::Morpheme counter = next;
+        counter.pos = core::PartOfSpeech::Suffix;
+        counter.extended_pos = core::ExtendedPOS::Suffix;
+        counter.lemma = counter.surface;
+        result.push_back(current);
+        result.push_back(counter);
+        idx += 2;
+        continue;
+      }
+      // A comma-grouped numeral is pretokenized as a complete numeric search
+      // unit.  Do not absorb its following counter here: unlike a contiguous
+      // digit run, the grouping separator supplies an explicit boundary.
+      const bool is_number_unit =
+          !comma_grouped && endsWithDigit(current.surface) && looksLikeUnit(next.surface) && next.surface != "対";
       const bool is_quantity_suffix = isQuantityPhraseSuffixSurface(next.surface);
       if (next.pos == core::PartOfSpeech::Noun && (is_number_unit || is_quantity_suffix)) {
         core::Morpheme merged = current;

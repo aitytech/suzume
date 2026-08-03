@@ -209,6 +209,41 @@ bool PreTokenizer::tryMatchCurrency(std::string_view text, size_t pos, PreToken&
   return true;
 }
 
+bool PreTokenizer::tryMatchGroupedNumber(std::string_view text, size_t pos, PreToken& token) const {
+  // A thousands separator joins groups of exactly three digits.  Currency is
+  // matched first, so a following 円 retains its established quantity token;
+  // this branch supplies the same numeric boundary before other counters.
+  size_t idx = pos;
+  size_t first_group = 0;
+  while (idx < text.size() && isAsciiDigit(text[idx]) && first_group < 4) {
+    ++idx;
+    ++first_group;
+  }
+  if (first_group == 0 || first_group > 3 || idx >= text.size() || text[idx] != ',') {
+    return false;
+  }
+
+  bool has_group = false;
+  while (idx < text.size() && text[idx] == ',') {
+    ++idx;
+    size_t group_size = 0;
+    while (idx < text.size() && isAsciiDigit(text[idx]) && group_size < 4) {
+      ++idx;
+      ++group_size;
+    }
+    if (group_size != 3) {
+      return false;
+    }
+    has_group = true;
+  }
+  if (!has_group) {
+    return false;
+  }
+
+  setTokenFromRange(token, text, pos, idx, PreTokenType::Number, core::PartOfSpeech::Noun);
+  return true;
+}
+
 bool PreTokenizer::tryMatchStorage(std::string_view text, size_t pos, PreToken& token) const {
   // Match patterns: 数字[KMGT]?B
   size_t idx = scanDigits(text, pos);

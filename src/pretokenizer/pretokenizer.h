@@ -121,6 +121,11 @@ class PreTokenizer {
   bool tryMatchCurrency(std::string_view text, size_t pos, PreToken& token) const;
 
   /**
+   * @brief Match a comma-grouped decimal numeral (1,000; 12,345,678).
+   */
+  bool tryMatchGroupedNumber(std::string_view text, size_t pos, PreToken& token) const;
+
+  /**
    * @brief Try to match storage size at position
    * @param text Input text
    * @param pos Current position
