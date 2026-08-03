@@ -51,6 +51,86 @@ class TestL2NounMerge:
         assert [token["surface"] for token in merged] == ["が", "お"]
         assert rule is None
 
+    def test_recovers_l2_noun_after_multiple_closed_class_misreads(self, monkeypatch):
+        monkeypatch.setattr(
+            "suzume_mcp.core.merge_rules.core_headwords_by_length",
+            lambda filename: ("てがみ",),
+        )
+        tokens = [
+            _tok("て", pos="助詞", pos_sub1="接続助詞"),
+            _tok("が", pos="助詞", pos_sub1="格助詞"),
+            _tok("み", pos="動詞"),
+            _tok("を", pos="助詞"),
+        ]
+
+        merged, rule = apply_suzume_merge(tokens, "てがみを")
+
+        assert [token["surface"] for token in merged] == ["てがみ", "を"]
+        assert merged[0]["pos"] == "Noun"
+        assert rule == "l2-noun"
+
+    def test_recovers_l2_noun_after_particle_pos_correction(self, monkeypatch):
+        monkeypatch.setattr(
+            "suzume_mcp.core.merge_rules.core_headwords_by_length",
+            lambda filename: ("にわ",),
+        )
+        tokens = [
+            _tok("に", pos="助詞", pos_sub1="格助詞"),
+            _tok("わ", pos="Particle", pos_sub1="一般"),
+            _tok("に", pos="助詞", pos_sub1="格助詞"),
+        ]
+
+        merged, rule = apply_suzume_merge(tokens, "にわに")
+
+        assert [token["surface"] for token in merged] == ["にわ", "に"]
+        assert merged[0]["pos"] == "Noun"
+        assert rule == "l2-noun"
+
+    def test_splits_topic_absorbed_into_l2_noun(self, monkeypatch):
+        monkeypatch.setattr(
+            "suzume_mcp.core.merge_rules.core_headwords_by_length",
+            lambda filename: ("にわ",),
+        )
+        tokens = [
+            _tok("そこ", pos="名詞", pos_sub1="代名詞"),
+            _tok("はにわ", pos="名詞"),
+            _tok("だ", pos="助動詞"),
+        ]
+
+        merged, rule = apply_suzume_merge(tokens, "そこはにわだ")
+
+        assert [token["surface"] for token in merged] == ["そこ", "は", "にわ", "だ"]
+        assert rule == "topic+l2-noun-boundary"
+
+    def test_splits_topic_from_multicell_l2_noun(self, monkeypatch):
+        monkeypatch.setattr(
+            "suzume_mcp.core.merge_rules.core_headwords_by_length",
+            lambda filename: ("いりぐち",),
+        )
+        tokens = [
+            _tok("ここ", pos="名詞", pos_sub1="代名詞"),
+            _tok("はいり", pos="動詞"),
+            _tok("ぐち", pos="名詞"),
+            _tok("だ", pos="助動詞"),
+        ]
+
+        merged, rule = apply_suzume_merge(tokens, "ここはいりぐちだ")
+
+        assert [token["surface"] for token in merged] == ["ここ", "は", "いりぐち", "だ"]
+        assert rule == "topic+l2-noun-boundary"
+
+    def test_keeps_standalone_noun_starting_with_topic_homograph(self, monkeypatch):
+        monkeypatch.setattr(
+            "suzume_mcp.core.merge_rules.core_headwords_by_length",
+            lambda filename: ("にわ", "はにわ"),
+        )
+        tokens = [_tok("はにわ", pos="名詞")]
+
+        merged, rule = apply_suzume_merge(tokens, "はにわ")
+
+        assert [token["surface"] for token in merged] == ["はにわ"]
+        assert rule is None
+
     def test_merges_whole_adjacent_reference_tokens(self, monkeypatch):
         monkeypatch.setattr(
             "suzume_mcp.core.merge_rules.core_headwords_by_length",

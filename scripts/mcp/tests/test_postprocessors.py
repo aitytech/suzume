@@ -394,6 +394,21 @@ class TestPostprocessClassicalPerfectAux:
         tokens = [_tok("語り", "Noun"), _tok("を", "Particle")]
         assert not postprocess_classical_perfect_aux(tokens)
 
+    def test_deverbal_noun_reading_is_restored_before_adnominal_taru(self):
+        tokens = [
+            _tok("咲き", "Noun"),
+            _tok("たる", "Auxiliary", lemma="たり"),
+        ]
+        assert postprocess_classical_perfect_aux(tokens)
+        assert tokens[0] == _tok("咲き", "Verb", lemma="咲く")
+
+    def test_non_continuative_noun_before_adnominal_taru_is_unchanged(self):
+        tokens = [
+            _tok("役割", "Noun"),
+            _tok("たる", "Auxiliary", lemma="たり"),
+        ]
+        assert not postprocess_classical_perfect_aux(tokens)
+
 
 class TestPostprocessMiruAux:
     def test_miru_after_te(self):

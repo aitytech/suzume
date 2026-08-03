@@ -1922,13 +1922,16 @@ def postprocess_classical_honorific_aux(tokens: list[dict]) -> bool:
 
 
 def postprocess_classical_perfect_aux(tokens: list[dict]) -> bool:
-    """Normalize terminal たり and 已然形+り as classical auxiliaries."""
+    """Normalize たり's terminal/adnominal cells and 已然形+り."""
     changed = False
     for idx, token in enumerate(tokens):
         if idx == 0:
             continue
         previous = tokens[idx - 1]
-        if token.get("surface") == "たり" and (idx == len(tokens) - 1 or tokens[idx + 1].get("surface") == "けり"):
+        surface = token.get("surface")
+        is_terminal_perfect = surface == "たり" and (idx == len(tokens) - 1 or tokens[idx + 1].get("surface") == "けり")
+        is_adnominal_perfect = surface == "たる" and token.get("pos") == "Auxiliary"
+        if is_terminal_perfect or is_adnominal_perfect:
             if previous.get("pos") == "Noun":
                 lemma = base_from_renyokei(previous.get("surface", ""))
                 if lemma is not None:
@@ -1940,10 +1943,10 @@ def postprocess_classical_perfect_aux(tokens: list[dict]) -> bool:
                     token["pos"] = "Auxiliary"
                     token["lemma"] = "たり"
                     changed = True
-        if token.get("surface") == "り" and previous.get("pos") == "Verb":
-            surface = previous.get("surface", "")
-            if surface.endswith("け"):
-                previous["lemma"] = f"{surface[:-1]}く"
+        if surface == "り" and previous.get("pos") == "Verb":
+            previous_surface = previous.get("surface", "")
+            if previous_surface.endswith("け"):
+                previous["lemma"] = f"{previous_surface[:-1]}く"
                 token["pos"] = "Auxiliary"
                 token["lemma"] = "り"
                 changed = True

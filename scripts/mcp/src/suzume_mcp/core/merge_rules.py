@@ -242,6 +242,41 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
         pos_in_text = sum(len(tokens[k].get("surface", "")) for k in range(i))
         remaining = text[pos_in_text:] if pos_in_text < len(text) else ""
 
+        # A reference headword can absorb topic は into a following unknown
+        # kana noun (そこ + はにわ, ここ + はいり + ぐち).  L2 evidence for the
+        # suffix noun restores the productive topic boundary, while requiring
+        # a preceding nominal keeps a standalone lexical noun such as はにわ
+        # intact.
+        if (
+            not merged
+            and result
+            and result[-1].get("pos") in ("名詞", "代名詞", "Noun", "Pronoun")
+            and t.get("surface", "").startswith("は")
+            and t.get("surface") != "は"
+        ):
+            for noun in core_headwords_by_length("nouns.tsv"):
+                topic_noun = "は" + noun
+                if not remaining.startswith(topic_noun):
+                    continue
+                consumed = ""
+                j = i
+                while j < len(tokens) and len(consumed) < len(topic_noun):
+                    consumed += tokens[j].get("surface", "")
+                    j += 1
+                if consumed != topic_noun:
+                    continue
+                result.extend(
+                    (
+                        {"surface": "は", "pos": "助詞", "pos_sub1": "係助詞", "lemma": "は"},
+                        {"surface": noun, "pos": "Noun", "lemma": noun},
+                    )
+                )
+                i = j
+                merged = True
+                if applied_rule is None:
+                    applied_rule = "topic+l2-noun-boundary"
+                break
+
         # After the attributive copula of a na-adjective, ものの is a closed
         # concessive particle when a predicate follows.  IPADIC happens to
         # split this host class into formal noun + genitive, unlike the same
@@ -467,7 +502,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
         # An L2 noun is lexical evidence that an otherwise ambiguous sequence
         # is one search unit. Recover only whole adjacent MeCab tokens: a
         # headword ending inside a token must not consume that token's suffix.
-        if not merged and t.get("pos") not in ("助詞", "助動詞", "連体詞"):
+        if not merged:
             for noun in core_headwords_by_length("nouns.tsv"):
                 if not remaining.startswith(noun):
                     continue
@@ -477,6 +512,12 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                     consumed += tokens[j].get("surface", "")
                     j += 1
                 if consumed != noun or j == i + 1:
+                    continue
+                starts_as_closed_class = t.get("pos") in ("助詞", "助動詞", "連体詞")
+                corrected_two_mora_noun = (
+                    j == i + 2 and tokens[i + 1].get("pos") == "Particle" and tokens[i + 1].get("pos_sub1") == "一般"
+                )
+                if starts_as_closed_class and j < i + 3 and not corrected_two_mora_noun:
                     continue
                 follows_verb_as_classical_ha_row = (
                     bool(result)
