@@ -15,7 +15,7 @@ mcp = FastMCP("suzume")
 # the MCP API silently disappear.
 _TOOLS_PACKAGE = f"{__package__}.tools"
 for _tool_file in sorted(Path(__file__).with_name("tools").glob("*.py")):
-    if _tool_file.stem != "__init__":
+    if not _tool_file.stem.startswith("_"):
         import_module(f"{_TOOLS_PACKAGE}.{_tool_file.stem}")
 
 
