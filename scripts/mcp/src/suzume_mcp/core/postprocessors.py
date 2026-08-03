@@ -19,6 +19,7 @@ from .constants import (
     TEMPORAL_COMPOUND_UNITS,
     TEMPORAL_PREFIX_KANJI,
     UNUSUAL_NAMES,
+    WORD_EXCEPTION_BLOCKED_FOLLOWERS,
     WORD_EXCEPTIONS,
 )
 from .core_lexicon import adjective_garu_stems, core_headwords
@@ -156,6 +157,9 @@ def preprocess_for_mecab(text: str) -> tuple[str, dict[tuple[int, str], dict], t
     # Word exceptions
     for word, standard in WORD_EXCEPTIONS.items():
         for m in regex.finditer(regex.escape(word), text):
+            blocked_followers = WORD_EXCEPTION_BLOCKED_FOLLOWERS.get(word, ())
+            if any(text.startswith(follower, m.end()) for follower in blocked_followers):
+                continue
             replacements[(m.start(), "word_exception")] = {
                 "original": word,
                 "replacement": standard,
@@ -1806,6 +1810,70 @@ def postprocess_classical_kere_aux(tokens: list[dict]) -> bool:
 
 
 @reports_mutation
+def postprocess_classical_ha_row_past(tokens: list[dict]) -> bool:
+    """Restore a kana ha-row continuative before the classical past けり.
+
+    The reference analyzer can split a historical ha-row stem as a case
+    particle plus a one-mora modern verb and then attach the past adnominal
+    ける to its final kana.  The three-token sequence has no grammatical
+    boundary: the reconstructed continuative ends in ひ and selects けり.
+    """
+    for idx in range(2, len(tokens)):
+        particle, stem, tail = tokens[idx - 2 : idx + 1]
+        if (
+            particle.get("pos") != "Particle"
+            or stem.get("pos") != "Verb"
+            or tail.get("surface") != "ひける"
+            or tail.get("pos") != "Verb"
+        ):
+            continue
+        surface = f"{particle.get('surface', '')}{stem.get('surface', '')}ひ"
+        if len(surface) < 3:
+            continue
+        tokens[idx - 2 : idx + 1] = [
+            {"surface": surface, "pos": "Verb", "lemma": f"{surface[:-1]}ふ"},
+            {"surface": "ける", "pos": "Auxiliary", "lemma": "けり"},
+        ]
+        return True
+    return False
+
+
+@reports_mutation
+def postprocess_classical_b_row_moteiku(tokens: list[dict]) -> bool:
+    """Restore a B-row continuative in the classical 〜もて行けば chain.
+
+    The reference analyzer may leave the B-row kana on the following compound
+    and classify the whole tail as a noun.  The following もて+いけ+ば sequence
+    selects a verbal compound, so the kana completes the preceding verb's
+    continuative and the remaining cells have unambiguous grammatical roles.
+    """
+    terminal_by_continuative = {"び": "ぶ", "み": "む", "り": "る", "ち": "つ", "し": "す"}
+    for idx in range(len(tokens) - 1):
+        head, tail = tokens[idx : idx + 2]
+        if head.get("pos") != "Verb" or tail.get("pos") not in ("Noun", "Other"):
+            continue
+        surface = tail.get("surface", "")
+        if len(surface) != 6 or not surface.endswith("もていけば"):
+            continue
+        continuative = surface[0]
+        terminal = terminal_by_continuative.get(continuative)
+        if terminal is None:
+            continue
+        stem = f"{head.get('surface', '')}{continuative}"
+        if len(stem) < 2:
+            continue
+        head["surface"] = stem
+        head["lemma"] = f"{stem[:-1]}{terminal}"
+        tokens[idx + 1 : idx + 2] = [
+            {"surface": "もて", "pos": "Verb", "lemma": "もつ"},
+            {"surface": "いけ", "pos": "Verb", "lemma": "いく"},
+            {"surface": "ば", "pos": "Particle", "lemma": "ば"},
+        ]
+        return True
+    return False
+
+
+@reports_mutation
 def postprocess_classical_ramu_boundary(tokens: list[dict]) -> bool:
     """Repair MeCab's one-kanji godan-ka plus らむ boundary."""
     for idx, token in enumerate(tokens):
@@ -2009,7 +2077,21 @@ def postprocess_formal_noun_lemma(tokens: list[dict]) -> bool:
     """Normalize productive formal nouns selected by closed grammar contexts."""
     canonical = {"事": "こと", "物": "もの"}
     changed = False
+    for idx in range(len(tokens) - 1):
+        if tokens[idx].get("surface") == "ため" and tokens[idx + 1].get("surface") == "しがない":
+            tokens[idx : idx + 2] = [
+                {"surface": "ためし", "pos": "Noun", "lemma": "ためし"},
+                {"surface": "が", "pos": "Particle", "lemma": "が"},
+                {"surface": "ない", "pos": "Auxiliary", "lemma": "ない"},
+            ]
+            changed = True
+            break
     for idx, token in enumerate(tokens):
+        if token.get("surface") == "どころ" and token.get("pos") == "Suffix":
+            token["pos"] = "Noun"
+            token["lemma"] = "どころ"
+            changed = True
+            continue
         if (
             idx > 0
             and token.get("surface") == "ため"
@@ -2558,6 +2640,18 @@ def postprocess_nara_verb(tokens: list[dict]) -> bool:
             t["lemma"] = "なる"
 
 
+@reports_mutation
+def postprocess_classical_nari_kateikei(tokens: list[dict]) -> bool:
+    """Restore the classical copula lemma in the 已然形 なれ+ば cell."""
+    for idx, token in enumerate(tokens[:-1]):
+        if token.get("surface") != "なれ" or tokens[idx + 1].get("surface") != "ば":
+            continue
+        if idx == 0 or tokens[idx - 1].get("pos") not in ("Noun", "Adjective"):
+            continue
+        token["pos"] = "Auxiliary"
+        token["lemma"] = "なり"
+
+
 def postprocess_bound_derived_adjective(tokens: list[dict]) -> bool:
     """Rejoin the bound suffix がまし〜 when it was split at its first mora.
 
@@ -2727,6 +2821,8 @@ POSTPROCESSORS: tuple[tuple[str, Callable[[list[dict]], bool]], ...] = (
     ("classical-honorific-aux", postprocess_classical_honorific_aux),
     ("classical-conjecture-aux", postprocess_classical_conjecture_aux),
     ("classical-kere-aux", postprocess_classical_kere_aux),
+    ("classical-ha-row-past", postprocess_classical_ha_row_past),
+    ("classical-b-row-moteiku", postprocess_classical_b_row_moteiku),
     ("classical-perfect-aux", postprocess_classical_perfect_aux),
     ("classical-past-shi", postprocess_classical_past_shi),
     ("adverbial-temporal-prefix", postprocess_adverbial_temporal_prefix),
@@ -2734,6 +2830,7 @@ POSTPROCESSORS: tuple[tuple[str, Callable[[list[dict]], bool]], ...] = (
     ("yoshi-formal-noun", postprocess_yoshi_formal_noun),
     ("sou-aux", postprocess_sou_aux),
     ("nara-verb", postprocess_nara_verb),
+    ("classical-nari-kateikei", postprocess_classical_nari_kateikei),
     ("n-kuruwa", postprocess_n_kuruwa),
     ("nai-context", postprocess_nai_context),
     ("binding-negative-aux", postprocess_binding_negative_aux),

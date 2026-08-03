@@ -8,6 +8,7 @@ from .constants import (
     COMPOUND_VERB_V2_ICHIDAN,
     COMPOUND_VERB_V2_NOT_AFTER_SURU,
     COMPOUND_VERB_V2_SURU_ONLY,
+    COUNTER_UNITS,
     DERIVED_ADJECTIVE_SUFFIX_LEMMAS,
     DERIVED_VERB_SUFFIX_FORMS,
     FAMILY_TERMS,
@@ -102,7 +103,119 @@ _FIXED_FUNCTION_SEARCH_UNITS = tuple(sorted(FIXED_FUNCTION_SEARCH_UNITS, key=len
 _FIXED_INFLECTED_FUNCTION_UNITS = tuple(sorted(FIXED_INFLECTED_FUNCTION_UNITS, key=len, reverse=True))
 _KEYCAP_EMOJI = regex.compile(r"[0-9#*]\uFE0F?\u20E3")
 _PRETOKENIZED_QUANTITY = regex.compile(r"(?:\d{1,3}(?:,\d{3})+|\d+)円")
+_PRETOKENIZED_COMMA_NUMBER = regex.compile(r"\d{1,3}(?:,\d{3})+")
 _PRETOKENIZED_EMAIL = regex.compile(r"[A-Za-z0-9][A-Za-z0-9._+\-]*@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)+")
+_DURATION_BEFORE_SPAN_KAN = regex.compile(
+    r"[0-9０-９〇零一二三四五六七八九十百千万億兆数半]+(?:年|月|日|週|(?:ヶ|ケ|カ|ヵ|箇|か)月)$"
+)
+# A succession of these finite units is one time/date/ratio search unit
+# (十時三十分, 二〇二五年三月, 三割五分), independent of the next token.
+_COUNTER_CHAIN_TAILS = frozenset({"年", "月", "日", "週", "時", "分", "秒", "間", "泊", "割"})
+_COUNTER_CHAIN_UNIT = regex.compile(r"[0-9０-９〇零一二三四五六七八九十百千万億兆]+[年月日時分秒間泊割]$")
+
+
+def _kanji_noun_run(tokens: list[dict], start: int) -> tuple[int, str]:
+    """Return the complete mergeable kanji-noun run beginning at ``start``."""
+    if start >= len(tokens):
+        return start, ""
+    token = tokens[start]
+    if not (
+        regex.match(r"^[\p{Han}]+$", token.get("surface", ""))
+        and token.get("pos") == "名詞"
+        and token.get("pos_sub1", "") not in ("接尾", "固有名詞", "副詞可能")
+    ):
+        return start, ""
+
+    index = start + 1
+    combined = token.get("surface", "")
+    while index < len(tokens):
+        following = tokens[index]
+        surface = following.get("surface", "")
+        is_mergeable = (
+            regex.match(r"^[\p{Han}]+$", surface)
+            and following.get("pos") == "名詞"
+            and following.get("pos_sub1", "") not in ("接尾", "固有名詞", "形容動詞語幹", "副詞可能", "数")
+        )
+        if not is_mergeable:
+            break
+        combined += surface
+        index += 1
+
+    if index < len(tokens) and tokens[index].get("surface", "") in ("付け", "者", "人"):
+        combined += tokens[index].get("surface", "")
+        index += 1
+    return index, combined
+
+
+def _denominal_ru_form(tokens: list[dict], index: int) -> str | None:
+    """Return the productive denominal-る surface starting at ``index``.
+
+    A reference dictionary sometimes treats the final inflection of a noun-
+    derived Godan-る verb as an unrelated classical auxiliary or non-word verb.
+    The token immediately before it is the nominal host, so the malformed tail
+    itself—not a vocabulary list of derived verbs—identifies the boundary.
+    """
+    tail = tokens[index]
+    surface = tail.get("surface", "")
+    conj_type = tail.get("conj_type", "")
+    if tail.get("pos") == "助動詞" and (
+        (surface in ("る", "れ") and conj_type == "文語・ル") or (surface == "り" and conj_type == "文語・リ")
+    ):
+        return surface
+    # Some reference-dictionary paths first retag the stranded terminal る
+    # as a nominal suffix. It still has no nominal host here: immediately
+    # after an ordinary noun it is the productive denominal verb ending.
+    if surface == "る" and tail.get("pos") != "助詞":
+        return surface
+    if (
+        surface == "っ"
+        and tail.get("pos") == "動詞"
+        and tail.get("pos_sub1") == "非自立"
+        and tail.get("lemma") == "く"
+        and index + 1 < len(tokens)
+        and tokens[index + 1].get("surface") == "た"
+    ):
+        return surface
+    if (
+        surface == "ら"
+        and tail.get("pos") == "名詞"
+        and tail.get("pos_sub1") == "接尾"
+        and index + 1 < len(tokens)
+        and tokens[index + 1].get("surface") == "ない"
+    ):
+        return surface
+    if (
+        regex.fullmatch(r"[\p{Katakana}ー]+っ", surface)
+        and tail.get("pos") == "動詞"
+        and tail.get("conj_type") == "五段・ラ行"
+        and tail.get("lemma", "").endswith("る")
+    ):
+        return surface
+    return None
+
+
+def _separate_counter_case_particles(tokens: list[dict]) -> list[dict]:
+    """Expose a case particle lexicalized onto a counter token."""
+    separated: list[dict] = []
+    for index, token in enumerate(tokens):
+        surface = token.get("surface", "")
+        is_counter = (
+            token.get("pos") == "名詞" and token.get("pos_sub1") == "接尾" and token.get("pos_sub2") == "助数詞"
+        )
+        following_is_numeral = (
+            index + 1 < len(tokens)
+            and tokens[index + 1].get("pos") == "名詞"
+            and tokens[index + 1].get("pos_sub1") == "数"
+        )
+        if not is_counter or not surface.endswith("の") or len(surface) == 1 or following_is_numeral:
+            separated.append(token)
+            continue
+        counter = token.copy()
+        counter["surface"] = surface[:-1]
+        if counter.get("lemma") == surface:
+            counter["lemma"] = surface[:-1]
+        separated.extend((counter, {"surface": "の", "pos": "助詞", "pos_sub1": "格助詞", "lemma": "の"}))
+    return separated
 
 
 def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str | None]:
@@ -111,6 +224,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
     Returns:
         Tuple of (merged tokens, applied rule name or None).
     """
+    tokens = _separate_counter_case_particles(tokens)
     result: list[dict] = []
     i = 0
     applied_rule: str | None = None
@@ -128,6 +242,118 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
         pos_in_text = sum(len(tokens[k].get("surface", "")) for k in range(i))
         remaining = text[pos_in_text:] if pos_in_text < len(text) else ""
 
+        # After the attributive copula of a na-adjective, ものの is a closed
+        # concessive particle when a predicate follows.  IPADIC happens to
+        # split this host class into formal noun + genitive, unlike the same
+        # connective after a verb.  A following predicate keeps a genuine
+        # nominal genitive (静かなものの色) out of this rule.
+        if (
+            not merged
+            and t.get("surface") == "もの"
+            and t.get("pos") == "名詞"
+            and i > 0
+            and tokens[i - 1].get("surface") == "な"
+            and tokens[i - 1].get("pos") == "助動詞"
+            and i + 2 < len(tokens)
+            and tokens[i + 1].get("surface") == "の"
+            and tokens[i + 1].get("pos") == "助詞"
+            and tokens[i + 2].get("pos") in ("動詞", "形容詞")
+        ):
+            result.append({"surface": "ものの", "pos": "助詞", "lemma": "ものの"})
+            i += 2
+            merged = True
+            if applied_rule is None:
+                applied_rule = "na-adjective-monono"
+
+        # Preserve a classical kari adjective before generic noun recovery can
+        # absorb its kanji stem. The terminal modern form validates the open
+        # adjective class; the suffix/auxiliary cells are grammatical.
+        if not merged:
+            kari_match = regex.match(r"^(\p{Han}+)(しから|から)(ず|む)(?=$|[^\p{Hiragana}])", remaining)
+            kere_match = regex.match(r"^(\p{Han}+)(しけれ|かれ)(ど)(?=$|[^\p{Hiragana}])", remaining)
+            match = kari_match or kere_match
+            if match is not None:
+                stem, kari, tail = match.groups()
+                terminal = stem + ("しい" if kari.startswith("し") else "い")
+                analysis = mecab_analyze(terminal)
+                source_span = stem + kari + tail
+                consumed = ""
+                j = i
+                while j < len(tokens) and len(consumed) < len(source_span):
+                    consumed += tokens[j].get("surface", "")
+                    j += 1
+                if len(analysis) == 1 and analysis[0].get("pos") == "形容詞" and consumed == source_span:
+                    result.append({"surface": stem + kari, "pos": "形容詞", "lemma": terminal})
+                    if kari_match is not None:
+                        result.append({"surface": tail, "pos": "助動詞", "lemma": "ぬ" if tail == "ず" else "む"})
+                    else:
+                        result.append({"surface": tail, "pos": "助詞", "lemma": tail})
+                    i = j
+                    merged = True
+                    if applied_rule is None:
+                        applied_rule = "classical-adjective-kari"
+
+        # The parallel particle とか is a closed unit after a predicate or
+        # copula.  The reference lattice can split its final occurrence into
+        # quotative と plus focus か, despite retaining the same particle in
+        # the preceding parallel member.
+        if (
+            not merged
+            and t.get("surface") == "と"
+            and t.get("pos") == "助詞"
+            and i > 0
+            and tokens[i - 1].get("pos") in ("動詞", "助動詞", "形容詞")
+            and i + 1 < len(tokens)
+            and tokens[i + 1].get("surface") == "か"
+            and tokens[i + 1].get("pos") == "助詞"
+        ):
+            result.append({"surface": "とか", "pos": "助詞", "lemma": "とか"})
+            i += 2
+            merged = True
+            if applied_rule is None:
+                applied_rule = "parallel-toka"
+
+        # Volitional う licenses concessive とも as one connective particle.
+        # Without that inflectional environment, と + も remains a quotative
+        # plus focus-particle sequence (行くとも思わない).
+        if (
+            not merged
+            and t.get("surface") == "と"
+            and t.get("pos") == "助詞"
+            and i > 0
+            and tokens[i - 1].get("surface") == "う"
+            and tokens[i - 1].get("pos") == "助動詞"
+            and i + 1 < len(tokens)
+            and tokens[i + 1].get("surface") == "も"
+            and tokens[i + 1].get("pos") == "助詞"
+        ):
+            result.append({"surface": "とも", "pos": "助詞", "lemma": "とも"})
+            i += 2
+            merged = True
+            if applied_rule is None:
+                applied_rule = "volitional-tomo"
+
+        # A nominalizer (ん/の) followed by だって carries the same adverbial
+        # particle as a nominal host (学生だって).  Punctuation makes IPADIC
+        # choose the compositional copula + quotative lattice only here.
+        if (
+            not merged
+            and t.get("surface") == "だ"
+            and t.get("pos") == "助動詞"
+            and i > 0
+            and tokens[i - 1].get("surface") in ("ん", "の")
+            and tokens[i - 1].get("pos") in ("名詞", "助詞", "Particle")
+            and (tokens[i - 1].get("pos") == "名詞" or (i > 1 and tokens[i - 2].get("pos") == "動詞"))
+            and i + 1 < len(tokens)
+            and tokens[i + 1].get("surface") == "って"
+            and tokens[i + 1].get("pos") == "助詞"
+        ):
+            result.append({"surface": "だって", "pos": "助詞", "lemma": "だって"})
+            i += 2
+            merged = True
+            if applied_rule is None:
+                applied_rule = "nominalizer-datte"
+
         # Native pre-tokenization sees the normalized ASCII punctuation before
         # analysis. Recover its open-pattern quantity and email units when
         # MeCab emitted their punctuation as separate records.
@@ -137,6 +363,9 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
             if pretokenized_match is None:
                 pretokenized_match = _PRETOKENIZED_QUANTITY.match(remaining)
                 pretokenized_rule = "number+unit"
+            if pretokenized_match is None:
+                pretokenized_match = _PRETOKENIZED_COMMA_NUMBER.match(remaining)
+                pretokenized_rule = "comma-number"
             if pretokenized_match is None:
                 pretokenized_match = _PRETOKENIZED_EMAIL.match(remaining)
                 pretokenized_rule = "email"
@@ -153,6 +382,41 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                     merged = True
                     if applied_rule is None:
                         applied_rule = pretokenized_rule
+
+        # A comma-grouped numeral can be split inside the token holding its
+        # counter (1 , 000人). Recover the numeral and expose a productive
+        # counter boundary; currency remains the established combined unit.
+        if not merged:
+            comma_match = _PRETOKENIZED_COMMA_NUMBER.match(remaining)
+            if comma_match is not None:
+                number = comma_match.group(0)
+                counter = next(
+                    (unit for unit in COUNTER_UNITS if unit != "円" and remaining.startswith(number + unit)), ""
+                )
+                if counter:
+                    source_span = number + counter
+                    consumed = ""
+                    j = i
+                    while j < len(tokens) and len(consumed) < len(source_span):
+                        consumed += tokens[j].get("surface", "")
+                        j += 1
+                    if consumed == source_span:
+                        result.extend(
+                            (
+                                {"surface": number, "pos": "名詞", "pos_sub1": "数", "lemma": number},
+                                {
+                                    "surface": counter,
+                                    "pos": "名詞",
+                                    "pos_sub1": "接尾",
+                                    "pos_sub2": "助数詞",
+                                    "lemma": counter,
+                                },
+                            )
+                        )
+                        i = j
+                        merged = True
+                        if applied_rule is None:
+                            applied_rule = "comma-number+counter"
 
         # A closed subsidiary inflection may be split into arbitrary pieces
         # by the reference dictionary (い+た+だけ+ませ).  Consume the exact
@@ -203,7 +467,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
         # An L2 noun is lexical evidence that an otherwise ambiguous sequence
         # is one search unit. Recover only whole adjacent MeCab tokens: a
         # headword ending inside a token must not consume that token's suffix.
-        if not merged:
+        if not merged and t.get("pos") not in ("助詞", "助動詞", "連体詞"):
             for noun in core_headwords_by_length("nouns.tsv"):
                 if not remaining.startswith(noun):
                     continue
@@ -259,6 +523,131 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                     merged = True
                     if applied_rule is None:
                         applied_rule = "kana-number+unit"
+
+        # A classical ha-row irrealis immediately selected by a negative
+        # auxiliary is a verb cell, not the topic particle (言は+ざる,
+        # 言は+ず).  Reconstruct the historical terminal ふ from the productive
+        # paradigm; ordinary noun+は clauses have no such auxiliary follower.
+        if not merged and regex.fullmatch(r"\p{Han}+", t.get("surface", "")) and i + 1 < len(tokens):
+            nxt = tokens[i + 1]
+            following = tokens[i + 2] if i + 2 < len(tokens) else None
+            negative = following is not None and following.get("surface") in ("ず", "ざる", "ぬ", "ね")
+            if nxt.get("surface") == "は" and negative:
+                stem = t["surface"]
+                auxiliary_surface = following["surface"]
+                result.extend(
+                    (
+                        {"surface": stem + "は", "pos": "動詞", "lemma": stem + "ふ"},
+                        {"surface": auxiliary_surface, "pos": "助動詞", "lemma": "ぬ"},
+                    )
+                )
+                i += 3
+                merged = True
+                if applied_rule is None:
+                    applied_rule = "classical-ha-row-negative"
+
+            elif nxt.get("surface") == "はず":
+                stem = t["surface"]
+                result.extend(
+                    (
+                        {"surface": stem + "は", "pos": "動詞", "lemma": stem + "ふ"},
+                        {"surface": "ず", "pos": "助動詞", "lemma": "ぬ"},
+                    )
+                )
+                i += 2
+                merged = True
+                if applied_rule is None:
+                    applied_rule = "classical-ha-row-negative"
+
+        # The directional particle cannot host a past, perfective, or negative
+        # auxiliary. In that environment a Han stem plus へ is the historical
+        # lower-bigrade continuative (終へ+た, 終へ+ぬ), not a case phrase.
+        if not merged and regex.fullmatch(r"\p{Han}+", t.get("surface", "")) and i + 2 < len(tokens):
+            nxt = tokens[i + 1]
+            following = tokens[i + 2]
+            if nxt.get("surface") == "へ" and following.get("surface") in ("た", "て", "ぬ", "ず", "ざる"):
+                stem = t["surface"]
+                result.extend(
+                    (
+                        {"surface": stem + "へ", "pos": "動詞", "lemma": stem + "ふ"},
+                        {
+                            "surface": following["surface"],
+                            "pos": "助動詞",
+                            "lemma": "ぬ" if following["surface"] in ("ぬ", "ず", "ざる") else following["surface"],
+                        },
+                    )
+                )
+                i += 3
+                merged = True
+                if applied_rule is None:
+                    applied_rule = "classical-he-auxiliary"
+
+        # Reconstruct the productive classical kari paradigm of kanji i-adjectives.
+        # The adjective's lemma is validated through its modern terminal form,
+        # so this remains a conjugation rule rather than a list of headwords.
+        if not merged:
+            kari_match = regex.match(r"^(\p{Han}+)(しから|から)(ず|む)$", remaining)
+            kere_match = regex.match(r"^(\p{Han}+)(しけれ|かれ)(ど)$", remaining)
+            if kari_match is not None:
+                stem, kari, auxiliary = kari_match.groups()
+                terminal = stem + ("しい" if kari == "しから" else "い")
+                analysis = mecab_analyze(terminal)
+                if len(analysis) == 1 and analysis[0].get("pos") == "形容詞":
+                    source_span = stem + kari + auxiliary
+                    consumed = ""
+                    j = i
+                    while j < len(tokens) and len(consumed) < len(source_span):
+                        consumed += tokens[j].get("surface", "")
+                        j += 1
+                    if consumed == source_span:
+                        result.extend(
+                            (
+                                {"surface": stem + kari, "pos": "形容詞", "lemma": terminal},
+                                {"surface": auxiliary, "pos": "助動詞", "lemma": "ぬ" if auxiliary == "ず" else "む"},
+                            )
+                        )
+                        i = j
+                        merged = True
+                        if applied_rule is None:
+                            applied_rule = "classical-adjective-kari"
+            elif kere_match is not None:
+                stem, kari, particle = kere_match.groups()
+                terminal = stem + ("しい" if kari == "しけれ" else "い")
+                analysis = mecab_analyze(terminal)
+                if len(analysis) == 1 and analysis[0].get("pos") == "形容詞":
+                    source_span = stem + kari + particle
+                    consumed = ""
+                    j = i
+                    while j < len(tokens) and len(consumed) < len(source_span):
+                        consumed += tokens[j].get("surface", "")
+                        j += 1
+                    if consumed == source_span:
+                        result.extend(
+                            (
+                                {"surface": stem + kari, "pos": "形容詞", "lemma": terminal},
+                                {"surface": particle, "pos": "助詞", "lemma": particle},
+                            )
+                        )
+                        i = j
+                        merged = True
+                        if applied_rule is None:
+                            applied_rule = "classical-adjective-kari"
+        # Dialectal どえ- intensifiers remain one modifier.  Require the
+        # emphatic prefix and a following content word, rather than changing a
+        # bare えりゃー verb by surface alone.
+        if not merged and regex.match(r"^どえ(?:らい|りゃー)", remaining):
+            intensifier = "どえりゃー" if remaining.startswith("どえりゃー") else "どえらい"
+            consumed = ""
+            j = i
+            while j < len(tokens) and len(consumed) < len(intensifier):
+                consumed += tokens[j].get("surface", "")
+                j += 1
+            if consumed == intensifier and j < len(tokens) and tokens[j].get("pos") not in ("助詞", "記号"):
+                result.append({"surface": intensifier, "pos": "副詞", "lemma": intensifier})
+                i = j
+                merged = True
+                if applied_rule is None:
+                    applied_rule = "dialectal-doe-intensifier"
 
         # 1. Full date pattern
         if not merged:
@@ -343,6 +732,47 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                 if applied_rule is None:
                     applied_rule = "mixed-script-reduplication"
 
+        # A duration expression followed by the suffix 間 is one search unit.
+        # The reference dictionary splits lexical heads such as 半年 and 半月
+        # before 間, while numeric heads happen to arrive through the number+
+        # counter path below.  Key on the productive quantity+duration shape,
+        # rather than either dictionary headword, so both forms agree.
+        if not merged and i + 1 < len(tokens):
+            nxt = tokens[i + 1]
+            if (
+                t.get("pos") == "名詞"
+                and _DURATION_BEFORE_SPAN_KAN.fullmatch(t.get("surface", ""))
+                and nxt.get("surface") == "間"
+                and nxt.get("pos") == "名詞"
+                and nxt.get("pos_sub1") == "接尾"
+            ):
+                combined = t["surface"] + nxt["surface"]
+                result.append({"surface": combined, "pos": "名詞", "lemma": combined})
+                i += 2
+                merged = True
+                if applied_rule is None:
+                    applied_rule = "duration+span-kan"
+
+        # A noun-derived Godan-る verb is one lexical predicate.  Rejoin a
+        # malformed reference tail (事故+る, 事故+っ+た, ミ+スっ+た) by its
+        # inflectional evidence; the rule also covers productive hosts that
+        # are absent from the reference lexicon.
+        if (
+            not merged
+            and t.get("pos") == "名詞"
+            and t.get("pos_sub1") not in ("接尾", "代名詞")
+            and i + 1 < len(tokens)
+        ):
+            tail = _denominal_ru_form(tokens, i + 1)
+            if tail is not None:
+                combined = t.get("surface", "") + tail
+                lemma = combined[:-1] + "る" if tail.endswith(("っ", "ら", "り", "れ")) else combined
+                result.append({"surface": combined, "pos": "動詞", "lemma": lemma})
+                i += 2
+                merged = True
+                if applied_rule is None:
+                    applied_rule = "denominal-ru-verb"
+
         # 2. Number + counter/katakana
         if not merged and t.get("pos") == "名詞" and t.get("pos_sub1") == "数":
             j = i + 1
@@ -354,16 +784,23 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                 ns1 = nxt.get("pos_sub1", "")
                 ns2 = nxt.get("pos_sub2", "")
 
-                is_counter = np == "名詞" and ns1 == "接尾" and ns2 == "助数詞"
-                # The span marker 間 (名詞/接尾/一般) closes a month-counter duration
-                # (三ヶ月+間 → 三ヶ月間), matching the single-token 年間/時間/週間/分間 that
-                # MeCab already emits whole. Without this ヶ月 splits from 間, which then
-                # folds rightward into a following noun (三ヶ月|間勉強 non-word).
-                is_span_kan = (
-                    ns == "間"
-                    and np == "名詞"
+                counter_continues_fraction = (
+                    ns.endswith("の")
+                    and j + 1 < len(tokens)
+                    and tokens[j + 1].get("pos") == "名詞"
+                    and tokens[j + 1].get("pos_sub1") == "数"
+                )
+                is_counter = (
+                    np == "名詞"
                     and ns1 == "接尾"
-                    and regex.search(r"(?:ヶ月|ケ月|カ月|ヵ月|箇月|か月)$", combined)
+                    and ns2 == "助数詞"
+                    and (not ns.endswith("の") or counter_continues_fraction)
+                )
+                # The span marker 間 (名詞/接尾/一般) closes any duration quantity
+                # (三ヶ月+間 → 三ヶ月間).  Non-numeric dictionary heads are handled by
+                # the duration+span-kan rule immediately above.
+                is_span_kan = (
+                    ns == "間" and np == "名詞" and ns1 == "接尾" and _DURATION_BEFORE_SPAN_KAN.search(combined)
                 )
                 is_calendar_month = ns == "月" and regex.match(r"^(?:1[0-2]|[1-9])$", combined)
                 is_katakana_noun = np == "名詞" and regex.match(r"^[\u30A0-\u30FF]+$", ns)
@@ -371,6 +808,13 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                 is_me_suffix = ns == "目" and np == "名詞" and ns1 == "接尾"
                 is_large_unit = np == "名詞" and ns1 == "数" and ns in ("万", "億", "兆")
                 is_number_after_large = combined.endswith(("万", "億", "兆")) and np == "名詞" and ns1 == "数"
+                is_number_after_counter_chain = combined[-1:] in _COUNTER_CHAIN_TAILS and np == "名詞" and ns1 == "数"
+                # IPADIC also emits calendar pieces such as 三月 as one
+                # non-numeric token. It is still the next numeral+counter
+                # member of a chain whose left member has already been read.
+                is_compact_counter_chain_unit = (
+                    combined[-1:] in _COUNTER_CHAIN_TAILS and _COUNTER_CHAIN_UNIT.fullmatch(ns) is not None
+                )
                 is_number_after_decimal = combined.endswith(".") and np == "名詞" and ns1 == "数"
                 is_counter_aux = ns == "つ" and np in ("助動詞", "動詞")
                 is_percent = ns == "%"
@@ -391,6 +835,8 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                         is_me_suffix,
                         is_large_unit,
                         is_number_after_large,
+                        is_number_after_counter_chain,
+                        is_compact_counter_chain_unit,
                         is_number_after_decimal,
                         is_counter_aux,
                         is_percent,
@@ -535,8 +981,9 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
             # compound, so the prefix stays a separate modifier there (超|簡単,
             # 超|重要) while a plain noun host still yields one search unit
             # (超高速, 超大型).
-            if nxt.get("pos") == "名詞" and nxt.get("pos_sub1") != "形容動詞語幹":
-                combined = t.get("surface", "") + nxt.get("surface", "")
+            noun_end, noun_surface = _kanji_noun_run(tokens, i + 1)
+            if noun_surface and nxt.get("pos_sub1") != "形容動詞語幹":
+                combined = t.get("surface", "") + noun_surface
                 # A temporal prefix heads a temporal noun, so only a temporal unit
                 # continues it (今週, 今度, 毎時). Before an ordinary noun the prefix
                 # is the adverbial 今 and the noun is its own word (今|紙, 今|水).
@@ -546,7 +993,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                 )
                 if not temporal_break and regex.match(r"^[\p{Han}]+$", combined):
                     result.append({"surface": combined, "pos": "名詞", "lemma": combined})
-                    i += 2
+                    i = noun_end
                     merged = True
                     if applied_rule is None:
                         applied_rule = "prefix+noun"
@@ -642,6 +1089,37 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                     merged = True
                     if applied_rule is None:
                         applied_rule = "vowel-repeat"
+
+        # 4d-1. The completive auxiliary しまう contracts after a te-form:
+        # 読んで+もうた and 読んで+しもうた. MeCab can split the closed
+        # auxiliary across arbitrary token boundaries (も/うた, し/もう), so
+        # recover it from the source span rather than a particular raw analysis.
+        if not merged and result and result[-1].get("surface") in ("て", "で"):
+            contracted = ""
+            tail = ""
+            if remaining.startswith("しもうた"):
+                contracted, tail = "しもう", "た"
+            elif remaining.startswith("もうた"):
+                contracted, tail = "もう", "た"
+            elif remaining.startswith("しもう"):
+                contracted = "しもう"
+            elif remaining.startswith("もう"):
+                contracted = "もう"
+            if contracted:
+                source_span = contracted + tail
+                consumed = 0
+                j = i
+                while j < len(tokens) and consumed < len(source_span):
+                    consumed += len(tokens[j].get("surface", ""))
+                    j += 1
+                if consumed == len(source_span):
+                    result.append({"surface": contracted, "pos": "助動詞", "lemma": "しまう"})
+                    if tail:
+                        result.append({"surface": tail, "pos": "助動詞", "lemma": tail})
+                    i = j
+                    merged = True
+                    if applied_rule is None:
+                        applied_rule = "contracted-shimau"
 
         # 4d-2. Nominal host + productive adjective suffix
         # くさい derives an adjective from its host instead of predicating over
@@ -750,6 +1228,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                 nxt = tokens[j]
                 if (
                     len(t.get("surface", "")) <= 2
+                    and not (t.get("surface") == "し" and result and result[-1].get("surface") == "に")
                     and nxt.get("surface") == "方"
                     and nxt.get("pos") == "名詞"
                     and nxt.get("pos_sub1") == "接尾"
@@ -828,40 +1307,11 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                     applied_rule = "proper-noun"
 
         # 6. Kanji compound
-        is_mergeable_kanji = (
-            regex.match(r"^[\p{Han}]+$", t.get("surface", ""))
-            and t.get("pos") == "名詞"
-            and t.get("pos_sub1", "") not in ("接尾", "固有名詞", "副詞可能")
-        )
-        if not merged and is_mergeable_kanji:
-            j = i + 1
-            combined = t.get("surface", "")
-            while j < len(tokens):
-                nxt = tokens[j]
-                ns = nxt.get("surface", "")
-                next_mergeable = (
-                    regex.match(r"^[\p{Han}]+$", ns)
-                    and nxt.get("pos") == "名詞"
-                    and nxt.get("pos_sub1", "") not in ("接尾", "固有名詞", "形容動詞語幹", "副詞可能")
-                )
-                if not next_mergeable:
-                    break
-                # A number after a plain noun is a quantity boundary, not part of a kanji
-                # compound (徒歩|五分, 定員|五名, 気温|三十度 — never 徒歩五|分). The number
-                # binds right to its counter via the number+counter rule.
-                if nxt.get("pos_sub1") == "数":
-                    break
-                combined += ns
-                j += 1
-            # Merge with common noun-forming suffixes
-            if j < len(tokens):
-                ns = tokens[j].get("surface", "")
-                if ns in ("付け", "者", "人"):
-                    combined += ns
-                    j += 1
-            if j > i + 1:
+        if not merged:
+            kanji_end, combined = _kanji_noun_run(tokens, i)
+            if kanji_end > i + 1:
                 result.append({"surface": combined, "pos": "名詞", "lemma": combined})
-                i = j
+                i = kanji_end
                 merged = True
                 if applied_rule is None:
                     applied_rule = "kanji-compound"
@@ -1115,7 +1565,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
         # 11. Colloquial intensifier めちゃ
         if not merged and t.get("surface") == "め" and t.get("pos") == "名詞":
             if i + 1 < len(tokens) and tokens[i + 1].get("surface") == "ちゃ":
-                result.append({"surface": "めちゃ", "pos": "その他", "lemma": "めちゃ"})
+                result.append({"surface": "めちゃ", "pos": "副詞", "lemma": "めちゃ"})
                 i += 2
                 merged = True
                 if applied_rule is None:

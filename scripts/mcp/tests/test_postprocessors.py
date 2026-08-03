@@ -141,6 +141,18 @@ class TestPreprocessForMecab:
         assert text == "供給"
         assert rules == ("word-exception",)
 
+    def test_word_exception_leaves_inflected_word_intact(self):
+        text, replacements, rules = preprocess_for_mecab("日程を打ち合わせる")
+        assert text == "日程を打ち合わせる"
+        assert replacements == {}
+        assert rules == ()
+
+    def test_word_exception_leaves_quotative_intact(self):
+        text, replacements, rules = preprocess_for_mecab("そうですって")
+        assert text == "そうですって"
+        assert replacements == {}
+        assert rules == ()
+
     def test_no_change(self):
         text, reps, rules = preprocess_for_mecab("食べる")
         assert text == "食べる"

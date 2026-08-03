@@ -45,6 +45,10 @@ NOUN_NAI_COMPOUND_ADJECTIVES: list[str] = [
     "揺るぎない",
 ]
 
+# Colloquial causatives that IPADIC stores as independent Godan-す headwords,
+# despite their productive a-row host plus causative-す boundary.
+LEXICALIZED_CAUSATIVE_SU_LEMMAS: frozenset[str] = frozenset({"待たす", "行かす"})
+
 # Classical volitional auxiliary followed by a quotative particle.  MeCab
 # sometimes treats the closed-class sequence as one noun token; Suzume keeps
 # both grammatical search units independent.
@@ -162,9 +166,11 @@ TARI_ADVERB_STEMS: list[str] = [
 # An expectation must not split a compound the tokenizer joins, so every V2 the
 # core can join appears here; scripts/check_compound_v2_sync.py fails when the two
 # drift apart. Two hiragana readings are held back because they collide with a
-# productive contraction rather than naming a lexical V2 here: 解く's とく, which the
-# core lexicon itself excludes, and 取る's とる, which is the progressive 〜ている in
-# 話しとる. Both compounds still merge in their kanji spelling.
+# productive contraction or a grammatical homograph rather than naming a lexical
+# V2 here: 解く's とく, which the core lexicon itself excludes; 取る's とる,
+# which is the progressive 〜ている in 話しとる; and 張る's はる, which is the
+# honorific auxiliary after a continuative. All three compounds still merge in
+# their kanji spelling.
 COMPOUND_VERB_V2_GODAN: list[str] = [
     "込む",
     "こむ",
@@ -320,7 +326,6 @@ COMPOUND_VERB_V2_GODAN: list[str] = [
     "越す",
     "こす",
     "張る",
-    "はる",
     "叫ぶ",
     "さけぶ",
     "注ぐ",
@@ -393,6 +398,7 @@ COMPOUND_VERB_V2_GODAN: list[str] = [
 COMPOUND_VERB_V2_ICHIDAN: list[str] = [
     "続ける",
     "つづける",
+    "はてる",
     "まとめる",
     "つける",
     "替える",
@@ -540,6 +546,14 @@ WORD_EXCEPTIONS: dict[str, str] = {
     "再確認": "確認",
     "ですっ": "です",
     "ますっっ": "ます",
+}
+
+# A lexical replacement is safe only at a word boundary. These followers extend
+# the exception's surface into an inflected word, so preprocessing must leave
+# the raw verb or quotative sequence available to MeCab instead.
+WORD_EXCEPTION_BLOCKED_FOLLOWERS: dict[str, tuple[str, ...]] = {
+    "打ち合わせ": ("る", "た", "て", "ます", "まし", "ない", "なかっ", "ず", "ぬ", "ん", "れ", "ろ", "よう", "ば"),
+    "ですっ": ("て",),
 }
 
 # Particles that MeCab may misclassify as Noun
@@ -828,6 +842,11 @@ PREFIX_EXCEPTIONS: set[str] = _PREFIXED_FAMILY_TERMS | {
 
 # User-dict registered kanji+katakana compounds (skip splitting)
 USER_DICT_COMPOUNDS: set[str] = {"東京テスト"}
+
+# Unicode currency, unit, and legal-mark symbols are meaningful input rather
+# than punctuation. IPADIC has no entries for many of them and calls them
+# 記号, which would otherwise make the oracle's symbol filter discard them.
+TEXT_SYMBOLS: frozenset[str] = frozenset("￥€＄$℃°№℡§±™©")
 
 # POS normalization map (uppercase/variations -> canonical form)
 POS_NORM_MAP: dict[str, str] = {

@@ -4,7 +4,7 @@ import unicodedata
 
 import regex
 
-from .constants import SLANG_ADJ_STEMS
+from .constants import SLANG_ADJ_STEMS, TEXT_SYMBOLS
 from .mecab import mecab_analyze
 from .merge_rules import apply_suzume_merge
 from .pos_mapping import correct_mecab_pos, map_mecab_pos, normalize_pos
@@ -45,27 +45,78 @@ def _oracle_text(text: str) -> str:
 
 
 def _is_deliberately_removed_symbol(surface: str) -> bool:
-    """Mirror the punctuation/emoji classes removed by the C++ default."""
+    """Return whether C++ default options deliberately remove punctuation.
 
-    def is_cpp_emoji(codepoint: int) -> bool:
-        return (
-            0x1F300 <= codepoint <= 0x1F64F
-            or 0x1F680 <= codepoint <= 0x1FBFF
-            or 0x2300 <= codepoint <= 0x23FF
-            or 0x25A0 <= codepoint <= 0x27BF
-            or 0x2B50 <= codepoint <= 0x2B55
-            or 0x2934 <= codepoint <= 0x2935
-            or 0x1F1E6 <= codepoint <= 0x1F1FF
-            or codepoint == 0x200D
-            or 0xFE0E <= codepoint <= 0xFE0F
-            or 0x1F3FB <= codepoint <= 0x1F3FF
-            or codepoint == 0x20E3
-            or 0xE0020 <= codepoint <= 0xE007F
-        )
-
-    return bool(surface) and all(
-        unicodedata.category(char).startswith("P") or is_cpp_emoji(ord(char)) for char in surface
+    Content symbols and emoji are emitted as OTHER by the tokenizer, so they
+    must stay in the expected-token stream as well.  Only punctuation is a
+    removable boundary under the default options.
+    """
+    return (
+        surface not in TEXT_SYMBOLS
+        and bool(surface)
+        and all(unicodedata.category(char).startswith("P") for char in surface)
     )
+
+
+def _is_emoji_cluster_component(char: str) -> bool:
+    """Mirror the emoji and joiner code points grouped by the C++ tokenizer."""
+    codepoint = ord(char)
+    return (
+        0x1F300 <= codepoint <= 0x1FBFF
+        or codepoint == 0x200D
+        or 0xFE00 <= codepoint <= 0xFE0F
+        or codepoint == 0x20E3
+        or 0xE0020 <= codepoint <= 0xE007F
+    )
+
+
+def _merge_emoji_clusters(tokens: list[dict]) -> None:
+    """Coalesce emoji ZWJ sequences into the tokenizer's single OTHER token."""
+    merged: list[dict] = []
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        surface = token.get("surface", "")
+        if not surface or not all(_is_emoji_cluster_component(char) for char in surface):
+            merged.append(token)
+            index += 1
+            continue
+
+        cluster = [surface]
+        index += 1
+        while index < len(tokens):
+            following = tokens[index].get("surface", "")
+            if not following or not all(_is_emoji_cluster_component(char) for char in following):
+                break
+            cluster.append(following)
+            index += 1
+        combined = "".join(cluster)
+        merged.append({"surface": combined, "pos": "その他", "pos_sub1": "", "lemma": combined})
+    tokens[:] = merged
+
+
+def _merge_ideographic_variation_selectors(tokens: list[dict]) -> None:
+    """Keep an ideographic variation selector inside its surrounding kanji word."""
+    merged: list[dict] = []
+    index = 0
+    while index < len(tokens):
+        selector = tokens[index].get("surface", "")
+        if (
+            merged
+            and selector
+            and all(0xE0100 <= ord(char) <= 0xE01EF for char in selector)
+            and index + 1 < len(tokens)
+            and regex.fullmatch(r"\p{Han}+", merged[-1].get("surface", ""))
+            and regex.fullmatch(r"\p{Han}+", tokens[index + 1].get("surface", ""))
+        ):
+            following = tokens[index + 1].get("surface", "")
+            combined = merged.pop().get("surface", "") + selector + following
+            merged.append({"surface": combined, "pos": "名詞", "pos_sub1": "一般", "lemma": combined})
+            index += 2
+            continue
+        merged.append(tokens[index])
+        index += 1
+    tokens[:] = merged
 
 
 def get_mecab_tokens(text: str) -> list[dict]:
@@ -145,9 +196,11 @@ def get_expected_tokens(text: str, suzume_tokens: list[dict] | None = None) -> t
     raw_tokens = mecab_analyze(processed_text)
     postprocess_mecab_tokens(raw_tokens, normalized_text, replacements)
     repair_kko_nominalizer(raw_tokens)
+    _merge_ideographic_variation_selectors(raw_tokens)
 
     # Fix MeCab POS errors (before POS mapping)
     correct_mecab_pos(raw_tokens)
+    _merge_emoji_clusters(raw_tokens)
     # Restore inflection boundaries the dictionary lexicalized away.  Runs here
     # because the decision needs the reading, which the merge pass drops.
     split_transparent_suru_te_adverb(raw_tokens)

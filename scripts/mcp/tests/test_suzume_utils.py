@@ -106,6 +106,16 @@ class TestGetExpectedTokens:
         tokens, _, _ = get_expected_tokens("確認を再確認する")
         assert "".join(token["surface"] for token in tokens) == "確認を再確認する"
 
+    def test_word_exception_does_not_strand_a_verb_ending(self):
+        tokens, _, rule = get_expected_tokens("日程を打ち合わせる")
+        assert [token["surface"] for token in tokens] == ["日程", "を", "打ち合わせる"]
+        assert rule != "word-exception"
+
+    def test_word_exception_does_not_cut_a_quotative(self):
+        tokens, _, rule = get_expected_tokens("そうですって")
+        assert [token["surface"] for token in tokens] == ["そう", "です", "って"]
+        assert rule != "word-exception"
+
     def test_whitespace_does_not_shift_merge_rule_anchor(self):
         tokens, _, rule = get_expected_tokens("彼は そんなら行く")
         assert [token["surface"] for token in tokens] == ["彼", "は", "そんなら", "行く"]
@@ -167,6 +177,12 @@ class TestSurfaceIsNeverLost:
         assert "".join(token["surface"] for token in tokens) == "테스트を見る"
         assert tokens[0]["pos"] == "Noun"
 
+    @pytest.mark.parametrize("symbol", ["￥", "€", "＄", "℃", "°", "№", "℡", "§", "±", "™", "©"])
+    def test_meaningful_symbols_survive_the_filter(self, symbol):
+        tokens, _, _ = get_expected_tokens(f"価格は{symbol}1です")
+        expected_symbol = "$" if symbol == "＄" else symbol
+        assert expected_symbol in [token["surface"] for token in tokens]
+
     @pytest.mark.parametrize(
         ("source", "normalized"),
         [
@@ -181,18 +197,18 @@ class TestSurfaceIsNeverLost:
         tokens, _, _ = get_expected_tokens(source)
         assert "".join(token["surface"] for token in tokens) == normalized
 
-    def test_emoji_family_is_explicitly_removed_like_the_cpp_default(self):
+    def test_emoji_family_is_retained_like_the_cpp_default(self):
         tokens, _, rule = get_expected_tokens("👨‍👩‍👧")
-        assert tokens == []
-        assert rule == "symbol-filter"
+        assert [token["surface"] for token in tokens] == ["👨‍👩‍👧"]
+        assert tokens[0]["pos"] == "Other"
+        assert rule == ""
 
-    def test_unknown_non_punctuation_symbol_fails_instead_of_being_silently_dropped(self):
-        raw_symbol = [{"surface": "€", "pos": "記号", "pos_sub1": "一般", "lemma": "€"}]
-        with (
-            patch("suzume_mcp.core.suzume_utils.mecab_analyze", return_value=raw_symbol),
-            pytest.raises(RuntimeError, match="symbol filter would drop"),
-        ):
-            get_expected_tokens("€")
+    def test_unknown_non_punctuation_symbol_is_retained_as_other(self):
+        raw_symbol = [{"surface": "↯", "pos": "記号", "pos_sub1": "一般", "lemma": "↯"}]
+        with patch("suzume_mcp.core.suzume_utils.mecab_analyze", return_value=raw_symbol):
+            tokens, _, _ = get_expected_tokens("↯")
+        assert tokens[0]["surface"] == "↯"
+        assert tokens[0]["pos"] == "Other"
 
     def test_duplicate_surface_raises_instead_of_poisoning_the_oracle(self):
         duplicated = [

@@ -156,6 +156,12 @@ class TestSymbolMisclassification:
         correct_mecab_pos(tokens)
         assert tokens[0]["pos"] == "名詞"
 
+    @pytest.mark.parametrize("surface", ["￥", "€", "＄", "℃", "°", "№", "℡", "§", "±", "™", "©"])
+    def test_meaningful_symbols_become_other(self, surface):
+        tokens = [{"surface": surface, "pos": "記号", "pos_sub1": "一般"}]
+        correct_mecab_pos(tokens)
+        assert tokens[0]["pos"] == "その他"
+
     def test_real_punctuation_stays_a_symbol(self):
         tokens = [
             {"surface": "。", "pos": "記号", "pos_sub1": "句点"},

@@ -7,6 +7,7 @@ from .constants import (
     COPULAR_PREDICATE_HEADS,
     FIXED_FUNCTION_SEARCH_UNITS,
     FIXED_LEADING_SEARCH_UNITS,
+    LEXICALIZED_CAUSATIVE_SU_LEMMAS,
     LITERARY_VOLITIONAL_PARTICLE_COMPOUNDS,
     NOUN_NAI_COMPOUND_ADJECTIVES,
     STATE_NOUN_SUFFIXES,
@@ -255,6 +256,19 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
                 applied_rule = "lexicalized-morpheme-boundary"
             continue
 
+        # 無くなる is a lexicalized reference headword, but its adjective
+        # continuative plus なる boundary is productive (良くなる, 高くなる).
+        if t.get("pos") == "動詞" and t.get("lemma") in ("無くなる", "なくなる"):
+            stem = surface[:-2] if surface.endswith("なる") else surface[:-2] if surface.endswith("なっ") else ""
+            tail = surface[len(stem) :]
+            if stem and tail in ("なる", "なっ"):
+                adjective_lemma = "無い" if stem.startswith("無") else "ない"
+                result.append({"surface": stem, "pos": "形容詞", "lemma": adjective_lemma})
+                result.append({"surface": tail, "pos": "動詞", "lemma": "なる"})
+                if applied_rule is None:
+                    applied_rule = "nakunaru-inflection-boundary"
+                continue
+
         # IPADIC lexicalizes this entire interrogative nominal phrase as an
         # adverb. Suzume keeps its productive pronoun/particle/noun boundaries;
         # the final か is the indefinite adverbial particle.
@@ -319,6 +333,22 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
             if applied_rule is None:
                 applied_rule = "lexicalized-particle-predicate-boundary"
             continue
+
+        # A productive causative may be lexicalized as a Godan-す verb
+        # (待たさ/行かさ) even though its a-row host plus す auxiliary is the
+        # same boundary that the reference analyzer exposes for 書かさ.  The
+        # host is recoverable from the a-row stem, so this is not a word list.
+        if t.get("pos") == "動詞" and t.get("lemma") in LEXICALIZED_CAUSATIVE_SU_LEMMAS:
+            causative_tail = next((form for form in ("さ", "し", "す", "せ") if surface.endswith(form)), "")
+            causative_stem = surface[: -len(causative_tail)] if causative_tail else ""
+            causative_base = base_from_mizenkei(causative_stem)
+            base_tokens = _reanalyze_exact(causative_base) if causative_base is not None else None
+            if base_tokens is not None and len(base_tokens) == 1 and base_tokens[0].get("pos") == "動詞":
+                result.append({"surface": causative_stem, "pos": "動詞", "lemma": causative_base})
+                result.append({"surface": causative_tail, "pos": "助動詞", "lemma": "す"})
+                if applied_rule is None:
+                    applied_rule = "productive-causative-su-boundary"
+                continue
 
         # The productive Godan causative volitional is mizenkei + せ + よう.
         # A reference dictionary can split its tail as the unrelated サ変

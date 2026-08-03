@@ -813,6 +813,7 @@ def _postprocess_ha_row_godan(result: list[dict], applied_rule: str | None) -> t
         # takes that particle, so the pair is one 命令形 of the ハ行四段 verb.
         if (
             following is not None
+            and token.get("surface") == "給"
             and token.get("pos") == "名詞"
             and token.get("pos_sub1") == "接尾"
             and following.get("surface") in _HA_ROW_DETACHED_TAILS

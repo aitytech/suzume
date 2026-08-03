@@ -1,5 +1,7 @@
 """POS mapping and correction logic ported from SuzumeUtils.pm."""
 
+import unicodedata
+
 import regex
 
 from .constants import (
@@ -18,6 +20,7 @@ from .constants import (
     PRONOUN_OVERRIDES,
     SUFFIX_AS_NOUN,
     SUZUME_POS_OVERRIDE,
+    TEXT_SYMBOLS,
     VALID_POS,
     VERB_NOT_AUX_LEMMAS,
     is_all_kanji,
@@ -56,6 +59,11 @@ def map_mecab_pos(token: dict | str) -> str:
     # Already an English POS
     if pos in VALID_POS:
         return pos
+
+    # correct_mecab_pos marks Unicode symbols and enclosed numerals as
+    # その他 so the oracle retains the same OTHER tokens as the tokenizer.
+    if pos == "その他":
+        return "Other"
 
     # Rich token dict with subcategories
     pos_sub1 = token.get("pos_sub1", "")
@@ -301,6 +309,13 @@ def correct_mecab_pos(tokens: list[dict]) -> None:
         # kanji, and labels them 記号. A surface made only of Unicode letters,
         # marks, or decimal digits is text rather than punctuation.
         carries_only_text = bool(surface) and regex.fullmatch(r"[\p{L}\p{M}\p{Nd}]+", surface) is not None
+        if surface and (
+            surface in TEXT_SYMBOLS
+            or all(unicodedata.category(char).startswith("S") or unicodedata.category(char) == "No" for char in surface)
+        ):
+            t["pos"] = "その他"
+            t["pos_sub1"] = ""
+            continue
         if pos == "記号" and (t.get("pos_sub1", "") == "アルファベット" or is_all_kanji(surface) or carries_only_text):
             t["pos"] = "名詞"
             t["pos_sub1"] = "一般"
@@ -489,17 +504,25 @@ def correct_mecab_pos(tokens: list[dict]) -> None:
                 t["lemma"] = BENEFACTIVE_REQUEST_LEMMAS[surface]
 
         # A regional final particle is outside the reference dictionary, so it
-        # arrives as a bare noun. Only a preceding predicate identifies it
-        # (飲む+ばい); elsewhere the nominal reading stands.
+        # arrives as a bare noun. It can close either an inflected predicate or
+        # a nominal predicate (飲む+ばい, 本+ばい). A prefix in that slot is the
+        # nominal head of the predicate, not a productive modifier.
         if surface in DIALECT_FINAL_PARTICLES and pos in ("Noun", "名詞", "Interjection", "感動詞") and idx > 0:
-            if tokens[idx - 1].get("pos", "") in (
+            preceding = tokens[idx - 1]
+            if preceding.get("pos", "") in (
                 "Verb",
                 "動詞",
                 "Auxiliary",
                 "助動詞",
                 "Adjective",
                 "形容詞",
+                "Noun",
+                "名詞",
+                "Prefix",
+                "接頭詞",
             ):
+                if preceding.get("pos") in ("Prefix", "接頭詞"):
+                    preceding["pos"] = "Noun"
                 t["pos"] = "Particle"
 
         # The regional causal き is read as the classical past auxiliary, which

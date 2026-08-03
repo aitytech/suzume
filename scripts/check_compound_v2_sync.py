@@ -30,7 +30,7 @@ CONSTANTS = "scripts/mcp/src/suzume_mcp/core/constants.py"
 # Readings held back from the oracle because the hiragana form is a productive
 # contraction rather than a lexical V2 there. Each compound still merges in its
 # kanji spelling, and constants.py records the reason.
-READINGS_NOT_MIRRORED = {"とく", "とる"}
+READINGS_NOT_MIRRORED = {"とく", "とる", "はる"}
 
 ROW = re.compile(
     r'\{"([^"]+)",\s*(?:"([^"]*)"|nullptr),\s*"[^"]*",\s*V2VerbType::(Godan|Ichidan)((?:\s*,\s*(?:true|false))*)\}'
@@ -58,7 +58,10 @@ def core_lexicon() -> tuple[dict[str, set[str]], set[str], set[str]]:
         joins_suru = bools[0] if len(bools) > 0 else True
         joins_general = bools[1] if len(bools) > 1 else True
         joins_reading = bools[2] if len(bools) > 2 else True
-        entry = {surface}
+        joins_surface = bools[3] if len(bools) > 3 else True
+        entry: set[str] = set()
+        if joins_surface:
+            entry.add(surface)
         if reading and joins_reading:
             entry.add(reading)
         forms[kind] |= entry

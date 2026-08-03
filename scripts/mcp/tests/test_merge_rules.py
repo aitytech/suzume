@@ -1,5 +1,6 @@
 """Tests for merge rules - individual pattern tests using mock token lists."""
 
+from suzume_mcp.core.mecab import mecab_analyze
 from suzume_mcp.core.merge_rules import apply_suzume_merge
 
 
@@ -38,6 +39,18 @@ class TestFixedFunctionSearchUnits:
 
 
 class TestL2NounMerge:
+    def test_does_not_start_an_l2_noun_inside_a_closed_class_token(self, monkeypatch):
+        monkeypatch.setattr(
+            "suzume_mcp.core.merge_rules.core_headwords_by_length",
+            lambda filename: ("がお",),
+        )
+        tokens = [_tok("が", pos="助詞"), _tok("お", pos="名詞")]
+
+        merged, rule = apply_suzume_merge(tokens, "がお")
+
+        assert [token["surface"] for token in merged] == ["が", "お"]
+        assert rule is None
+
     def test_merges_whole_adjacent_reference_tokens(self, monkeypatch):
         monkeypatch.setattr(
             "suzume_mcp.core.merge_rules.core_headwords_by_length",
@@ -196,6 +209,52 @@ class TestDateMerge:
         assert rule == "date"
 
 
+class TestFixedParallelParticles:
+    def test_merges_split_parallel_toka_after_auxiliary(self):
+        tokens = [_tok("ない", pos="助動詞"), _tok("と", pos="助詞"), _tok("か", pos="助詞")]
+        result, rule = apply_suzume_merge(tokens, "ないとか")
+        assert [token["surface"] for token in result] == ["ない", "とか"]
+        assert rule == "parallel-toka"
+
+    def test_merges_datte_after_nominalizer(self):
+        tokens = [_tok("ん", pos="名詞"), _tok("だ", pos="助動詞"), _tok("って", pos="助詞")]
+        result, rule = apply_suzume_merge(tokens, "んだって")
+        assert [token["surface"] for token in result] == ["ん", "だって"]
+        assert rule == "nominalizer-datte"
+
+    def test_merges_tomo_after_volitional_auxiliary(self):
+        tokens = [_tok("しよ", pos="動詞"), _tok("う", pos="助動詞"), _tok("と", pos="助詞"), _tok("も", pos="助詞")]
+        result, rule = apply_suzume_merge(tokens, "しようとも")
+        assert [token["surface"] for token in result] == ["しよ", "う", "とも"]
+        assert rule == "volitional-tomo"
+
+
+class TestNaAdjectiveMonono:
+    def test_merges_concessive_monono_after_attributive_copula(self):
+        tokens = [
+            _tok("静か", pos="名詞"),
+            _tok("な", pos="助動詞"),
+            _tok("もの", pos="名詞"),
+            _tok("の", pos="助詞"),
+            _tok("落ち着か", pos="動詞"),
+        ]
+        result, rule = apply_suzume_merge(tokens, "静かなものの落ち着か")
+        assert [token["surface"] for token in result] == ["静か", "な", "ものの", "落ち着か"]
+        assert rule == "na-adjective-monono"
+
+    def test_keeps_nominal_genitive_before_noun(self):
+        tokens = [
+            _tok("静か", pos="名詞"),
+            _tok("な", pos="助動詞"),
+            _tok("もの", pos="名詞"),
+            _tok("の", pos="助詞"),
+            _tok("色", pos="名詞"),
+        ]
+        result, rule = apply_suzume_merge(tokens, "静かなものの色")
+        assert [token["surface"] for token in result] == ["静か", "な", "もの", "の", "色"]
+        assert rule is None
+
+
 class TestNumberUnit:
     def test_number_counter(self):
         tokens = [
@@ -218,6 +277,64 @@ class TestNumberUnit:
         assert len(result) == 1
         assert result[0]["surface"] == "100万円"
 
+    def test_comma_separated_number(self):
+        tokens = [_tok("1", pos="名詞", pos_sub1="数"), _tok(",", pos="記号"), _tok("200", pos="名詞", pos_sub1="数")]
+        result, rule = apply_suzume_merge(tokens, "1,200")
+        assert result == [{"surface": "1,200", "pos": "名詞", "lemma": "1,200"}]
+        assert rule == "comma-number"
+
+    def test_counter_does_not_absorb_a_following_case_particle(self):
+        tokens = [
+            _tok("三", pos="名詞", pos_sub1="数"),
+            _tok("割", pos="名詞", pos_sub1="接尾", pos_sub2="助数詞"),
+            _tok("五", pos="名詞", pos_sub1="数"),
+            _tok("分の", pos="名詞", pos_sub1="接尾", pos_sub2="助数詞"),
+            _tok("確率", pos="名詞"),
+        ]
+        result, _rule = apply_suzume_merge(tokens, "三割五分の確率")
+        assert [token["surface"] for token in result] == ["三割五分", "の", "確率"]
+
+    def test_merges_duration_head_with_span_kan(self):
+        tokens = [
+            _tok("半年", pos="名詞", pos_sub1="副詞可能"),
+            _tok("間", pos="名詞", pos_sub1="接尾"),
+            _tok("の", pos="助詞"),
+        ]
+        result, rule = apply_suzume_merge(tokens, "半年間の")
+        assert [token["surface"] for token in result] == ["半年間", "の"]
+        assert rule == "duration+span-kan"
+
+    def test_does_not_merge_non_duration_with_span_kan(self):
+        tokens = [
+            _tok("空", pos="名詞"),
+            _tok("間", pos="名詞", pos_sub1="接尾"),
+        ]
+        result, rule = apply_suzume_merge(tokens, "空間")
+        assert [token["surface"] for token in result] == ["空", "間"]
+        assert rule is None
+
+    def test_merges_denominal_ru_verb_from_malformed_reference_tail(self):
+        tokens = [
+            _tok("事故", pos="名詞"),
+            _tok("っ", pos="動詞", pos_sub1="非自立", lemma="く"),
+            _tok("た", pos="助動詞"),
+        ]
+        result, rule = apply_suzume_merge(tokens, "事故った")
+        assert [token["surface"] for token in result] == ["事故っ", "た"]
+        assert result[0]["lemma"] == "事故る"
+        assert rule == "denominal-ru-verb"
+
+    def test_merges_katakana_denominal_ru_tail(self):
+        tokens = [
+            _tok("ミ", pos="名詞"),
+            _tok("スっ", pos="動詞", conj_type="五段・ラ行", lemma="スる"),
+            _tok("た", pos="助動詞"),
+        ]
+        result, rule = apply_suzume_merge(tokens, "ミスった")
+        assert [token["surface"] for token in result] == ["ミスっ", "た"]
+        assert result[0]["lemma"] == "ミスる"
+        assert rule == "denominal-ru-verb"
+
     def test_kana_counter_from_arbitrary_mecab_split(self):
         tokens = [_tok("い", pos="動詞"), _tok("ちまい", pos="動詞")]
         result, rule = apply_suzume_merge(tokens, "いちまい")
@@ -238,6 +355,16 @@ class TestNumberUnit:
 
 
 class TestKanjiCompound:
+    def test_prefix_keeps_a_noun_forming_suffix_with_its_host(self):
+        tokens = [
+            _tok("各", pos="接頭詞", pos_sub1="名詞接続"),
+            _tok("担当", pos="名詞", pos_sub1="サ変接続"),
+            _tok("者", pos="名詞", pos_sub1="接尾"),
+        ]
+        result, rule = apply_suzume_merge(tokens, "各担当者")
+        assert result == [{"surface": "各担当者", "pos": "名詞", "lemma": "各担当者"}]
+        assert rule == "prefix+noun"
+
     def test_two_kanji(self):
         tokens = [_tok("経済", pos="名詞"), _tok("成長", pos="名詞")]
         text = "経済成長"
@@ -340,7 +467,130 @@ class TestTariAdverb:
         assert result[0]["pos"] == "副詞"
 
 
+class TestContractedShimau:
+    def test_merges_mou_after_te_form(self):
+        tokens = [_tok("読ん", pos="動詞"), _tok("で", pos="助詞"), _tok("も", pos="助詞"), _tok("うた", pos="名詞")]
+        result, rule = apply_suzume_merge(tokens, "読んでもうた")
+        assert [token["surface"] for token in result] == ["読ん", "で", "もう", "た"]
+        assert result[-2:] == [
+            {"surface": "もう", "pos": "助動詞", "lemma": "しまう"},
+            {"surface": "た", "pos": "助動詞", "lemma": "た"},
+        ]
+        assert rule == "contracted-shimau"
+
+    def test_merges_shimou_after_te_form(self):
+        tokens = [_tok("読ん", pos="動詞"), _tok("で", pos="助詞"), _tok("し", pos="助詞"), _tok("もう", pos="副詞")]
+        result, rule = apply_suzume_merge(tokens, "読んでしもう")
+        assert [token["surface"] for token in result] == ["読ん", "で", "しもう"]
+        assert result[-1] == {"surface": "しもう", "pos": "助動詞", "lemma": "しまう"}
+        assert rule == "contracted-shimau"
+
+    def test_keeps_adverbial_mou_without_te_form(self):
+        tokens = [_tok("もう", pos="副詞"), _tok("終わっ", pos="動詞")]
+        result, rule = apply_suzume_merge(tokens, "もう終わっ")
+        assert [token["surface"] for token in result] == ["もう", "終わっ"]
+        assert rule is None
+
+
+class TestDialectalDoeIntensifier:
+    def test_merges_only_the_prefixed_modifier(self):
+        tokens = [
+            _tok("ど", pos="接頭詞"),
+            _tok("えりゃ", pos="動詞"),
+            _tok("ー", pos="名詞"),
+            _tok("高い", pos="形容詞"),
+        ]
+        result, rule = apply_suzume_merge(tokens, "どえりゃー高い")
+        assert result[0] == {"surface": "どえりゃー", "pos": "副詞", "lemma": "どえりゃー"}
+        assert rule == "dialectal-doe-intensifier"
+
+    def test_does_not_retag_bare_e_rya(self):
+        tokens = [_tok("えりゃ", pos="動詞"), _tok("ー", pos="名詞"), _tok("高い", pos="形容詞")]
+        result, rule = apply_suzume_merge(tokens, "えりゃー高い")
+        assert [token["surface"] for token in result] == ["えりゃー", "高い"]
+        assert rule == "prolonged-sound-merge"
+
+
+class TestCommaNumberCounter:
+    def test_splits_counter_absorbed_into_comma_number_tail(self):
+        tokens = [_tok("1", pos="名詞", pos_sub1="数"), _tok(",", pos="記号"), _tok("000人", pos="名詞")]
+        result, rule = apply_suzume_merge(tokens, "1,000人")
+        assert [token["surface"] for token in result] == ["1,000", "人"]
+        assert result[1]["pos_sub2"] == "助数詞"
+        assert rule == "comma-number+counter"
+
+    def test_keeps_currency_as_one_search_unit(self):
+        tokens = [_tok("1", pos="名詞", pos_sub1="数"), _tok(",", pos="記号"), _tok("000円", pos="名詞")]
+        result, rule = apply_suzume_merge(tokens, "1,000円")
+        assert [token["surface"] for token in result] == ["1,000円"]
+        assert rule == "number+unit"
+
+
+class TestClassicalHaRowPostprocess:
+    def test_does_not_reinterpret_formal_noun_and_direction_particle(self):
+        tokens = [_tok("寝", pos="名詞"), _tok("どころ", pos="名詞", pos_sub1="接尾"), _tok("へ", pos="助詞")]
+        result, _ = apply_suzume_merge(tokens, "寝どころへ")
+        assert [token["surface"] for token in result] == ["寝", "どころ", "へ"]
+
+
+class TestClassicalHaRowNegative:
+    def test_rebuilds_historical_irrealis_before_negative_auxiliary(self):
+        tokens = [_tok("言", pos="名詞"), _tok("は", pos="助詞"), _tok("ざる", pos="名詞")]
+        result, rule = apply_suzume_merge(tokens, "言はざる")
+        assert result == [
+            {"surface": "言は", "pos": "動詞", "lemma": "言ふ"},
+            {"surface": "ざる", "pos": "助動詞", "lemma": "ぬ"},
+        ]
+        assert rule == "classical-ha-row-negative"
+
+    def test_keeps_topic_particle_before_adjective(self):
+        tokens = [_tok("庭", pos="名詞"), _tok("は", pos="助詞"), _tok("広い", pos="形容詞")]
+        result, rule = apply_suzume_merge(tokens, "庭は広い")
+        assert [token["surface"] for token in result] == ["庭", "は", "広い"]
+        assert rule is None
+
+
+class TestClassicalHeAuxiliary:
+    def test_rebuilds_historical_continuative_before_past_auxiliary(self):
+        tokens = [_tok("終", pos="名詞"), _tok("へ", pos="助詞"), _tok("た", pos="助動詞")]
+        result, rule = apply_suzume_merge(tokens, "終へた")
+        assert result == [
+            {"surface": "終へ", "pos": "動詞", "lemma": "終ふ"},
+            {"surface": "た", "pos": "助動詞", "lemma": "た"},
+        ]
+        assert rule == "classical-he-auxiliary"
+
+    def test_keeps_direction_particle_before_predicate(self):
+        tokens = [_tok("駅", pos="名詞"), _tok("へ", pos="助詞"), _tok("向かう", pos="動詞")]
+        result, rule = apply_suzume_merge(tokens, "駅へ向かう")
+        assert [token["surface"] for token in result] == ["駅", "へ", "向かう"]
+        assert rule is None
+
+
+class TestClassicalAdjectiveKari:
+    def test_rebuilds_i_adjective_kari_cells(self):
+        cases = [
+            ("難しからず", ["難しから", "ず"]),
+            ("高からむ", ["高から", "む"]),
+            ("多かれど", ["多かれ", "ど"]),
+        ]
+        for text, expected_surfaces in cases:
+            tokens = mecab_analyze(text)
+            result, rule = apply_suzume_merge(tokens, text)
+            assert [token["surface"] for token in result] == expected_surfaces
+            assert rule == "classical-adjective-kari"
+
+
 class TestCompoundVerb:
+    def test_hiragana_haru_does_not_merge_as_lexical_v2(self):
+        tokens = [
+            _tok("来", pos="動詞", lemma="来る", conj_form="連用形"),
+            _tok("はる", pos="動詞", lemma="はる"),
+        ]
+        result, rule = apply_suzume_merge(tokens, "来はる")
+        assert [token["surface"] for token in result] == ["来", "はる"]
+        assert rule is None
+
     def test_merge_yomitsuzukeru(self):
         tokens = [
             _tok("読み", pos="動詞", conj_form="連用形"),
@@ -566,6 +816,7 @@ class TestMechaMerge:
         result, rule = apply_suzume_merge(tokens, text)
         assert len(result) == 1
         assert result[0]["surface"] == "めちゃ"
+        assert result[0]["pos"] == "副詞"
 
 
 class TestColloquialPronoun:

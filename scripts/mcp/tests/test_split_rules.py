@@ -270,6 +270,24 @@ class TestProductiveCompletiveTsukusuSplit:
 
 
 class TestProductiveCausativeConditionalSplit:
+    def test_splits_lexicalized_nakunaru_at_inflection_boundary(self):
+        result, rule = apply_suzume_split([_tok("無くなっ", pos="動詞", lemma="無くなる")])
+
+        assert result == [
+            {"surface": "無く", "pos": "形容詞", "lemma": "無い"},
+            {"surface": "なっ", "pos": "動詞", "lemma": "なる"},
+        ]
+        assert rule == "nakunaru-inflection-boundary"
+
+    def test_splits_lexicalized_causative_su_stem(self):
+        result, rule = apply_suzume_split([_tok("待たさ", pos="動詞", lemma="待たす")])
+
+        assert result == [
+            {"surface": "待た", "pos": "動詞", "lemma": "待つ"},
+            {"surface": "さ", "pos": "助動詞", "lemma": "す"},
+        ]
+        assert rule == "productive-causative-su-boundary"
+
     def test_lexicalized_godan_causative_keeps_auxiliary_boundary(self):
         result, rule = apply_suzume_split([_tok("遊ばせれ", pos="動詞", lemma="遊ばせる")])
 
