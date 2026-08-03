@@ -9,6 +9,8 @@
 #include "analysis/category_cost.h"
 #include "candidate_constants.h"
 #include "core/debug.h"
+#include "grammar/char_patterns.h"
+#include "grammar/conjugation.h"
 #include "grammar/honorific_verbs.h"
 #include "grammar/inflection.h"
 #include "normalize/char_type.h"
@@ -62,6 +64,20 @@ bool hasSuruContinuation(const std::vector<char32_t>& codepoints, size_t suffix_
   return normalize::isKanjiCodepoint(next_char) || next_char == U'ち' || next_char == U'て' || next_char == U'た' ||
          next_char == U'な' || next_char == U'ま' || next_char == U'よ' || next_char == U'ろ' || next_char == U'そ' ||
          next_char == U'と' || next_char == U'か' || next_char == U'つ';
+}
+
+bool suffixHeadedRunAbsorbsVerifiedGodanStem(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                             size_t kanji_end, const dictionary::DictionaryManager& dict_manager) {
+  if (start_pos >= kanji_end || kanji_end >= codepoints.size() ||
+      dict_manager.lookupExact(extractSubstring(codepoints, start_pos, start_pos + 1), core::PartOfSpeech::Suffix) ==
+          nullptr) {
+    return false;
+  }
+  const std::string_view base_suffix = grammar::godanBaseSuffixFromIRow(codepoints[kanji_end]);
+  return !base_suffix.empty() &&
+         dict_manager.lookupExact(
+             normalize::concat(extractSubstring(codepoints, kanji_end - 1, kanji_end), base_suffix),
+             core::PartOfSpeech::Verb) != nullptr;
 }
 
 bool hasDictionaryLexicalPrefix(const std::vector<dictionary::LookupResult>& results, size_t full_length) {
@@ -422,7 +438,8 @@ void addNounVerbSplitCandidates(core::Lattice& lattice, std::string_view text, c
       !hasDictionaryLexicalPrefix(noun_results, kanji_length) &&
       !crossesModifierBoundaryForSuruNoun(text, byte_offsets, start_pos, kanji_end, dict_manager) &&
       !(start_pos > 0 && normalize::isIterationMark(codepoints[start_pos - 1])) &&
-      !containsIterationMark(codepoints, start_pos, kanji_end) && !ends_with_derivational_suffix) {
+      !containsIterationMark(codepoints, start_pos, kanji_end) && !ends_with_derivational_suffix &&
+      !suffixHeadedRunAbsorbsVerifiedGodanStem(codepoints, start_pos, kanji_end, dict_manager)) {
     size_t noun_end_byte = byteOffsetAt(byte_offsets, kanji_end);
     std::string noun_surface(text.substr(start_byte, noun_end_byte - start_byte));
     float noun_cost = getCategoryCost(core::ExtendedPOS::Noun) + scorer.splitOpts().noun_verb_split_bonus +

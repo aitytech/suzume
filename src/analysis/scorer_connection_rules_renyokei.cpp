@@ -82,7 +82,8 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
                                   grammar::isIRowCodepoint(utf8::decodeLastChar(prev.surface));
   const bool topicalized_continuative = godan_continuative && next.extended_pos == core::ExtendedPOS::ParticleTopic &&
                                         prev.surface.size() >= core::kTwoJapaneseCharBytes;
-  const bool literary_perfect = godan_continuative && next.extended_pos == core::ExtendedPOS::AuxNegativeNu;
+  const bool literary_perfect = godan_continuative && next.extended_pos == core::ExtendedPOS::AuxNegativeNu &&
+                                utf8::equalsAny(next.surface, {"ぬ"});
   if (topicalized_continuative)
     SUZUME_CONNECTION_ADD(bonus, cost::kModerateBonus);
   if (literary_perfect)
@@ -273,6 +274,14 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && prev.surface == "なら" &&
       next.extended_pos == core::ExtendedPOS::ParticleConj && next.surface == "ば") {
     SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
+  }
+
+  // A te/de connective must attach to a predicate or an explicitly licensed
+  // auxiliary; two connective particles cannot be adjacent. Keep this
+  // surface-scoped so the productive conditional なら+ば remains available.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleConj && next.extended_pos == core::ExtendedPOS::ParticleConj &&
+      grammar::isTeDeSurface(prev.surface) && grammar::isTeDeSurface(next.surface)) {
+    SUZUME_CONNECTION_ADD(bonus, sc::kPenaltyInvalidConjunctiveSequence);
   }
 
   // Classical past conjecture attaches to a continuative verb form

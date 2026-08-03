@@ -745,9 +745,16 @@ void generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t star
   std::vector<UnknownCandidate> nominalized_candidates;
   for (size_t idx = candidate_start; idx < candidates.size(); ++idx) {
     const UnknownCandidate& cand = candidates[idx];
+    // A renyokei reading beginning at the second character of a kanji run is
+    // not a standalone deverbal-noun host.  Keeping that fabricated reading
+    // lets a two-kanji sahen stem split internally before a binding particle
+    // (確認しさえ -> 確 / 認し / さえ).  The complete kanji run plus its
+    // renyokei remains available as the productive analysis.
+    const bool starts_inside_kanji_run = cand.start > 0 && normalize::isKanjiCodepoint(codepoints[cand.start - 1]) &&
+                                         normalize::isKanjiCodepoint(codepoints[cand.start]);
     if (cand.pos != core::PartOfSpeech::Verb || cand.origin != core::CandidateOrigin::VerbKanji ||
         cand.extended_pos != core::ExtendedPOS::VerbRenyokei ||
-        (!cand.lemma_verified && cand.conj_type != dictionary::ConjugationType::GodanSa) ||
+        (!cand.lemma_verified && cand.conj_type != dictionary::ConjugationType::GodanSa) || starts_inside_kanji_run ||
         hasDictionaryAdjectiveTail(codepoints, cand.start, cand.end, dict_manager) ||
         vh::isBoundSuffixAfterNominalHost(dict_manager, codepoints, cand.start, cand.surface) ||
         !hasNominalizedNounParticleContinuation(codepoints, cand.end, dict_manager)) {

@@ -191,6 +191,28 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
 
       // Found a valid verb - generate onbin stem candidate
       std::string onbin_surface = extractSubstring(codepoints, start_pos, onbin_pos + 1);
+      // Do not turn an i-adjective continuative followed by なる into a
+      // fabricated Godan onbin verb.  The earlier start-position guard catches
+      // the tail beginning at く; this scans the whole proposed span so a
+      // hiragana adjective such as なく+なっ is protected as well.
+      bool contains_adjective_ku_naru = false;
+      for (size_t na_pos = start_pos + 1; na_pos < onbin_pos; ++na_pos) {
+        if (codepoints[na_pos] != U'な' || codepoints[na_pos - 1] != U'く') {
+          continue;
+        }
+        const std::string adjective_renyokei = extractSubstring(codepoints, start_pos, na_pos);
+        const auto adjective_analyses = inflection.analyze(adjective_renyokei);
+        contains_adjective_ku_naru =
+            std::any_of(adjective_analyses.begin(), adjective_analyses.end(),
+                        [](const auto& analysis) { return analysis.verb_type == grammar::VerbType::IAdjective; });
+        if (contains_adjective_ku_naru) {
+          break;
+        }
+      }
+      if (!lemma_dict_verified && contains_adjective_ku_naru) {
+        SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] \"" << onbin_surface << "\" adjective_ku_naru_boundary\n");
+        continue;
+      }
       // A span the dictionary already registers as an auxiliary is a cell of a
       // closed paradigm, and that paradigm is complete: nothing is left for an
       // unattested open-class base to explain. なかっ is the past stem of the

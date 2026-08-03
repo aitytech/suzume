@@ -45,6 +45,16 @@ char32_t firstCodepoint(std::string_view surface) {
 float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0
 
+  // A formal noun followed by a multi-mora case particle is a complete
+  // adpositional phrase (こと+に関して). The independent adverbial reading
+  // ending in the particle's first mora cannot own that construction, so keep
+  // the closed particle attached to its formal-noun host without changing
+  // unrelated compound particles such as conditional ったら.
+  if (prev.extended_pos == core::ExtendedPOS::NounFormal && next.extended_pos == core::ExtendedPOS::ParticleCase &&
+      normalize::utf8Length(next.surface) >= 3) {
+    SUZUME_CONNECTION_ADD(bonus, sc::kBonusFormalParticleBinding);
+  }
+
   // An object marker followed by a continuative verb strongly licenses a
   // predicate (本を買いに行く, 本を読み始める). This left-context evidence
   // offsets the general renyokei-before-case-particle nominalization bias while
@@ -52,6 +62,17 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase && grammar::isAccusativeParticleWoSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.fromDictionary()) {
     SUZUME_CONNECTION_ADD(bonus, cost::kExtraStrongBonus);
+  }
+
+  // A multi-mora compound case particle finishes an adpositional phrase; it
+  // cannot directly host the aspectual いる. If this
+  // sequence is intended as a predicate, the competing analysis retains the
+  // internal case-particle + verb-te boundary (目を+通し+て+いる).  Keep this
+  // surface-sensitive because single case particles may validly precede an
+  // independent verb with either lemma.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleCase && normalize::utf8Length(prev.surface) > 1 &&
+      next.lemma == "いる") {
+    SUZUME_CONNECTION_ADD(bonus, sc::kPenaltyClosedClassBoundary);
   }
 
   // Penalty for single-char case particle → very short inflected
@@ -211,13 +232,15 @@ float computeParticleDeterminerBonus(const core::LatticeEdge& prev, const core::
   const bool unlicensed_tomo = tomo_particle && prev.extended_pos != core::ExtendedPOS::AuxNegativeNu &&
                                prev.extended_pos != core::ExtendedPOS::AuxVolitional &&
                                prev.extended_pos != core::ExtendedPOS::AdjRenyokei;
-  // A particle offers no inflected stem, and the passive fills the slot with its
-  // own cell れれ/られれ — so the bare 未然/連用 れ cannot carry these particles
-  // either, even though it precedes every other conjunctive particle.
+  // A particle offers no inflected stem, and the passive fills the conditional
+  // ば slot with its own cell れれ/られれ.  The concessive ど/ども, however,
+  // attaches to the passive continuative itself (書か+れ+ども), just like
+  // ながら; do not reject that productive classical construction.
   const bool unlicensed_hypothetical_host =
       prev.extended_pos == core::ExtendedPOS::ParticleAdverbial ||
       prev.extended_pos == core::ExtendedPOS::ParticleBinding ||
-      (prev.extended_pos == core::ExtendedPOS::AuxPassive && !grammar::spellsHypotheticalAuxiliaryCell(prev.surface));
+      (prev.extended_pos == core::ExtendedPOS::AuxPassive && !grammar::spellsHypotheticalAuxiliaryCell(prev.surface) &&
+       utf8::equalsAny(next.surface, {"ば"}));
   const bool unlicensed_hypothetical = next.extended_pos == core::ExtendedPOS::ParticleConj &&
                                        grammar::isHypotheticalSelectingConjunctiveParticle(next.surface) &&
                                        unlicensed_hypothetical_host;

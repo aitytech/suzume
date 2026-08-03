@@ -81,7 +81,12 @@ bool pastAuxiliaryClosesPredicateBefore(const grammar::Inflection& inflection,
   if (past != U'た' && past != U'だ') {
     return false;
   }
-  const std::string predicate = extractSubstring(codepoints, start_pos, onbin_pos - 1);
+  // Keep the past auxiliary in the probe.  The boundary under examination is
+  // immediately before the quotative っ, so `届いたっ` must be recognized as
+  // the complete predicate `届いた` followed by `って`, rather than asking an
+  // inflection analyser to infer a predicate from the bare continuative
+  // `届い`.
+  const std::string predicate = extractSubstring(codepoints, start_pos, onbin_pos);
   if (vh::isVerbInDictionary(dict_manager, predicate)) {
     return true;
   }
@@ -166,6 +171,8 @@ void appendExtendedSokuonbinCandidates(const std::vector<char32_t>& codepoints, 
       // This prevents false positives like 来なかった → 来なかっ+た (来なかる doesn't exist)
       // The correct split is 来 + なかっ + た (kuru + negative aux + past)
       std::string hiragana_part = extractSubstring(codepoints, kanji_end, onbin_end);
+      const bool crosses_completed_past =
+          pastAuxiliaryClosesPredicateBefore(inflection, dict_manager, codepoints, start_pos, onbin_end - 1);
       if (hasClosedAuxiliaryTail(dict_manager, codepoints, kanji_end, onbin_end) ||
           hasVerifiedInternalOnbinPredicate(inflection, dict_manager, codepoints, kanji_end, onbin_end - 1,
                                             hiragana_end)) {
@@ -249,13 +256,19 @@ void appendExtendedSokuonbinCandidates(const std::vector<char32_t>& codepoints, 
 
             if (!is_adj_katt_form && (in_dict || infl_verified)) {
               // Verified - generate candidate
-              constexpr float kExtendedSokuonbinCost = candidate::verb_cost::kModerateBonus;
+              float cost = candidate::verb_cost::kModerateBonus;
+              if (crosses_completed_past) {
+                // A completed predicate before the quotative って is stronger
+                // evidence than a fabricated long-verb analysis. Keep the
+                // candidate available, but price it out of that boundary.
+                cost += candidate::verb_cost::kGeneratedSpanParticlePenalty;
+              }
               SUZUME_DEBUG_VERBOSE_BLOCK {
                 SUZUME_DEBUG_STREAM << "[VERB_CAND] " << onbin_surface << " extended_sokuonbin lemma=" << potential_base
-                                    << (in_dict ? " [dict]" : " [infl]") << " cost=" << kExtendedSokuonbinCost << "\n";
+                                    << (in_dict ? " [dict]" : " [infl]") << " cost=" << cost << "\n";
               }
               auto candidate =
-                  makeVerbCandidate(onbin_surface, start_pos, onbin_end, kExtendedSokuonbinCost, potential_base,
+                  makeVerbCandidate(onbin_surface, start_pos, onbin_end, cost, potential_base,
                                     grammar::verbTypeToConjType(onbin_verb_type), true, CandidateOrigin::VerbKanji,
                                     0.9F, "extended_sokuonbin", core::ExtendedPOS::VerbOnbinkei);
               // A standalone dictionary verb tail supplies a grammatical

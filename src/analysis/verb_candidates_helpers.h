@@ -155,6 +155,11 @@ bool isCommaClauseChainingRenyokei(const std::vector<char32_t>& codepoints, size
 bool startsInsideDictionaryParticle(const std::vector<char32_t>& codepoints, size_t start_pos,
                                     const dictionary::DictionaryManager* dict_manager);
 
+// Returns true when start_pos is interior to the polite copula です. An
+// unknown-word predicate cannot reopen that interior boundary (です -> で+す).
+bool startsInsideDictionaryAuxiliary(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                     const dictionary::DictionaryManager* dict_manager);
+
 // Detect a multi-mora particle beginning exactly at @p start_pos. Such a
 // closed-class prefix cannot be the first half of a productive compound verb.
 bool startsWithMultiMoraDictionaryParticle(const std::vector<char32_t>& codepoints, size_t start_pos,

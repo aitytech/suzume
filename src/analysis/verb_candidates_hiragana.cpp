@@ -51,6 +51,19 @@ bool hasInternalPredicateBoundary(const std::vector<char32_t>& codepoints, size_
   return false;
 }
 
+bool startsPastAuxiliaryBeforeQuote(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                    const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || start_pos == 0 || start_pos + 2 >= codepoints.size() ||
+      (codepoints[start_pos] != U'た' && codepoints[start_pos] != U'だ') || codepoints[start_pos + 1] != U'っ' ||
+      codepoints[start_pos + 2] != U'て') {
+    return false;
+  }
+  const char32_t preceding = codepoints[start_pos - 1];
+  const bool follows_onbin = preceding == U'い' || preceding == U'ん' || preceding == core::hiragana::kSmallTsu;
+  return follows_onbin && dict_manager->lookupExact(extractSubstring(codepoints, start_pos, start_pos + 1),
+                                                    core::PartOfSpeech::Auxiliary) != nullptr;
+}
+
 size_t closedOnbinTenseEnd(const std::vector<char32_t>& codepoints, size_t start_pos,
                            const std::vector<normalize::CharType>& char_types, const grammar::Inflection& inflection,
                            const dictionary::DictionaryManager* dict_manager) {
@@ -131,6 +144,53 @@ size_t completeIndependentGodanWaTerminalEnd(const std::vector<char32_t>& codepo
   for (const auto& candidate : inflection.analyze(surface)) {
     if (candidate.verb_type == grammar::VerbType::GodanWa && candidate.base_form == surface &&
         candidate.morphemes.empty() && candidate.confidence >= verb_opts.confidence_low) {
+      return end_pos;
+    }
+  }
+  return 0;
+}
+
+size_t completeGodanTerminalAfterCaseParticle(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                              const std::vector<normalize::CharType>& char_types,
+                                              const grammar::Inflection& inflection,
+                                              const dictionary::DictionaryManager* dict_manager,
+                                              const VerbCandidateOptions& verb_opts) {
+  if (dict_manager == nullptr || start_pos == 0) {
+    return 0;
+  }
+  const auto* preceding_particle =
+      dict_manager->lookupExact(extractSubstring(codepoints, start_pos - 1, start_pos), core::PartOfSpeech::Particle);
+  if (preceding_particle == nullptr || preceding_particle->extended_pos != core::ExtendedPOS::ParticleCase) {
+    return 0;
+  }
+  // A case-particle homograph inside a kana predicate (読んでみよう,
+  // ぷにぷにしてる) does not open a new predicate slot. Unknown kanji nouns
+  // remain valid hosts without requiring lexical registration; kana hosts need
+  // an explicit nominal entry ending before the particle.
+  const size_t particle_start = start_pos - 1;
+  const bool follows_kanji_host = particle_start > 0 && normalize::isKanjiCodepoint(codepoints[particle_start - 1]);
+  constexpr PartOfSpeechMask kNominalHostMask =
+      partOfSpeechMask(core::PartOfSpeech::Noun) | partOfSpeechMask(core::PartOfSpeech::Pronoun);
+  const size_t min_host_start = particle_start > 12 ? particle_start - 12 : 0;
+  const bool follows_nominal_host =
+      hasDictionaryEntryEndingAt(*dict_manager, codepoints, min_host_start, particle_start, kNominalHostMask);
+  if (!follows_kanji_host && !follows_nominal_host) {
+    return 0;
+  }
+
+  size_t end_pos = start_pos;
+  while (end_pos < char_types.size() && end_pos - start_pos < 12 &&
+         char_types[end_pos] == normalize::CharType::Hiragana) {
+    ++end_pos;
+  }
+  if (end_pos - start_pos < 3) {
+    return 0;
+  }
+
+  const std::string surface = extractSubstring(codepoints, start_pos, end_pos);
+  for (const auto& candidate : inflection.analyze(surface)) {
+    if (grammar::isGodanVerbType(candidate.verb_type) && candidate.base_form == surface &&
+        candidate.morphemes.empty() && candidate.confidence >= verb_opts.confidence_standard) {
       return end_pos;
     }
   }
@@ -337,6 +397,68 @@ void appendHiraganaRenyokeiBeforeAspect(const std::vector<char32_t>& codepoints,
   candidates.push_back(std::move(candidate));
 }
 
+void appendHiraganaRenyokeiBeforeFormalNoun(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                            const std::vector<normalize::CharType>& char_types,
+                                            const grammar::Inflection& inflection,
+                                            const dictionary::DictionaryManager* dict_manager,
+                                            std::vector<UnknownCandidate>& candidates) {
+  if (dict_manager == nullptr) {
+    return;
+  }
+  size_t run_end = start_pos;
+  while (run_end < char_types.size() && run_end - start_pos < 12 &&
+         char_types[run_end] == normalize::CharType::Hiragana) {
+    ++run_end;
+  }
+
+  // A two-or-more-mora e-row stem immediately before a formal noun is the
+  // productive verb-continuative nominal construction (たて+もの). The
+  // closed noun supplies the right boundary, so this does not turn arbitrary
+  // kana runs into verbs.
+  for (size_t stem_end = start_pos + 2; stem_end < run_end; ++stem_end) {
+    if (stem_end + 2 > run_end) {
+      continue;
+    }
+    const std::string following = extractSubstring(codepoints, stem_end, stem_end + 2);
+    if (following != "もの" ||
+        !lookupResultsHaveExtendedPOS(dict_manager->lookup(following, 0), core::ExtendedPOS::NounFormal) ||
+        !grammar::isERowCodepoint(codepoints[stem_end - 1])) {
+      continue;
+    }
+    const std::string stem = extractSubstring(codepoints, start_pos, stem_end);
+    const std::string terminal = stem + "る";
+    float ichidan_terminal_confidence = candidate::kNoConfidence;
+    float godan_ra_terminal_confidence = candidate::kNoConfidence;
+    for (const auto& candidate : inflection.analyze(terminal)) {
+      if (candidate.base_form != terminal || !candidate.morphemes.empty()) {
+        continue;
+      }
+      if (candidate.verb_type == grammar::VerbType::Ichidan) {
+        ichidan_terminal_confidence = std::max(ichidan_terminal_confidence, candidate.confidence);
+      }
+      if (candidate.verb_type == grammar::VerbType::GodanRa) {
+        godan_ra_terminal_confidence = std::max(godan_ra_terminal_confidence, candidate.confidence);
+      }
+    }
+    // An e-row stem whose only terminal analysis is Godan-ra is not an
+    // independently supported Ichidan continuative. Before a formal noun,
+    // keep it as a nominal stem instead of fabricating a verb lemma
+    // (たて+もの). A true Ichidan terminal retains the productive verb path.
+    if (godan_ra_terminal_confidence >= candidate::verb_cost::kConstructedVerbMinConfidence &&
+        godan_ra_terminal_confidence > ichidan_terminal_confidence) {
+      candidates.push_back(makeNounCandidate(stem, start_pos, stem_end, candidate::verb_cost::kStrongBonus, true,
+                                             CandidateOrigin::VerbHiragana, core::ExtendedPOS::Noun));
+      return;
+    }
+    SUZUME_DEBUG_LOG_VERBOSE("[VERB_CAND] " << stem << " hiragana_renyokei_before_formal_noun\n");
+    candidates.push_back(makeVerbCandidate(stem, start_pos, stem_end, candidate::verb_cost::kStrongBonus, stem + "る",
+                                           dictionary::ConjugationType::Ichidan, true, CandidateOrigin::VerbHiragana,
+                                           candidate::kHighOriginConfidence, "hiragana_renyokei_before_formal_noun",
+                                           core::ExtendedPOS::VerbRenyokei));
+    return;
+  }
+}
+
 }  // namespace
 
 std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
@@ -350,14 +472,37 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     return candidates;
   }
 
+  // This construction is licensed by its formal-noun follower, even when the
+  // stem starts with a mora that is also a closed auxiliary (たてもの).
+  appendHiraganaRenyokeiBeforeFormalNoun(codepoints, start_pos, char_types, inflection, dict_manager, candidates);
+
   const size_t closed_onbin_tense_end =
       closedOnbinTenseEnd(codepoints, start_pos, char_types, inflection, dict_manager);
   const size_t complete_godan_wa_terminal_end =
       completeIndependentGodanWaTerminalEnd(codepoints, start_pos, char_types, inflection, verb_opts);
+  const size_t complete_case_particle_terminal_end =
+      completeGodanTerminalAfterCaseParticle(codepoints, start_pos, char_types, inflection, dict_manager, verb_opts);
 
   if (vh::startsInsideDictionaryParticle(codepoints, start_pos, dict_manager)) {
     SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] pos=" << start_pos << " inside_dictionary_particle\n");
     return candidates;
+  }
+  if (vh::startsInsideDictionaryAuxiliary(codepoints, start_pos, dict_manager)) {
+    SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] pos=" << start_pos << " inside_dictionary_auxiliary\n");
+    return candidates;
+  }
+  if (startsPastAuxiliaryBeforeQuote(codepoints, start_pos, dict_manager)) {
+    SUZUME_DEBUG_LOG_VERBOSE("[VERB_SKIP] pos=" << start_pos << " past_auxiliary_before_quote\n");
+    return candidates;
+  }
+  // A candidate cannot begin inside an already complete formal noun.  This
+  // keeps もの+だっ+た from becoming the fabricated onbin verb のだっ.
+  if (start_pos > 0 && dict_manager != nullptr) {
+    const auto* preceding_noun =
+        dict_manager->lookupExact(extractSubstring(codepoints, start_pos - 1, start_pos + 1), core::PartOfSpeech::Noun);
+    if (preceding_noun != nullptr && preceding_noun->extended_pos == core::ExtendedPOS::NounFormal) {
+      return candidates;
+    }
   }
 
   // Context-gated irregular 来る mizenkei before a selecting auxiliary.
@@ -545,6 +690,10 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
         ++hiragana_end;
         continue;
       }
+      if (complete_case_particle_terminal_end != 0 && hiragana_end < complete_case_particle_terminal_end) {
+        ++hiragana_end;
+        continue;
+      }
       if (comma_clause_end != 0 && hiragana_end < comma_clause_end) {
         ++hiragana_end;
         continue;
@@ -701,6 +850,9 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
   if (complete_godan_wa_terminal_end != 0) {
     hiragana_end = complete_godan_wa_terminal_end;
   }
+  if (complete_case_particle_terminal_end != 0) {
+    hiragana_end = complete_case_particle_terminal_end;
+  }
 
   // A previously recognized onbin tail can carry the scanner across a
   // particle-homographic や before the ordinary boundary loop reaches it.
@@ -738,7 +890,8 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
   const bool has_inflected_candidate =
       !starts_suru_passive_conditional &&
       appendInflectedHiraganaVerbCandidates(codepoints, start_pos, hiragana_end, first_char, char_types, inflection,
-                                            dict_manager, verb_opts, complete_godan_wa_terminal_end != 0, candidates);
+                                            dict_manager, verb_opts, complete_godan_wa_terminal_end != 0,
+                                            complete_case_particle_terminal_end != 0, candidates);
   if (godan_ra_continuation_stem_end != 0) {
     const std::string surface = extractSubstring(codepoints, start_pos, godan_ra_continuation_stem_end);
     // A lexical inflection (notably たがっ or ちがっ) must retain its
@@ -772,11 +925,20 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
     SUZUME_DEBUG_LOG_VERBOSE("[VERB_CAND] " << surface << " hiragana_godan_ra_particle_continuation lemma=" << lemma
                                             << " cost=" << candidate::verb_cost::kStrongBonus << "\n");
   }
-  if (!has_inflected_candidate && closed_onbin_tense_end == 0 && godan_ra_continuation_stem_end == 0) {
+  // A quoted negative predicate supplies the same irrealis evidence as the
+  // ordinary inflected scan, even when a dictionary renyokei candidate was
+  // already emitted.  Preserve the Ichidan mizenkei alternative for
+  // でき+ない+という instead of allowing the nominal whole-span fallback.
+  const bool negative_before_quotative =
+      hiragana_end >= start_pos + 2 && codepoints[hiragana_end - 2] == U'な' && codepoints[hiragana_end - 1] == U'い' &&
+      dict_manager != nullptr && hiragana_end + 3 <= codepoints.size() &&
+      dict_manager->lookupExact(extractSubstring(codepoints, hiragana_end, hiragana_end + 3),
+                                core::PartOfSpeech::Determiner) != nullptr;
+  if (!has_inflected_candidate && !negative_before_quotative && closed_onbin_tense_end == 0 &&
+      godan_ra_continuation_stem_end == 0) {
     return candidates;
   }
-
-  if (has_inflected_candidate) {
+  if (has_inflected_candidate || negative_before_quotative) {
     appendHiraganaDerivedCandidates(codepoints, start_pos, hiragana_end, char_types, inflection, dict_manager,
                                     candidates);
   }

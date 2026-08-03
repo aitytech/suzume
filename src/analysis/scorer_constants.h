@@ -136,6 +136,22 @@ constexpr float kPenaltyIshiVerbRenyokei = scale::kSevere;
 // Penalty for kanji 中 compound patterns (過剰分割防止)
 constexpr float kPenaltyKanjiChuuCompound = scale::kMinor;
 
+// Shared connection-level adjustments. These name the grammatical evidence
+// used by multiple rule families, keeping individual scorer files focused on
+// the predicate that establishes that evidence.
+constexpr float kPenaltyClosedClassBoundary = scale::kAlmostNever;
+constexpr float kPenaltyGeneratedInternalBoundary = scale::kVeryRare;
+constexpr float kPenaltyIncompatibleInflection = scale::kSevere;
+constexpr float kPenaltyInvalidConjunctiveSequence = scale::kProhibitive;
+constexpr float kBonusClosedInflectionalChain = scale::kVeryStrongBonus;
+constexpr float kBonusContractedNominalizer = scale::kExtremeBonus;
+constexpr float kBonusConditionalPredicate = scale::kDoubleVeryStrongBonus;
+constexpr float kBonusFormalParticleBinding = scale::kStrongBonus;
+constexpr float kPenaltyAmbiguousSuffixBoundary = scale::kStrong;
+constexpr float kPenaltyConjunctionInternalNoun = scale::kMinor;
+constexpr float kBonusHonorificGeneratedRenyokei = scale::kMinorBonus;
+constexpr float kBonusVerifiedTerminalAfterObject = scale::kModerateBonus;
+
 // The Kuruwa polite auxiliary is a closed-class inflectional marker. Its
 // dedicated category must remain available against noun-plus-suru fragments.
 constexpr float kBonusKuruwaPoliteAuxiliary = scale::kExtraStrongBonus;

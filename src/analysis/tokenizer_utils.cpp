@@ -480,7 +480,7 @@ size_t compoundVerbEndCovering(const core::Lattice& lattice, size_t pos) {
 
 bool joinsParticleToDictionaryAdverb(const core::Lattice& lattice, const dictionary::DictionaryManager& dict_manager,
                                      std::string_view text, const ByteOffsets& byte_offsets, size_t candidate_start,
-                                     size_t candidate_end) {
+                                     size_t candidate_end, core::ExtendedPOS candidate_extended_pos) {
   if (candidate_start == 0 || candidate_start + 1 >= candidate_end || byte_offsets.empty()) {
     return false;
   }
@@ -490,6 +490,17 @@ bool joinsParticleToDictionaryAdverb(const core::Lattice& lattice, const diction
       partOfSpeechMask(core::PartOfSpeech::Verb) | partOfSpeechMask(core::PartOfSpeech::Adjective) |
       partOfSpeechMask(core::PartOfSpeech::Auxiliary);
   if (!hasPrecedingPartOfSpeech(lattice, candidate_start, kLeftContextMask)) {
+    return false;
+  }
+
+  // The mizenkei of the contracted preparative auxiliary selects the
+  // volitional う after a verb onbin form (買っ+とこ+う).  Its first mora is
+  // homographic with the quotation particle, but this closed inflectional
+  // chain is not a particle followed by the dictionary adverb こう.
+  if (candidate_extended_pos == core::ExtendedPOS::AuxAspectOku &&
+      hasPrecedingExtendedPOS(lattice, candidate_start, core::ExtendedPOS::VerbOnbinkei) &&
+      lookupResultsHaveExtendedPOS(dict_manager.lookup(text, byteOffsetAt(byte_offsets, candidate_end)),
+                                   core::ExtendedPOS::AuxVolitional, 1)) {
     return false;
   }
 

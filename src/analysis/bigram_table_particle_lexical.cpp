@@ -256,6 +256,11 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // ParticleConj → AuxAspectOku (て+おく) - strong bonus
       {EPOS::ParticleConj, EPOS::AuxAspectOku, cost::kStrongBonus},
 
+      // A quotative clause can be followed by the preparative auxiliary
+      // (〜っておいて). Keep that auxiliary chain ahead of a fabricated
+      // katakana onbin verb that would consume the quotation's っ.
+      {EPOS::ParticleQuote, EPOS::AuxAspectOku, cost::kVeryStrongBonus},
+
       // ParticleConj → AuxAspectMiru (て+みる) - strong bonus
       {EPOS::ParticleConj, EPOS::AuxAspectMiru, cost::kVeryStrongBonus},
 
@@ -290,10 +295,10 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // Keep bonus small to avoid changing よう POS in 次のように (NounFormal vs AuxVolitional)
       {EPOS::AuxVolitional, EPOS::ParticleCase, cost::kMinorBonus},
 
-      // AuxVolitional → ParticleConj (う+として) - strong penalty
-      // Volitional form (う/よう) is not followed by conjunctive particles (として, ながら)
-      // 書こうとしている should split as 書こ+う+と+し+て+いる, not 書こ+う+として+いる
-      {EPOS::AuxVolitional, EPOS::ParticleConj, cost::kStrong},
+      // A volitional auxiliary can license a concessive conjunctive particle
+      // (降ろ+う+とも).  The superficially similar として is ParticleCase, so
+      // its quotative boundary remains governed by the case-particle path.
+      {EPOS::AuxVolitional, EPOS::ParticleConj, cost::kModerateBonus},
 
       // AuxAspectOku → AuxVolitional (とい+う) - strong penalty
       // Prevents とい+う from beating という (quotative determiner)
@@ -680,6 +685,11 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // conjugation's (小さかり+し). Without these the one-mora surface is read
       // as the サ変 continuative it shares its spelling with.
       {EPOS::VerbRenyokei, EPOS::AuxClassicalKi, cost::kVeryStrongBonus},
+      // The classical past auxiliary closes or modifies a clause; it cannot
+      // directly introduce a new verb continuative. This keeps a sahen
+      // continuative before a following classical predicate (記録+し+終へ)
+      // from being re-read as the homographic past き.
+      {EPOS::AuxClassicalKi, EPOS::VerbRenyokei, cost::kAlmostNever},
       // The negative's continuative ざり needs the wider margin: the サ変
       // continuative it competes with is the cheapest word in the lattice.
       {EPOS::AuxNegativeNu, EPOS::AuxClassicalKi, cost::kExtremeBonus},

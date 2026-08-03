@@ -197,6 +197,8 @@ const char* originToString(CandidateOrigin origin) {
       return "kanji_hira_nominal_compound";
     case CandidateOrigin::SelectedNominalHead:
       return "selected_nominal_head";
+    case CandidateOrigin::BracketedNoun:
+      return "bracketed_noun";
     case CandidateOrigin::Counter:
       return "counter";
     case CandidateOrigin::PrefixCompound:

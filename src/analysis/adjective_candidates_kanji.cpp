@@ -45,6 +45,70 @@ constexpr const char* kGaMashiiStem = "がまし";
 constexpr size_t kGaMashiiStemLength = 3;
 constexpr size_t kMaxGaMashiiInflectionLength = 8;
 
+// A generated i-adjective cannot contain a complete auxiliary followed by a
+// final particle.  That sequence closes an independently inflected predicate
+// (終わっ+た+ばい), while a real adjective keeps its own inflection before any
+// following particle.  Dictionary adjectives are checked by the caller and
+// remain eligible for their lexical readings.
+bool containsAuxiliaryFinalParticleBoundary(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                            const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || end_pos <= start_pos + 2) {
+    return false;
+  }
+  for (size_t auxiliary_start = start_pos + 1; auxiliary_start + 1 < end_pos; ++auxiliary_start) {
+    for (size_t auxiliary_end = auxiliary_start + 1; auxiliary_end < end_pos; ++auxiliary_end) {
+      if (dict_manager->lookupExact(extractSubstring(codepoints, auxiliary_start, auxiliary_end),
+                                    core::PartOfSpeech::Auxiliary) == nullptr) {
+        continue;
+      }
+      const auto* particle =
+          dict_manager->lookupExact(extractSubstring(codepoints, auxiliary_end, end_pos), core::PartOfSpeech::Particle);
+      if (particle != nullptr && particle->extended_pos == core::ExtendedPOS::ParticleFinal) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+bool endsWithMultiMoraFinalParticle(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                    const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || end_pos <= start_pos + 2) {
+    return false;
+  }
+  constexpr size_t kMaxFinalParticleChars = 4;
+  const size_t earliest = end_pos > kMaxFinalParticleChars ? end_pos - kMaxFinalParticleChars : start_pos + 1;
+  for (size_t particle_start = earliest; particle_start < end_pos - 1; ++particle_start) {
+    const auto* particle =
+        dict_manager->lookupExact(extractSubstring(codepoints, particle_start, end_pos), core::PartOfSpeech::Particle);
+    if (particle != nullptr && particle->extended_pos == core::ExtendedPOS::ParticleFinal) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// An unverified adjective cannot span an independently dictionary-backed verb
+// within its putative stem (複数|見つかっ|た, not 複|数見つかった).  Check every
+// internal span because the verb may be followed by its own auxiliary inside
+// the adjective-shaped surface.
+bool containsDictionaryVerbBoundary(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                    const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || end_pos <= start_pos + 2) {
+    return false;
+  }
+  constexpr size_t kMinimumVerbLength = 2;
+  for (size_t verb_start = start_pos + 1; verb_start < end_pos; ++verb_start) {
+    for (size_t verb_end = verb_start + kMinimumVerbLength; verb_end < end_pos; ++verb_end) {
+      if (dict_manager->lookupExact(extractSubstring(codepoints, verb_start, verb_end), core::PartOfSpeech::Verb) !=
+          nullptr) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 // =============================================================================
 // Pattern Skip Helpers for I-Adjective Candidate Generation
 // =============================================================================
@@ -375,6 +439,13 @@ void generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t
     const auto& all_candidates = inflection.analyze(surface);
 
     for (const auto& cand : all_candidates) {
+      // A dictionary-backed adjective remains eligible as a second component
+      // of a compound (山 / 高し). Only an unverified hypothesis that crosses
+      // an independently attested verb boundary is suppressed.
+      if (!isAdjectiveInDictionary(dict_manager, cand.base_form) &&
+          containsDictionaryVerbBoundary(codepoints, start_pos, end_pos, dict_manager)) {
+        continue;
+      }
       // A long unregistered i-adjective in its uninflected form is recognizable
       // wherever no following kana can continue the inflection: before a content
       // word (面倒くさい作業) and equally at the end of the sentence (面倒くさい).
@@ -548,6 +619,11 @@ void generateAdjectiveCandidates(const std::vector<char32_t>& codepoints, size_t
         // conjugation of a dictionary verb (かかった → かかる). [noun][verb] is not
         // an adjective, so skip rather than penalize (mirrors the ゆく/いく case).
         if (!isAdjectiveInDictionary(dict_manager, cand.base_form)) {
+          if (containsAuxiliaryFinalParticleBoundary(codepoints, start_pos, end_pos, dict_manager) ||
+              endsWithMultiMoraFinalParticle(codepoints, start_pos, end_pos, dict_manager)) {
+            SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] \"" << surface << "\" crosses auxiliary + final-particle boundary\n");
+            continue;
+          }
           std::string_view base_sv(cand.base_form);
           if (base_sv.size() > core::kJapaneseCharBytes && utf8::endsWith(base_sv, "い")) {
             std::string_view stem = base_sv.substr(0, base_sv.size() - core::kJapaneseCharBytes);

@@ -151,6 +151,11 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Ensures 揉まれながら → 揉ま+れ+ながら over 揉まれ+ながら
       {EPOS::AuxPassive, EPOS::ParticleConj, cost::kModerateBonus},
 
+      // The 已然形 of the classical perfect is selected by a conjunctive
+      // particle (記録し+たれ+ども), rather than by the modern past-plus-passive
+      // homograph し+た+れ+ども.
+      {EPOS::AuxClassicalPerfect, EPOS::ParticleConj, cost::kStrongBonus},
+
       // A finite passive predicate modifies a formal noun just as a lexical
       // terminal verb does: 成し遂げ+られる+もの, 委ね+られる+ほか.
       {EPOS::AuxPassive, EPOS::NounFormal, cost::kVeryStrongBonus},
@@ -186,9 +191,9 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Ensures ないんだ → ない+ん+だ over な+いん+だ
       {EPOS::AuxNegativeNai, EPOS::ParticleNo, cost::kStrongBonus},
 
-      // AuxNegativeNai → ParticleConj (なけれ+ば, ない+のに, ない+ので) - very strong bonus
+      // AuxNegativeNai → ParticleConj (なけれ+ば, ない+のに, ない+ので) - decisive bonus
       // Ensures the negative conditional and conjunctive forms retain their auxiliaries.
-      {EPOS::AuxNegativeNai, EPOS::ParticleConj, cost::kVeryStrongBonus},
+      {EPOS::AuxNegativeNai, EPOS::ParticleConj, cost::kDoubleVeryStrongBonus},
 
       // ParticleNo → AuxCopulaDesu (ん+です/でし for んです/んでした) - strong bonus
       // Ensures んでした → ん+でし+た over ん+で+し+た
@@ -220,6 +225,11 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
 
       // Classical negative → concessive particle (読ま+ず+とも).
       {EPOS::AuxNegativeNu, EPOS::ParticleConj, cost::kStrongBonus},
+
+      // The 已然形 of the classical copula takes the conditional/conjunctive
+      // particle (重要+なれ+ば). Its passive homograph is not licensed after
+      // a copula, so retain the registered copular paradigm as one edge.
+      {EPOS::AuxClassicalNari, EPOS::ParticleConj, cost::kDoubleVeryStrongBonus},
 
       // The irrealis form of the classical obligation auxiliary is followed
       // by classical negation (べから+ず). Keep that inflectional chain ahead
@@ -286,6 +296,11 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // Contracted ~ておく form + past tense: 見とい+た, 読んどい+た
       {EPOS::AuxAspectOku, EPOS::AuxTenseTa, cost::kStrongBonus},
 
+      // The preparative auxiliary itself inflects to the te-form
+      // (書い+て+おい+て).  Keep that closed auxiliary cell ahead of the
+      // homographic open-verb onbin candidate.
+      {EPOS::AuxAspectOku, EPOS::ParticleConj, cost::kVeryStrongBonus},
+
       // AuxAspectOku → AuxNegativeNai (とか+ない, どか+なきゃ) - decisive bonus
       // Only the mizenkei cell of the contracted preparation auxiliary can
       // precede the negative, and its surface とか also spells the adverbial
@@ -330,6 +345,9 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       {EPOS::AuxAspectKuru, EPOS::AuxTenseTa, cost::kVeryStrongBonus},
       {EPOS::AuxAspectKuru, EPOS::AuxTenseMasu, cost::kStrongBonus},
       {EPOS::AuxAspectKuru, EPOS::ParticleConj, cost::kVeryStrongBonus},
+      // The directional subsidiary can itself be potential/passive
+      // (書い+て+こ+られ+た), rather than opening a new lexical られる.
+      {EPOS::AuxAspectKuru, EPOS::AuxPassive, cost::kStrongBonus},
 
       // The directional subsidiary is negated by ない (持ってこない), and its
       // mizenkei candidate is context-gated on exactly that ending.
@@ -675,6 +693,10 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       {EPOS::ParticleCase, EPOS::AuxVolitional, cost::kAlmostNever},
       {EPOS::ParticleAdverbial, EPOS::AuxVolitional, cost::kAlmostNever},
       {EPOS::AdjStem, EPOS::AuxVolitional, cost::kAlmostNever},
+      // A volitional auxiliary must attach to an inflecting predicate. This
+      // blocks a stray hiragana fragment from posing as its irrealis stem
+      // (そ+う in そうとも言える).
+      {EPOS::Other, EPOS::AuxVolitional, cost::kAlmostNever},
 
       // An adjective stem cannot govern an object or case particle. This
       // preserves a competing lexical noun reading before the particle.
@@ -726,6 +748,10 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // overcomes the DET→NOUN bonus on prefix compounds like 先生.
       {EPOS::Noun, EPOS::AuxAspectIru, cost::kSevere},
       {EPOS::Noun, EPOS::AuxAspectKuru, cost::kProhibitive},
+      // The progressive auxiliary い also requires a preceding te-form. An
+      // unclassified span, including retained content symbols, cannot license
+      // it as a predicate continuation.
+      {EPOS::Other, EPOS::AuxAspectIru, cost::kAlmostNever},
 
       // Binding particle (は/も) → aspect auxiliary: aspect attaches only to a
       // te-form, so は/も before き/いく/いる is a mis-parse (ではきもの → で+は+きもの).
@@ -767,6 +793,12 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // The attributive form of らしい modifies a following noun:
       // 本らしい本 → 本 + らしい + 本.
       {EPOS::AuxConjectureRashii, EPOS::Noun, cost::kMinorBonus},
+
+      // The conjectural auxiliary completes a predicate and cannot directly
+      // take a case particle or a copula. This leaves a productive nominalized
+      // continuative available for compounds such as 山暮らしを and 日暮らしだ.
+      {EPOS::AuxConjectureRashii, EPOS::ParticleCase, cost::kAlmostNever},
+      {EPOS::AuxConjectureRashii, EPOS::AuxCopulaDa, cost::kAlmostNever},
 
       // Na-adjective stem → suffix (豊か+さ, 静か+さ) nominalizes the
       // adjective; the homographic さ cannot be the suru irrealis here.

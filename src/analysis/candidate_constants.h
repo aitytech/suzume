@@ -70,9 +70,17 @@ constexpr float kOrdinalSequentialSplitBonus = -1.2F;
 constexpr float kOrdinalDigitCounterSplitBonus = -1.2F;
 constexpr float kNumeralKanaMonthMergeBonus = -1.2F;
 
+// A standalone duration unit must stay ahead of its clock-reading prefix
+// before a degree particle (一時間くらい).
+constexpr float kDurationCounterMergeBonus = bigram_cost::kVeryStrongBonus;
+
 // A completed temporal counter with its grammatical closing suffix is a
 // single search unit (二時間目, 三ヶ月間).
 constexpr float kClosedTemporalCounterMergeBonus = -3.2F;
+
+// A chained time/date/ratio quantity has one search boundary irrespective of
+// the particle or word that follows it (十時三十分, 三割五分).
+constexpr float kCounterChainMergeBonus = bigram_cost::kDoubleVeryStrongBonus;
 
 // Last-resort single-character edge used to keep the lattice connected.
 constexpr float kFallbackCandidateCost = 5.0F;
@@ -368,7 +376,9 @@ constexpr float kSelectedNominalFourMoraHeadCost = -0.8F;
 // written form. Keep it as one content token without allowing an unbounded
 // unknown-word merge.
 constexpr size_t kParentheticalReadingMaxLength = 12;
-constexpr float kParentheticalReadingCandidateCost = 1.5F;
+// A bracketed kana reading is explicit orthographic evidence, so it must win
+// over the generic unknown-word fallback for the same span.
+constexpr float kParentheticalReadingCandidateCost = bigram_cost::kUncommon;
 
 // Formal-noun + na-adjective boundary (時+妙な, 事+不思議な).
 // A one-kanji formal noun is a grammatical boundary before an attributive
@@ -588,6 +598,12 @@ constexpr float kCommaClauseRenyokeiBonus = -1.2F;
 // must remain cheaper than the homographic suru mizenkei before both paths
 // converge on the same passive lattice state.
 constexpr float kShortenedCausativePassiveBonus = -0.3F;
+// A quotative predicate followed by the passive される is analyzed as
+// する's irrealis plus the passive auxiliary (と + さ + れる).
+constexpr float kQuotedPassiveSuruBonus = -0.3F;
+// A sahen nominal followed by the complete passive paradigm has both its
+// lexical host and closed auxiliary boundary established (反映+さ+れ+ます).
+constexpr float kSahenPassiveSuruBonus = kContractedOnbinBonus;
 // Weak penalty for uncertain verb patterns (passive, causative, zu-form)
 constexpr float kWeakPenalty = 0.1F;
 // Minor penalty for a tense candidate with less evidence than a contracted
@@ -600,6 +616,11 @@ constexpr float kMinorPenalty = 0.2F;
 // rather than removed, and a lexical head that leaves nothing for the copula to
 // predicate over still wins (坂 + を + くだっ + た).
 constexpr float kSwallowedAuxiliaryCellPenalty = bigram_cost::kRare;
+
+// A non-dictionary candidate that covers a complete closed-class particle
+// crosses a grammatical boundary; keep it in the lattice but make the
+// explicitly segmented path win.
+constexpr float kGeneratedSpanParticlePenalty = bigram_cost::kProhibitive;
 // An unattested sa-row irrealis on a pure-hiragana stem competes with the two
 // other things さ is: the causative marker and the nominalizer. Those readings
 // are the common ones, so the irrealis is discouraged — but not removed, since

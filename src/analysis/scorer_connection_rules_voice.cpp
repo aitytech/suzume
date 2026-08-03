@@ -166,6 +166,16 @@ float computePassiveCausativeBonus(const core::LatticeEdge& prev, const core::La
     return cost::kAlmostNever;
   }
 
+  // A られる passive followed by the past marker is a closed inflectional
+  // chain (知らせ+られ+た, 話しかけ+られ+た). Give that completed auxiliary
+  // sequence enough weight to outrank a homographic continuative whose only
+  // support is the same past marker. The bare れ auxiliary remains subject to
+  // its preceding stem's inflection, so おく+れ+た cannot imitate おくれ+た.
+  if (prev.extended_pos == core::ExtendedPOS::AuxPassive && next.extended_pos == core::ExtendedPOS::AuxTenseTa &&
+      utf8::startsWith(prev.surface, "ら") && grammar::isPastMarkerTaDaSurface(next.surface)) {
+    SUZUME_CONNECTION_ADD(bonus, sc::kBonusClosedInflectionalChain);
+  }
+
   // A humble/honorific subsidiary may follow a connective particle, another
   // verb's renyokei/onbinkei, or a verbal noun. Favor its dictionary-confirmed
   // lemma over paths that split the subsidiary into short homographs. This

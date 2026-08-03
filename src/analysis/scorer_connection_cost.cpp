@@ -92,7 +92,9 @@ float computeLateLexicalBoundaryBonus(const core::LatticeEdge& prev, const core:
       normalize::utf8Length(prev.surface) == 1) {
     SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
-  const bool unknown_hiragana_conjunction_host = !prev.fromDictionary() && grammar::isPureHiragana(prev.surface);
+  const bool unknown_hiragana_conjunction_host = !prev.fromDictionary() &&
+                                                 prev.origin != core::CandidateOrigin::BracketedNoun &&
+                                                 grammar::isPureHiragana(prev.surface);
   // A conjunction that spells a te-form cannot be introduced by a bare noun:
   // with no boundary marker between them its opening mora is the continuative
   // that the noun's own predicate needs (確認+し+たがっ+て+いる, not
@@ -323,6 +325,14 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
     invalid_closed_conjunctive = invalid_closed_conjunctive || (!polite_te && !polite_conditional);
   }
   if (invalid_closed_conjunctive) {
+    SUZUME_CONNECTION_ADD(surface_bonus, sc::kPenaltyClosedClassBoundary);
+  }
+
+  // The continuative stem い of the aspect auxiliary cannot introduce a
+  // quotative determiner; the terminal いる does so. This rejects a fabricated
+  // 〜な+い(いる)+という chain while retaining complete progressive predicates.
+  if (prev.extended_pos == core::ExtendedPOS::AuxAspectIru && utf8::equalsAny(prev.surface, {"い"}) &&
+      next.extended_pos == core::ExtendedPOS::DeterminerQuotative) {
     SUZUME_CONNECTION_ADD(surface_bonus, cost::kAlmostNever);
   }
 
@@ -352,7 +362,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // This prevents か+もし+れ split, favoring か+も+しれ
   if (prev.extended_pos == core::ExtendedPOS::ParticleFinal && prev.surface == "か" &&
       next.pos == core::PartOfSpeech::Adverb && next.surface == "もし") {
-    SUZUME_CONNECTION_ADD(surface_bonus, cost::kVeryRare);
+    SUZUME_CONNECTION_ADD(surface_bonus, sc::kPenaltyGeneratedInternalBoundary);
   }
 
   // Penalty for short hiragana verb mizenkei + ん pattern
@@ -362,7 +372,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   // ん can be AUX_否定古 or PART_準体, both should be penalized
   if (prev.extended_pos == core::ExtendedPOS::VerbMizenkei && grammar::isPureHiragana(prev.surface) &&
       prev.surface.size() <= 6 &&  // 2 chars or less (6 bytes in UTF-8)
-      next.surface == "ん" && !(prev.lemma == "する" && prev.surface == "せ")) {
+      next.surface == "ん" && !(prev.lemma == "する" && prev.surface == "せ") && prev.lemma != "いく") {
     SUZUME_CONNECTION_ADD(surface_bonus, cost::kAlmostNever);
   }
 
@@ -399,6 +409,17 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
       !(grammar::isSuruRenyokeiSurface(next.surface) && prev.fromDictionary()) &&   // サ変動詞パターン
       !kana::isKatakanaCodepoint(utf8::decodeFirstChar(next.surface)) &&            // Exclude katakana verbs
       !suzume::normalize::isKanjiCodepoint(utf8::decodeFirstChar(next.surface))) {  // Exclude kanji verbs
+    SUZUME_CONNECTION_ADD(surface_bonus, cost::kVeryRare);
+  }
+
+  // An unverified one-kanji fragment inside a kanji run is not a nominal host
+  // for a dictionary terminal verb. Keep the compound candidate intact
+  // (提+出す, 外+出す) while preserving genuine particleless noun predicates,
+  // whose nominal head is dictionary-attested.
+  if (prev.pos == core::PartOfSpeech::Noun && !prev.fromDictionary() && normalize::utf8Length(prev.surface) == 1 &&
+      next.pos == core::PartOfSpeech::Verb && next.fromDictionary() &&
+      next.extended_pos == core::ExtendedPOS::VerbShuushikei && normalize::utf8Length(next.surface) == 2 &&
+      suzume::normalize::isKanjiCodepoint(utf8::decodeFirstChar(next.surface))) {
     SUZUME_CONNECTION_ADD(surface_bonus, cost::kVeryRare);
   }
 
@@ -544,7 +565,7 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isConjunctiveParticleShi(prev.surface) &&
       next.surface == "て" &&
       (next.extended_pos == core::ExtendedPOS::ParticleConj || next.extended_pos == core::ExtendedPOS::AuxAspectIru)) {
-    SUZUME_CONNECTION_ADD(surface_bonus, cost::kStrong);
+    SUZUME_CONNECTION_ADD(surface_bonus, cost::kVeryRare);
   }
 
   // Penalty for short hiragana VERB_連用 → し/き (single-char verb renyokei)

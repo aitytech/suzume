@@ -151,6 +151,30 @@ bool startsInsideDictionaryParticle(const std::vector<char32_t>& codepoints, siz
   return false;
 }
 
+bool startsInsideDictionaryAuxiliary(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                     const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || start_pos == 0) {
+    return false;
+  }
+  constexpr size_t kAuxiliaryLookback = 4;
+  constexpr size_t kAuxiliaryProbe = 5;
+  const size_t first_start = start_pos > kAuxiliaryLookback ? start_pos - kAuxiliaryLookback : 0;
+  const size_t probe_end = std::min(codepoints.size(), start_pos + kAuxiliaryProbe);
+  for (size_t auxiliary_start = first_start; auxiliary_start < start_pos; ++auxiliary_start) {
+    for (size_t auxiliary_end = start_pos + 1; auxiliary_end <= probe_end; ++auxiliary_end) {
+      const auto* auxiliary = dict_manager->lookupExact(extractSubstring(codepoints, auxiliary_start, auxiliary_end),
+                                                        core::PartOfSpeech::Auxiliary);
+      // Only the terminal polite copula itself owns this interior.  Its
+      // inflected dictionary cells (でし/でしたら) can occur across an ordinary
+      // conjunctive-particle boundary, as in 読んでしまう.
+      if (auxiliary != nullptr && auxiliary->surface.compare("です") == 0) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 bool startsWithMultiMoraDictionaryParticle(const std::vector<char32_t>& codepoints, size_t start_pos,
                                            const dictionary::DictionaryManager* dict_manager) {
   if (dict_manager == nullptr || start_pos >= codepoints.size()) {

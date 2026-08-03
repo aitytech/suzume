@@ -231,7 +231,7 @@ size_t compoundVerbEndCovering(const core::Lattice& lattice, size_t pos);
  */
 bool joinsParticleToDictionaryAdverb(const core::Lattice& lattice, const dictionary::DictionaryManager& dict_manager,
                                      std::string_view text, const ByteOffsets& byte_offsets, size_t candidate_start,
-                                     size_t candidate_end);
+                                     size_t candidate_end, core::ExtendedPOS candidate_extended_pos);
 
 }  // namespace suzume::analysis
 

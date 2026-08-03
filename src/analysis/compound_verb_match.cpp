@@ -200,7 +200,7 @@ CompoundVerbMatch findCompoundVerbMatch(
     bool inflection_includes_aux = false;
 
     // Try kanji match first
-    if (v2_start_byte + v2_surface.size() <= text.size()) {
+    if (v2_verb.joins_surface && v2_start_byte + v2_surface.size() <= text.size()) {
       std::string_view text_at_v2 = text.substr(v2_start_byte, v2_surface.size());
       if (text_at_v2 == v2_surface) {
         matched_kanji = true;
@@ -242,7 +242,8 @@ CompoundVerbMatch findCompoundVerbMatch(
     bool matched_renyokei = false;
     if (!matched_kanji && !matched_reading) {
       // Generate V2 renyokei
-      std::string kanji_renyokei = generateKanjiRenyokei(v2_surface, v2_reading, v2_verb.verb_type);
+      std::string kanji_renyokei =
+          v2_verb.joins_surface ? generateKanjiRenyokei(v2_surface, v2_reading, v2_verb.verb_type) : "";
       std::string hira_renyokei = generateRenyokei(v2_reading, "", v2_verb.verb_type);
 
       // Try kanji renyokei match
@@ -278,7 +279,8 @@ CompoundVerbMatch findCompoundVerbMatch(
     // base: 取り + 戻せる → 取り戻せる. Generate it from every allowlisted
     // V2 rather than adding per-verb potential entries.
     if (!matched_kanji && !matched_reading && !matched_renyokei) {
-      std::string kanji_potential = generateGodanPotential(v2_surface, "", v2_verb.verb_type);
+      std::string kanji_potential =
+          v2_verb.joins_surface ? generateGodanPotential(v2_surface, "", v2_verb.verb_type) : "";
       std::string hira_potential = generateGodanPotential(v2_reading, "", v2_verb.verb_type);
       if (!kanji_potential.empty() && v2_start_byte + kanji_potential.size() <= text.size() &&
           text.substr(v2_start_byte, kanji_potential.size()) == kanji_potential) {
@@ -320,7 +322,8 @@ CompoundVerbMatch findCompoundVerbMatch(
     // potential predicate.
     if (!matched_kanji && !matched_reading && !matched_renyokei && !matched_potential &&
         v2_verb.verb_type == V2VerbType::Godan) {
-      const std::string kanji_kateikei = generateKateikei(v2_surface, "", v2_verb.verb_type);
+      const std::string kanji_kateikei =
+          v2_verb.joins_surface ? generateKateikei(v2_surface, "", v2_verb.verb_type) : "";
       const std::string hira_kateikei = !v2_reading.empty() ? generateKateikei(v2_reading, "", v2_verb.verb_type) : "";
       auto tryKateikei = [&](const std::string& kateikei, bool via_reading) {
         if (matched_kateikei || kateikei.empty() ||
@@ -345,7 +348,8 @@ CompoundVerbMatch findCompoundVerbMatch(
     // auxiliary supplies decisive inflectional evidence.
     bool matched_volitional = false;
     if (v2_verb.verb_type == V2VerbType::Godan) {
-      const std::string kanji_volitional = generateVolitionalStem(v2_surface, "", v2_verb.verb_type);
+      const std::string kanji_volitional =
+          v2_verb.joins_surface ? generateVolitionalStem(v2_surface, "", v2_verb.verb_type) : "";
       const std::string hira_volitional =
           !v2_reading.empty() ? generateVolitionalStem(v2_reading, "", v2_verb.verb_type) : "";
       auto tryVolitional = [&](const std::string& stem, bool via_reading) {
@@ -381,7 +385,7 @@ CompoundVerbMatch findCompoundVerbMatch(
     // Keep a Godan mizenkei before its auxiliary separate.  Otherwise an
     // inflection match over the longer span (しきらない) would hide the
     // grammatical boundary that the mizenkei candidate below represents.
-    const std::string kanji_mizen = generateMizenkei(v2_surface, "", v2_verb.verb_type);
+    const std::string kanji_mizen = v2_verb.joins_surface ? generateMizenkei(v2_surface, "", v2_verb.verb_type) : "";
     const std::string hira_mizen = !v2_reading.empty() ? generateMizenkei(v2_reading, "", v2_verb.verb_type) : "";
     const bool mizenkei_before_aux = beginsMizenkeiAuxiliary(text, v2_start_byte, kanji_mizen) ||
                                      beginsMizenkeiAuxiliary(text, v2_start_byte, hira_mizen);

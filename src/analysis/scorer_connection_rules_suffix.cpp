@@ -22,6 +22,24 @@ namespace sc = suzume::analysis::scorer;
 
 namespace suzume::analysis::connection_rules {
 
+namespace {
+
+bool startsWithCaseParticleMora(std::string_view surface) {
+  switch (utf8::decodeFirstChar(surface)) {
+    case U'が':
+    case U'を':
+    case U'に':
+    case U'へ':
+    case U'で':
+    case U'と':
+      return true;
+    default:
+      return false;
+  }
+}
+
+}  // namespace
+
 bool isGodanRenyokeiOfLemma(std::string_view surface, std::string_view lemma) {
   const char32_t surface_last_codepoint = utf8::decodeLastChar(surface);
   if (surface_last_codepoint == 0) {
@@ -41,6 +59,33 @@ bool isGodanRenyokeiOfLemma(std::string_view surface, std::string_view lemma) {
 
 float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::LatticeEdge& next) {
   float bonus{};  // value-init to 0
+
+  // A suffix spelling that starts with a case-particle mora can be the
+  // particle plus the next predicate's first mora (雲+が+たなびく). It does
+  // not earn the generic NOUN→SUFFIX bonus in that ambiguous shape; genuine
+  // suffix constructions retain their lexical candidate and all other
+  // noun-suffix connections keep the base preference.
+  if (prev.pos == core::PartOfSpeech::Noun && next.pos == core::PartOfSpeech::Suffix &&
+      normalize::utf8Length(next.surface) >= 2 && startsWithCaseParticleMora(next.surface)) {
+    SUZUME_CONNECTION_ADD(bonus, sc::kPenaltyAmbiguousSuffixBoundary);
+  }
+
+  // A terminal predicate cannot directly select an unverified irrealis verb
+  // beginning with the binding-particle mora も. In that environment も closes
+  // the predicate and the following mora starts the next word (渡る+も+いとわ+ない).
+  if (prev.extended_pos == core::ExtendedPOS::VerbShuushikei && next.extended_pos == core::ExtendedPOS::VerbMizenkei &&
+      !next.fromDictionary() && utf8::startsWith(next.surface, "も")) {
+    SUZUME_CONNECTION_ADD(bonus, sc::kPenaltyClosedClassBoundary);
+  }
+
+  // A conjunction may introduce a nominal phrase, but an unverified one-kanji
+  // kanji noun is often only the prefix of the dictionary predicate beginning
+  // at the same boundary (しかも+間違えた). Do not let the generic conjunction
+  // bonus split that predicate; registered one-kanji nouns remain available.
+  if (prev.extended_pos == core::ExtendedPOS::Conjunction && next.pos == core::PartOfSpeech::Noun &&
+      !next.fromDictionary() && normalize::utf8Length(next.surface) == 1 && grammar::isAllKanji(next.surface)) {
+    SUZUME_CONNECTION_ADD(bonus, sc::kPenaltyConjunctionInternalNoun);
+  }
 
   // Nominalizing さ cannot attach to a verb continuative.  This blocks
   // fabricated predicates such as 静ける from exploiting the general
@@ -176,7 +221,7 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   // generated noun readings such as the adjective ない before ほど.
   if (prev.pos == core::PartOfSpeech::Noun && prev.fromDictionary() &&
       next.extended_pos == core::ExtendedPOS::ParticleAdverbial) {
-    SUZUME_CONNECTION_ADD(bonus, cost::kMinorBonus);
+    SUZUME_CONNECTION_ADD(bonus, sc::kBonusHonorificGeneratedRenyokei);
   }
 
   // A registered two-mora adverbial particle beginning with the copula だ can
@@ -209,6 +254,15 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
+  // The same productive honorific frame can contain an otherwise unlisted
+  // kanji ichidan continuative. Its generated verbal candidate has stronger
+  // inflection evidence than the homographic nominalization, whereas a bare
+  // prefix plus noun remains available for ordinary honorific compounds.
+  if (prev.extended_pos == core::ExtendedPOS::Prefix && grammar::isHonorificPrefix(prev.surface) &&
+      next.extended_pos == core::ExtendedPOS::VerbRenyokei && next.origin == core::CandidateOrigin::VerbKanji) {
+    SUZUME_CONNECTION_ADD(bonus, cost::kMinorBonus);
+  }
+
   // The parallel compound particle とともに must remain whole instead of
   // being reanalyzed as a quotative particle followed by the adverb ともに.
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase && next.pos == core::PartOfSpeech::Adverb &&
@@ -231,6 +285,16 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase && grammar::isAccusativeParticleWoSurface(prev.surface) &&
       next.extended_pos == core::ExtendedPOS::VerbShuushikei) {
     SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
+  }
+
+  // A dictionary-backed multi-mora terminal verb after を is a complete
+  // lexical predicate.  Give it a small preference over a competing V1 plus
+  // productive subsidiary analysis, while leaving short productive forms
+  // (読み+過ぎる) to their ordinary auxiliary path.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleCase && grammar::isAccusativeParticleWoSurface(prev.surface) &&
+      next.extended_pos == core::ExtendedPOS::VerbShuushikei && next.fromDictionary() &&
+      normalize::utf8Length(next.surface) >= 4) {
+    SUZUME_CONNECTION_ADD(bonus, sc::kBonusVerifiedTerminalAfterObject);
   }
 
   // A nominative case particle directly introduces a finite predicate. Keep a

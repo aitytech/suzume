@@ -287,8 +287,22 @@ void adj_detail::appendHiraganaIAdjSurfaceCandidates(const std::vector<char32_t>
           ((utf8::endsWith(surface, "なく") && utf8::endsWith(cand.base_form, "ない")) ||
            (utf8::endsWith(surface, "しく") && utf8::endsWith(cand.base_form, "しい"))) &&
           cand.confidence >= candidate::kHiraAdjUnverifiedNaiRenyokeiMin;
-      if (cand.verb_type == grammar::VerbType::IAdjective &&
+      // A particle-headed, unregistered -なく candidate has no lexical
+      // evidence for its reconstructed adjective.  Leave the closed particle
+      // sequence intact instead of accepting a near-threshold non-word such
+      // as かとない. Registered adjectives (はかない, かわいい) remain on their
+      // ordinary inflection path.
+      const bool is_unverified_particle_naku = starts_with_particle && utf8::endsWith(surface, "なく") &&
+                                               !isAdjectiveInDictionary(dict_manager, cand.base_form);
+      if (cand.verb_type == grammar::VerbType::IAdjective && !is_unverified_particle_naku &&
           (cand.confidence >= confidence_threshold || is_unverified_adverbial_i_adjective)) {
+        // A bare -げない reconstruction is ambiguous with the productive
+        // suffix げ followed by the negative auxiliary.  Without lexical
+        // evidence for the complete adjective, retain that grammatical
+        // boundary (さりげ + なく) rather than coining a whole-word adjective.
+        if (utf8::endsWith(surface, "げなく") && !isAdjectiveInDictionary(dict_manager, cand.base_form)) {
+          continue;
+        }
         // 様態 そう is a separate auxiliary, never an inflectional ending of
         // an i-adjective. This mirrors the kanji-adjective guard and keeps
         // derived forms split (ほし + そう + だ, やす + そう + だ).

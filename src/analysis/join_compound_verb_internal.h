@@ -47,6 +47,10 @@ struct SubsidiaryVerb {
   // Some kanji V2s have a hiragana reading that is also a productive
   // auxiliary contraction. Keep those entries available only in kanji form.
   bool joins_reading{true};
+  // A reading-only V2 is available for kana spelling but must not match the
+  // corresponding kanji spelling. This keeps orthographically distinct
+  // compound boundaries from sharing a lexical entry by accident.
+  bool joins_surface{true};
 };
 
 // The selected V2 entry and the evidence collected while matching it. Match
@@ -117,7 +121,7 @@ struct SubsidiaryVerbRange {
   const SubsidiaryVerb* end() const { return last; }
 };
 
-inline constexpr size_t kSubsidiaryVerbCount = 175;
+inline constexpr size_t kSubsidiaryVerbCount = 176;
 extern const SubsidiaryVerb kSubsidiaryVerbs[kSubsidiaryVerbCount];
 
 inline SubsidiaryVerbRange subsidiaryVerbs() {

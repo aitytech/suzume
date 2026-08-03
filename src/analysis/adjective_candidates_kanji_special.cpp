@@ -129,15 +129,24 @@ bool appendKanjiIAdjSpecialCandidates(const std::vector<char32_t>& codepoints, s
   // shape (明るい, 明るく). The inflection engine can prefer a homographic
   // godan analysis here, so retain the adjective candidate independently.
   if (kanji_end == start_pos + 1 && kanji_end + 1 < codepoints.size() && codepoints[kanji_end] == U'る' &&
-      (codepoints[kanji_end + 1] == U'い' || codepoints[kanji_end + 1] == U'く')) {
-    size_t adj_end = kanji_end + 2;
+      (codepoints[kanji_end + 1] == U'い' || codepoints[kanji_end + 1] == U'く' ||
+       (kanji_end + 3 < codepoints.size() && codepoints[kanji_end + 1] == U'か' && codepoints[kanji_end + 2] == U'っ' &&
+        codepoints[kanji_end + 3] == U'た'))) {
+    const bool is_past = codepoints[kanji_end + 1] == U'か';
+    size_t adj_end = kanji_end + (is_past ? 3 : 2);
     std::string surface = extractSubstring(codepoints, start_pos, adj_end);
     std::string lemma = extractSubstring(codepoints, start_pos, kanji_end) + "るい";
     const std::string verb_lemma = extractSubstring(codepoints, start_pos, kanji_end) + "る";
     if (!verb_helpers::isVerbInDictionary(dict_manager, verb_lemma) ||
         verb_helpers::isAdjectiveInDictionary(dict_manager, lemma)) {
-      candidates.push_back(makeIAdjCandidate(surface, start_pos, adj_end, lemma, candidate::kSingleKanjiICost,
-                                             CandidateOrigin::AdjectiveI, candidate::kIAdjConfMin, "single_kanji_rui"));
+      auto adjective = makeIAdjCandidate(surface, start_pos, adj_end, lemma,
+                                         is_past ? candidate::kAdjKattSplitBonus : candidate::kSingleKanjiICost,
+                                         CandidateOrigin::AdjectiveI, candidate::kIAdjConfMin, "single_kanji_rui");
+      if (is_past) {
+        adjective.extended_pos = core::ExtendedPOS::AdjKatt;
+        adjective.has_suffix = true;
+      }
+      candidates.push_back(std::move(adjective));
     }
   }
   return false;

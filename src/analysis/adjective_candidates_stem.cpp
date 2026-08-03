@@ -847,6 +847,47 @@ core::ExtendedPOS classicalKariCell(char32_t after_ka) {
   }
 }
 
+bool classicalConjunctiveFollowsAt(const std::vector<char32_t>& codepoints, size_t pos,
+                                   const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || pos >= codepoints.size()) {
+    return false;
+  }
+  constexpr size_t kClassicalTailProbeChars = 3;
+  const size_t probe_end = std::min(codepoints.size(), pos + kClassicalTailProbeChars);
+  for (size_t end = pos + 1; end <= probe_end; ++end) {
+    const auto* entry = dict_manager->lookupExact(extractSubstring(codepoints, pos, end), core::PartOfSpeech::Particle);
+    if (entry == nullptr) {
+      continue;
+    }
+    // The optative/imperative cell can be followed by the quotative と.
+    // Its dictionary entry is often labelled as a case particle even though
+    // this construction is a clausal connective (高かれ+と願う).
+    if (entry->extended_pos == core::ExtendedPOS::ParticleConj ||
+        entry->extended_pos == core::ExtendedPOS::ParticleQuote ||
+        (entry->extended_pos == core::ExtendedPOS::ParticleCase &&
+         grammar::isSingleHiragana(entry->surface, core::hiragana::kTo))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool classicalClauseEndsAt(const std::vector<char32_t>& codepoints, size_t pos) {
+  if (pos >= codepoints.size()) {
+    return true;
+  }
+  switch (codepoints[pos]) {
+    case U'。':
+    case U'、':
+    case U'！':
+    case U'？':
+    case U'」':
+      return true;
+    default:
+      return false;
+  }
+}
+
 // The supplementary conjugation exists only to carry the classical auxiliaries
 // the plain paradigm cannot take, so require one to start at the given position.
 // Gating on the classical auxiliary class rather than on auxiliaries in general
@@ -873,6 +914,7 @@ bool classicalAuxiliaryFollowsAt(const std::vector<char32_t>& codepoints, size_t
       case core::ExtendedPOS::AuxClassicalPerfect:
       case core::ExtendedPOS::AuxClassicalKi:
       case core::ExtendedPOS::AuxClassicalBeshi:
+      case core::ExtendedPOS::AuxVolitional:
         return true;
       default:
         break;
@@ -887,7 +929,7 @@ void appendIAdjKaraZuCandidates(const std::vector<char32_t>& codepoints, size_t 
                                 size_t scan_end, const grammar::Inflection& inflection,
                                 const dictionary::DictionaryManager* dict_manager,
                                 std::vector<UnknownCandidate>& candidates) {
-  for (size_t kara_pos = scan_start; kara_pos + 2 < scan_end; ++kara_pos) {
+  for (size_t kara_pos = scan_start; kara_pos + 1 < scan_end; ++kara_pos) {
     if (kara_pos <= start_pos || codepoints[kara_pos] != U'か') {
       continue;
     }
@@ -903,18 +945,27 @@ void appendIAdjKaraZuCandidates(const std::vector<char32_t>& codepoints, size_t 
     // (大きから+ず, 高かり+けり, 冷たかる+べし). Without one, the same kana are an
     // ordinary noun or godan verb (明かり, 見つかる).
     //
-    // The 命令形 takes no auxiliary at all: it survives in the optative, where
-    // the quotative と reports the wish (正しかれ+と願う, 幸多かれ+と祈る). That
-    // particle is what separates it from the passive reading, which cannot end
-    // a clause and so never precedes と (書かれ+ると, not 書かれ+と).
-    const bool licensed = codepoints[kara_pos + 1] == U'れ'
-                              ? codepoints[kara_pos + 2] == U'と'
-                              : classicalAuxiliaryFollowsAt(codepoints, kara_pos + 2, scan_end, dict_manager);
+    const size_t cell_end = kara_pos + 2;
+    // The 已然/命令 cell is selected by a conjunctive particle, including the
+    // concessive ど as well as the optative quotative と.  Either continuation
+    // rules out the homographic passive; without a closed particle the cell is
+    // not emitted. The continuative かり may also close a literary clause.
+    const bool is_kare = codepoints[kara_pos + 1] == U'れ';
+    const bool follows_conjunctive = is_kare && classicalConjunctiveFollowsAt(codepoints, cell_end, dict_manager);
+    const bool terminal_renyokei = codepoints[kara_pos + 1] == U'り' && classicalClauseEndsAt(codepoints, cell_end);
+    const bool licensed = follows_conjunctive || terminal_renyokei ||
+                          (!is_kare && classicalAuxiliaryFollowsAt(codepoints, cell_end, scan_end, dict_manager));
     if (!licensed) {
       continue;
     }
     std::string lemma = extractSubstring(codepoints, start_pos, kara_pos) + "い";
-    if (!isModernIAdjective(lemma, inflection, dict_manager)) {
+    // The かれ cell is also the passive auxiliary after a Godan-ka irrealis
+    // (書か+れ+ども).  The inflection engine intentionally recognizes broad
+    // i-adjective-shaped runs, which is not enough to distinguish that path.
+    // A classical カリ reading therefore needs lexical adjective evidence;
+    // genuine bases such as 美しい、高い、多い are L2-backed while the passive
+    // remains a regular productive verb chain.
+    if (!isAdjectiveInDictionary(dict_manager, lemma)) {
       continue;
     }
     // A カリ form is also an ordinary godan-ra inflection plus a classical
@@ -925,7 +976,7 @@ void appendIAdjKaraZuCandidates(const std::vector<char32_t>& codepoints, size_t 
     // analysis to complete (分から+ぬ -> 分かる). The 命令形 is followed by a
     // particle instead, which no verb analysis spans, so the probe stops at the
     // cell itself — that is what still recognizes 分かれ as 分かれる before と.
-    const size_t probe_end = codepoints[kara_pos + 1] == U'れ' ? kara_pos + 2 : std::min(kara_pos + 3, scan_end);
+    const size_t probe_end = is_kare ? cell_end : std::min(kara_pos + 3, scan_end);
     const std::string whole_surface = extractSubstring(codepoints, start_pos, probe_end);
     if (hasDictionaryVerifiedVerbAnalysis(whole_surface, inflection, dict_manager)) {
       continue;

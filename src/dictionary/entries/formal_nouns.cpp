@@ -18,6 +18,8 @@ EntrySpecRange getFormalNounEntries() {
       formal_noun("もん", ""),
       formal_noun("為", ""),
       formal_noun("ため", ""),
+      // Formal noun in the negative-experience construction (行ったためしがない).
+      formal_noun("ためし", ""),
       // Note: 漢字「所」は削除 - 複合語（所在、場所）の一部として分割を妨げるため
       // ひらがな「ところ」のみ残す
       formal_noun("ところ", ""),

@@ -169,6 +169,46 @@ void UnknownWordGenerator::generateCharacterSpeechCandidates(std::string_view /*
         continue;
       }
 
+      // Do not let an unknown character-speech edge absorb a regular copula
+      // followed by a closed final particle. Both morphemes already have
+      // precise dictionary candidates (だ+な, だ+よ, ...); treating their
+      // concatenation as an opaque auxiliary permits invalid auxiliary chains.
+      if (surface.size() > core::kJapaneseCharBytes &&
+          std::string_view(surface).substr(0, core::kJapaneseCharBytes) == "だ" && dict_manager_ != nullptr) {
+        const std::string_view tail(surface.data() + core::kJapaneseCharBytes,
+                                    surface.size() - core::kJapaneseCharBytes);
+        if (dict_manager_->lookupExact(std::string(tail), core::PartOfSpeech::Particle) != nullptr) {
+          continue;
+        }
+      }
+
+      // Independently registered closed forms form a grammatical chain, not
+      // an opaque character-speech auxiliary (そう+や+で, 飲ん+だ+き). Test
+      // every internal boundary so this stays a category rule instead of
+      // naming a dialectal spelling; closed compound entries are handled
+      // before this unknown candidate is considered.
+      if (dict_manager_ != nullptr && surface.size() >= core::kJapaneseCharBytes * 2) {
+        bool joins_two_particles = false;
+        bool joins_two_auxiliaries = false;
+        for (size_t split = 1; split < char_types.size() && start_pos + split < candidate_end; ++split) {
+          const std::string prefix = extractSubstring(codepoints, start_pos, start_pos + split);
+          const std::string suffix = extractSubstring(codepoints, start_pos + split, candidate_end);
+          if (dict_manager_->lookupExact(prefix, core::PartOfSpeech::Particle) != nullptr &&
+              dict_manager_->lookupExact(suffix, core::PartOfSpeech::Particle) != nullptr) {
+            joins_two_particles = true;
+            break;
+          }
+          if (dict_manager_->lookupExact(prefix, core::PartOfSpeech::Auxiliary) != nullptr &&
+              dict_manager_->lookupExact(suffix, core::PartOfSpeech::Auxiliary) != nullptr) {
+            joins_two_auxiliaries = true;
+            break;
+          }
+        }
+        if (joins_two_particles || joins_two_auxiliaries) {
+          continue;
+        }
+      }
+
       // Calculate character count (not byte count)
       size_t char_count = surface.size() / core::kJapaneseCharBytes;
 
@@ -198,6 +238,13 @@ void UnknownWordGenerator::generateCharacterSpeechCandidates(std::string_view /*
       // a past-tense auxiliary and peeled the tail off an unregistered
       // hiragana noun (いちご read as い + ちご, 汗まみれ as 汗ま + みれ).
       if (char_count >= 2 && start_type == normalize::CharType::Hiragana) {
+        // A nominalizer followed by a second nominalizer is a compositional
+        // clause boundary (〜て+ん+の), never one character-speech auxiliary.
+        // Keep both dictionary particles available instead of manufacturing
+        // an AUX_過去 candidate for んの.
+        if (codepoints[start_pos] == U'ん' && codepoints[start_pos + 1] == U'の') {
+          continue;
+        }
         static constexpr std::string_view kAuxiliaryOpeners[] = {
             "た", "て", "ぬ", "む", "ん", "い", "せ", "れ", "ず", "よ", "ろ", "だ", "で",
             "じ", "ざ", "ま", "な", "の", "に", "っ", "わ", "ぜ", "ぞ", "さ", "や",

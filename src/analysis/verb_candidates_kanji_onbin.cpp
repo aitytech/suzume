@@ -26,6 +26,18 @@
 namespace suzume::analysis::kanji_verb_detail {
 namespace vh = verb_helpers;
 
+bool followsQuantityHead(const std::vector<char32_t>& codepoints, size_t start_pos) {
+  if (start_pos < 2) {
+    return false;
+  }
+  const char32_t previous = codepoints[start_pos - 1];
+  const char32_t before_previous = codepoints[start_pos - 2];
+  // Numeral+counter and productive quantity nouns ending in 数 both close
+  // before the following predicate (二件|残っ, 複数|残っ).
+  return (normalize::isCounterKanji(previous) && normalize::isNumeralCodepoint(before_previous)) ||
+         (previous == U'数' && normalize::isKanjiCodepoint(before_previous));
+}
+
 void appendVerifiedTailGodanTaCompoundCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                                  size_t kanji_end, const dictionary::DictionaryManager* dict_manager,
                                                  std::vector<UnknownCandidate>& candidates) {
@@ -124,6 +136,7 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
     if ((is_hatsuonbin || is_ikuon || is_uonbin) && kanji_end + 1 < hiragana_end) {
       char32_t next_char = codepoints[kanji_end + 1];
       bool is_contraction_pattern = false;
+      size_t inflection_end = hiragana_end;
       if (is_hatsuonbin) {
         // ん + ど (どく/どいた) or じ (じゃう/じゃった) or で (でる/でた/でて)
         is_contraction_pattern = (next_char == U'ど' || next_char == U'じ' || next_char == U'で');
@@ -134,8 +147,18 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
         // when the open-class lemma is absent from the dictionary, allowing
         // the grammatical 音便形 + 過去 auxiliary boundary to enter the
         // lattice (続い+た).
-        const bool is_exact_past_run = kanji_end + 2 == hiragana_end && (next_char == U'た' || next_char == U'だ');
-        is_contraction_pattern = (next_char == U'と' || next_char == U'ち' || is_exact_past_run);
+        const bool is_past = next_char == U'た' || next_char == U'だ';
+        const bool is_exact_past_run = kanji_end + 2 == hiragana_end && is_past;
+        const bool is_past_before_quotative = is_past && kanji_end + 3 < hiragana_end &&
+                                              codepoints[kanji_end + 2] == U'っ' && codepoints[kanji_end + 3] == U'て';
+        if (is_exact_past_run || is_past_before_quotative) {
+          // The quote belongs after the completed past form.  Validate the
+          // closed い+た/だ cell itself, rather than asking inflection to
+          // interpret the following って as part of the verb.
+          inflection_end = kanji_end + 2;
+        }
+        is_contraction_pattern =
+            next_char == U'と' || next_char == U'ち' || is_exact_past_run || is_past_before_quotative;
       } else {
         // う音便 is a closed lexical GodanWa subclass, so it occurs only in
         // the simple past/te cells and only for an attested subclass stem.
@@ -157,7 +180,7 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
         std::string matched_base_form = std::move(onbin_match.base_form);
         // Inflection analysis fallback (dictionary lookup above found nothing)
         if (matched_verb_type == grammar::VerbType::Unknown && kanji_end > start_pos) {
-          std::string full_surface = extractSubstring(codepoints, start_pos, hiragana_end);
+          std::string full_surface = extractSubstring(codepoints, start_pos, inflection_end);
           OnbinInflMatch infl = bestOnbinInflMatch(inflection, full_surface, kanji_stem, candidates_to_try);
           if (infl.type != grammar::VerbType::Unknown) {
             matched_verb_type = infl.type;
@@ -355,7 +378,8 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
         // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
         bool sokuon_heads_dictionary_particle = false;
         if (!matched_via_dict && dict_manager != nullptr && start_pos > 0 &&
-            normalize::isKanjiCodepoint(codepoints[start_pos - 1]) && kanji_end + 1 < codepoints.size()) {
+            normalize::isKanjiCodepoint(codepoints[start_pos - 1]) && !followsQuantityHead(codepoints, start_pos) &&
+            kanji_end + 1 < codepoints.size()) {
           constexpr size_t kParticleProbe = 3;
           const size_t max_particle_end = std::min(codepoints.size(), kanji_end + kParticleProbe);
           for (size_t particle_end = kanji_end + 2; particle_end <= max_particle_end; ++particle_end) {

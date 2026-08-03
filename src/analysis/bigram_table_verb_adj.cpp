@@ -308,9 +308,10 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // Adjective + sentence-final particle is a very common pattern
       {EPOS::AdjBasic, EPOS::ParticleFinal, cost::kModerateBonus},
 
-      // AdjBasic → ParticleConj (美しい+し, 高い+けど) - minor bonus
-      // Helps i-adjective+conjunctive particle beat ADJ_NA+い(verb)+し path
-      {EPOS::AdjBasic, EPOS::ParticleConj, cost::kMinorBonus},
+      // An i-adjective directly licenses a concessive connective
+      // (高い+のに, 美しい+けれど).  This must also outrank the competing
+      // nominalizer+case-particle path before a past predicate.
+      {EPOS::AdjBasic, EPOS::ParticleConj, cost::kVeryStrongBonus},
 
       // AdjBasic → Noun (美しい+猫, 大きい+家, 高い+山) - strong bonus
       // i-adjective attributive form + noun is fundamental Japanese grammar

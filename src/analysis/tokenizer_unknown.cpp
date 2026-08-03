@@ -111,6 +111,21 @@ bool hasContentEdgeEndingAt(const core::Lattice& lattice, size_t boundary) {
   return false;
 }
 
+// A binding particle after a terminal predicate closes that predicate. An
+// unverified candidate beginning at the particle cannot instead be a new
+// lexical word (渡る+も+いとわない, not 渡る+もいとわ+ない).
+bool startsAtBindingParticleAfterTerminalVerb(const core::Lattice& lattice,
+                                              const dictionary::DictionaryManager& dict_manager, std::string_view text,
+                                              const ByteOffsets& byte_offsets, const UnknownCandidate& candidate) {
+  if (candidate.start == 0 || candidate.lemma_verified) {
+    return false;
+  }
+  const auto* particle = dict_manager.lookupExact(textRange(text, byte_offsets, candidate.start, candidate.start + 1),
+                                                  core::PartOfSpeech::Particle);
+  return particle != nullptr && particle->extended_pos == core::ExtendedPOS::ParticleBinding &&
+         hasPrecedingExtendedPOS(lattice, candidate.start, core::ExtendedPOS::VerbShuushikei);
+}
+
 // The left bracket of a post-particle noun rescue is whatever can fill the
 // argument slot the particle marks. That is wider than the taggable content
 // words: a pronoun heads a phrase exactly as a noun does (これ|は|りんご), and it
@@ -493,6 +508,37 @@ bool hasCompleteInternalConstituentBoundary(const core::Lattice& lattice,
   return false;
 }
 
+// A generated predicate cannot consume a multi-mora final particle after a
+// nominal head. The final particle closes the nominal predicate (本+ばい), and
+// the ordinary open-class candidate must leave that closed boundary intact.
+bool endsWithFinalParticleAfterNominalHead(const dictionary::DictionaryManager& dict_manager, std::string_view text,
+                                           const ByteOffsets& byte_offsets,
+                                           const std::vector<UnknownCandidate>& batch_candidates,
+                                           const UnknownCandidate& candidate) {
+  if (candidate.lemma_verified || candidate.end <= candidate.start + 2) {
+    return false;
+  }
+  constexpr size_t kMaxFinalParticleChars = 4;
+  const size_t earliest =
+      candidate.end > kMaxFinalParticleChars ? candidate.end - kMaxFinalParticleChars : candidate.start + 1;
+  for (size_t particle_start = earliest; particle_start < candidate.end - 1; ++particle_start) {
+    const auto* particle = dict_manager.lookupExact(textRange(text, byte_offsets, particle_start, candidate.end),
+                                                    core::PartOfSpeech::Particle);
+    if (particle == nullptr || particle->extended_pos != core::ExtendedPOS::ParticleFinal) {
+      continue;
+    }
+    const bool has_nominal_prefix =
+        std::any_of(batch_candidates.begin(), batch_candidates.end(), [&](const UnknownCandidate& alternative) {
+          return alternative.start == candidate.start && alternative.end == particle_start &&
+                 alternative.pos == core::PartOfSpeech::Noun;
+        });
+    if (has_nominal_prefix) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // The closed adverbial sequence Noun + ながら + に exposes a morpheme
 // boundary inside an otherwise plausible unknown verb continuative
 // (涙ながらに, not a deverbal noun 涙ながら + に). Require all three pieces:
@@ -596,7 +642,13 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
 
   size_t max_dict_length = 0;
   for (const auto& result : dict_results) {
-    if (result.entry != nullptr) {
+    // Closed classes mark grammatical boundaries but are not lexical evidence
+    // against a longer unknown content word beginning at the same character.
+    // In particular, a one-kanji suffix such as 内 must not make an entire
+    // Sino compound pay the dictionary-length penalty while arbitrary shorter
+    // fragments stay cheap.
+    if (result.entry != nullptr && core::isContentWord(result.entry->pos) &&
+        result.entry->extended_pos != core::ExtendedPOS::NounFormal) {
       max_dict_length = std::max(max_dict_length, result.length);
     }
   }
@@ -613,6 +665,24 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
                                           : kanji_end;
 
   for (const auto& candidate : candidates) {
+    const bool conjunction_before_short_nominal =
+        candidate.pos == core::PartOfSpeech::Noun && candidate.end == candidate.start + 1 &&
+        hasPrecedingPartOfSpeech(lattice, candidate.start, partOfSpeechMask(core::PartOfSpeech::Conjunction));
+    if (conjunction_before_short_nominal &&
+        std::any_of(candidates.begin(), candidates.end(), [&](const UnknownCandidate& alternative) {
+          return alternative.start == candidate.start && alternative.end > candidate.end &&
+                 alternative.pos == core::PartOfSpeech::Verb;
+        })) {
+      continue;
+    }
+    if (candidate.pos != core::PartOfSpeech::Particle &&
+        startsAtBindingParticleAfterTerminalVerb(lattice, dict_manager_, text, byte_offsets, candidate)) {
+      continue;
+    }
+    if ((candidate.pos == core::PartOfSpeech::Verb || candidate.pos == core::PartOfSpeech::Adjective) &&
+        endsWithFinalParticleAfterNominalHead(dict_manager_, text, byte_offsets, candidates, candidate)) {
+      continue;
+    }
     if (following_verb_start < kanji_end && candidate.pos == core::PartOfSpeech::Noun &&
         candidate.end > following_verb_start && candidate.end <= kanji_end) {
       continue;
@@ -654,7 +724,8 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
         candidate.end < codepoints.size() &&
         grammar::startsPredicativeCopula(text.substr(byteOffsetAt(byte_offsets, candidate.end)));
     if (!selected_by_following_copula && candidate.pos != core::PartOfSpeech::Particle &&
-        joinsParticleToDictionaryAdverb(lattice, dict_manager_, text, byte_offsets, candidate.start, candidate.end)) {
+        joinsParticleToDictionaryAdverb(lattice, dict_manager_, text, byte_offsets, candidate.start, candidate.end,
+                                        candidate.extended_pos)) {
       continue;
     }
     if (overlapsPredicativeNegativeConjecture(lattice, dict_manager_, text, codepoints, byte_offsets, candidate.start,

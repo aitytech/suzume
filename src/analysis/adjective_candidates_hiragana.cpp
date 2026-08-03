@@ -107,6 +107,20 @@ bool embedsGenitiveParticle(const dictionary::DictionaryManager* dict_manager, c
   return false;
 }
 
+// A generated i-adjective cannot begin with the genitive particle.  The
+// ordinary interior-boundary guard above cannot see this case because the
+// particle is the candidate's first character (紙+の+ごとく).  Preserve an
+// exact lexical adjective if one exists, but otherwise leave the closed
+// particle edge available to the lattice.
+bool startsWithGenitiveParticle(const dictionary::DictionaryManager* dict_manager,
+                                const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  if (dict_manager == nullptr || start_pos >= end_pos || codepoints[start_pos] != U'の') {
+    return false;
+  }
+  const auto* entry = dict_manager->lookupExact("の", core::PartOfSpeech::Particle);
+  return entry != nullptr && entry->extended_pos == core::ExtendedPOS::ParticleNo;
+}
+
 // Emit a whole-word i-adjective candidate for a spelled-out reduplicated 〜しい
 // adjective (バカバカしい, ばかばかしくない). The doubled stem is otherwise pre-empted
 // by an onomatopoeia ADV candidate (aa_doubled / abab_pattern) plus a split-off しい
@@ -169,6 +183,17 @@ void appendHiraganaPrefixedKanjiIAdjCandidates(std::vector<UnknownCandidate>& ca
   // ながら+歩く, なら+置く).
   if (startsInsideMultiMoraParticle(codepoints, start_pos, prefix_end, dict_manager)) {
     return;
+  }
+  if (dict_manager != nullptr) {
+    const size_t lookbehind = std::min<size_t>(3, start_pos);
+    for (size_t particle_start = start_pos - lookbehind; particle_start < start_pos; ++particle_start) {
+      for (size_t particle_end = start_pos + 1; particle_end <= prefix_end; ++particle_end) {
+        if (dict_manager->lookupExact(extractSubstring(codepoints, particle_start, particle_end),
+                                      core::PartOfSpeech::Particle) != nullptr) {
+          return;
+        }
+      }
+    }
   }
   const std::string prefix_surface = extractSubstring(codepoints, start_pos, prefix_end);
   if (start_pos > 0 && isParticleSequenceWithoutLexicalReading(codepoints, start_pos, prefix_end, dict_manager)) {
@@ -324,6 +349,49 @@ void generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints
   // Need at least 3 characters for an i-adjective (e.g., あつい)
   if (max_hiragana_end <= start_pos + 2) {
     return;
+  }
+
+  // The excessive auxiliary follows every i-adjective stem, not only the
+  // しい/きい subclasses handled by the shared pattern table below. Rebuild the
+  // base with its terminal い and let inflection validate it, so だる+すぎる,
+  // ゆる+すぎる, and きつ+すぎる share one productive path.  This must precede
+  // the general genitive-particle guard: that guard correctly rejects broad
+  // unknown sequences, but would prevent this independently verified stem.
+  const std::string first_mora = extractSubstring(codepoints, start_pos, start_pos + 1);
+  const bool starts_with_closed_particle =
+      dict_manager != nullptr && dict_manager->lookupExact(first_mora, core::PartOfSpeech::Particle) != nullptr;
+  // A kanji i-adjective's continuative く is already a complete edge at the
+  // preceding position (高く+なり+すぎる).  Starting a second adjective stem
+  // from that okurigana would reconstruct a non-word such as くなりい.  This
+  // leaves ordinary hiragana stems after particles available while preserving
+  // the kanji-adjective boundary.
+  const bool follows_kanji_continuative =
+      start_pos > 0 && normalize::isKanjiCodepoint(codepoints[start_pos - 1]) && first_char == U'く';
+  if (!starts_with_closed_particle && !follows_kanji_continuative) {
+    const std::string full_surface = extractSubstring(codepoints, start_pos, max_hiragana_end);
+    static constexpr std::array<std::string_view, 3> kExcessiveSuffixes = {"すぎる", "すぎた", "すぎ"};
+    for (const std::string_view suffix : kExcessiveSuffixes) {
+      if (!utf8::endsWith(full_surface, suffix)) {
+        continue;
+      }
+      const std::string stem = full_surface.substr(0, full_surface.size() - suffix.size());
+      if (normalize::utf8Length(stem) < 2 || utf8::contains(stem, "て") || utf8::contains(stem, "で")) {
+        continue;
+      }
+      const std::string base_form = stem + "い";
+      const float confidence = adj_detail::firstConfidenceAtLeast(
+          inflection.analyze(base_form), grammar::VerbType::IAdjective, candidate::kCompoundAdjConfMin);
+      if (confidence == candidate::kNoOriginConfidence) {
+        continue;
+      }
+      const size_t stem_end = start_pos + normalize::utf8Length(stem);
+      const float cost =
+          candidate::confidenceScaledCost(candidate::kAdjStemExtCost, confidence, candidate::kAdjStemConfScale);
+      candidates.push_back(makeIAdjStemCandidate(stem, start_pos, stem_end, base_form, cost,
+                                                 CandidateOrigin::AdjectiveIHiragana, confidence,
+                                                 "adj_stem_hira_excessive"));
+      break;
+    }
   }
 
   // A closed-class particle immediately followed by a registered auxiliary
@@ -526,6 +594,9 @@ void generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints
 
   const std::string bounded_surface = extractSubstring(codepoints, start_pos, hiragana_end);
   const bool has_exact_adjective = isAdjectiveInDictionary(dict_manager, bounded_surface);
+  if (!has_exact_adjective && startsWithGenitiveParticle(dict_manager, codepoints, start_pos, hiragana_end)) {
+    return;
+  }
   if (!has_exact_adjective && embedsGenitiveParticle(dict_manager, codepoints, start_pos, hiragana_end)) {
     return;
   }
@@ -555,6 +626,7 @@ void generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints
   // Check for しそう, しすぎ patterns (adjective stem + auxiliary)
   // Start from maximum hiragana sequence
   std::string full_surface = extractSubstring(codepoints, start_pos, max_hiragana_end);
+
   for (size_t pattern_index = 0; pattern_index < adj_detail::kHiraganaIAdjStemAuxPatternCount; ++pattern_index) {
     const std::string_view aux_pattern = adj_detail::kIAdjStemAuxPatterns[pattern_index];
     if (full_surface.size() >=
@@ -648,6 +720,12 @@ void generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints
     }
 
     const std::string stem = extractSubstring(codepoints, start_pos, stem_end);
+    // A closed interjection is not an i-adjective stem.  In particular, its
+    // following さ belongs to an unknown noun reading (うわさ), not to the
+    // productive adjective nominalizer.
+    if (dict_manager != nullptr && dict_manager->lookupExact(stem, core::PartOfSpeech::Interjection) != nullptr) {
+      continue;
+    }
     const std::string base_form = stem + "い";
     const bool is_dict_adjective = isAdjectiveInDictionary(dict_manager, base_form);
     if (!is_dict_adjective && grammar::isERowCodepoint(codepoints[stem_end - 1])) {

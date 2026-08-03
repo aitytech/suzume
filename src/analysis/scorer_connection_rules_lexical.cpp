@@ -423,6 +423,13 @@ float computePastConditionalVerbBonus(const core::LatticeEdge& prev, const core:
   // completed-past た, which must not be followed by a bare verb.
   if (prev.extended_pos == core::ExtendedPOS::AuxTenseTa && utf8::equalsAny(prev.surface, {"たら", "だら"}) &&
       next.extended_pos == core::ExtendedPOS::VerbShuushikei) {
+    return sc::kBonusConditionalPredicate;
+  }
+  // A past conditional can introduce a negative predicate as well as an
+  // ordinary verb (読ん+だら+あかん). The following auxiliary is a complete
+  // predicate here, not another inflectional suffix of the past form.
+  if (prev.extended_pos == core::ExtendedPOS::AuxTenseTa && utf8::equalsAny(prev.surface, {"たら", "だら"}) &&
+      next.extended_pos == core::ExtendedPOS::AuxNegativeNai) {
     return cost::kDoubleVeryStrongBonus;
   }
 
@@ -432,6 +439,14 @@ float computePastConditionalVerbBonus(const core::LatticeEdge& prev, const core:
   // contracted progressive (飲ん+で+たら = 飲んでいたら).
   if (next.extended_pos == core::ExtendedPOS::AuxTenseTa && utf8::equalsAny(next.surface, {"たら", "だら"}) &&
       prev.pos == core::PartOfSpeech::Particle) {
+    return sc::kBonusClosedInflectionalChain;
+  }
+  // The negative auxiliary's onbin is itself a predicate inflection.  Its
+  // following たら is therefore the past auxiliary's conditional cell even
+  // before an adjective predicate (読ま+なかっ+たら+いい), where the generic
+  // ParticleConj→Adjective bonus would otherwise select the homograph.
+  if (prev.extended_pos == core::ExtendedPOS::AuxNegativeNai && utf8::endsWith(prev.surface, "かっ") &&
+      next.extended_pos == core::ExtendedPOS::AuxTenseTa && utf8::equalsAny(next.surface, {"たら", "だら"})) {
     return cost::kVeryStrongBonus;
   }
   // The negative's own onbin form admits nothing but that auxiliary, so the

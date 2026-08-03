@@ -222,10 +222,34 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
     // Check if base form is in dictionary (gives confidence boost)
     bool is_dict_verb = vh::isVerbInDictionary(dict_manager, chosen_base);
 
+    // A registered inflectional surface already supplies its own lemma and
+    // conjugation type.  Do not overlay an unverified Ichidan reconstruction
+    // such as あり→ありる on that closed lexical evidence.
+    if (!is_dict_verb && vh::hasDictionaryEntry(dict_manager, stem_surface, core::PartOfSpeech::Verb)) {
+      continue;
+    }
+
+    // Likewise, a short candidate beginning inside a registered verb is its
+    // final morae rather than an independent predicate (しまい+ます, not
+    // し+まい(まいる)+ます).
+    if (!is_dict_verb && end_pos - start_pos == 2 && start_pos > 0 &&
+        vh::isVerbInDictionary(dict_manager, extractSubstring(codepoints, start_pos - 1, end_pos))) {
+      continue;
+    }
+
     // Skip causative+passive auxiliary chain patterns
     // E.g., "せられ" should be split as せ(causative) + られ(passive), not single verb
     // Preserve the causative, passive, and tense morpheme boundaries.
     if (utf8::endsWith(stem_surface, "せられ")) {
+      continue;
+    }
+
+    // A passive cell followed by its next auxiliary is not an independent
+    // lexical continuative.  In particular, a weak reconstruction of
+    // やめられ must leave the productive やめ + られ + ない/ます boundary
+    // available.  The same rule is structural, so it also covers other
+    // hiragana Ichidan hosts without naming a lexical verb.
+    if (utf8::endsWith(stem_surface, "られ") && (is_followed_by_nai || is_followed_by_masu)) {
       continue;
     }
 
@@ -295,6 +319,13 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
     // competing with dictionary compound particles like について
     // But not too high to break valid patterns like してほしい
     float cost = is_dict_verb ? -0.8F : 0.5F;
+    const std::string following = extractSubstring(codepoints, end_pos, std::min(end_pos + 2, codepoints.size()));
+    // The polite auxiliary completes the renyokei frame for an otherwise
+    // unregistered stem (くみ+ます). Its closed morphology is stronger evidence
+    // than the generic bracketed-noun fallback after an object particle.
+    if (!is_dict_verb && following == "ます") {
+      cost += bigram_cost::kVeryStrongBonus;
+    }
     // A godan-wa renyokei starting か…い immediately after a pronoun (誰かい, なにかい)
     // is spurious: the か is the particle か and い is いる's renyokei
     // (誰か + い + ます). Discourage it so the particle reading wins.
@@ -306,7 +337,6 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
                           << " conf=" << chosen_confidence << (is_dict_verb ? " [dict]" : "") << " cost=" << cost
                           << "\n";
     }
-    const std::string following = extractSubstring(codepoints, end_pos, std::min(end_pos + 2, codepoints.size()));
     const bool is_negative_continuation = utf8::startsWith(following, "ない") || utf8::startsWith(following, "なか");
     // A stem after a clear te/de boundary belongs to a subsidiary-verb
     // construction.  Leave that category to its dedicated candidate so an
@@ -347,7 +377,19 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
     // stem_surface = しなけ → base_form = しなける (false ichidan)
     bool is_suru_negative_pattern = (stem_surface.size() >= 6 &&  // しな = 6 bytes
                                      stem_surface.substr(0, 3) == "し" && stem_surface.substr(3, 3) == "な");
-    if (is_followed_by_reba && !is_suru_negative_pattern) {
+    bool embeds_te_conditional_auxiliary = false;
+    if (is_followed_by_reba && dict_manager != nullptr) {
+      const size_t kateikei_end = end_pos + 1;
+      for (size_t te_pos = start_pos + 1; te_pos + 1 < kateikei_end; ++te_pos) {
+        if (codepoints[te_pos] == core::hiragana::kTe &&
+            dict_manager->lookupExact(extractSubstring(codepoints, te_pos + 1, kateikei_end),
+                                      core::PartOfSpeech::Verb) != nullptr) {
+          embeds_te_conditional_auxiliary = true;
+          break;
+        }
+      }
+    }
+    if (is_followed_by_reba && !is_suru_negative_pattern && !embeds_te_conditional_auxiliary) {
       std::string kateikei_surface = stem_surface + "れ";  // 連用形 + れ = 仮定形
       size_t kateikei_end = end_pos + 1;                   // renyokei + れ
       constexpr float kKateikeiCost = candidate::verb_cost::kStrongBonus;

@@ -179,7 +179,13 @@ void adj_detail::appendKanjiCompoundIAdjCandidates(const std::vector<char32_t>& 
         // main loop's 0.5 threshold for compound adjectives like 薄暗い, 物悲しく.
         // Use tighter hiragana limits for い/く/か/け (max 2) to prevent
         if (candidates.size() == candidate_start) {
-          size_t hira_limit = (first_hira == U'し') ? kMaxHiraganaLen : 2;
+          // くさい is itself a productive adjective-forming second element,
+          // so its past and conditional cells need the same scan width as the
+          // しい family (面倒くさかっ+た).  Other く heads remain at the short
+          // limit to avoid swallowing an ordinary kanji-verb continuative.
+          const bool kusai_derivation =
+              first_hira == U'く' && kanji_end + 1 < codepoints.size() && codepoints[kanji_end + 1] == U'さ';
+          size_t hira_limit = (first_hira == U'し' || kusai_derivation) ? kMaxHiraganaLen : 2;
           size_t max_end = std::min(hiragana_end, kanji_end + hira_limit);
           for (size_t end_pos = max_end; end_pos > kanji_end; --end_pos) {
             std::string surface = extractSubstring(codepoints, start_pos, end_pos);

@@ -109,10 +109,29 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         const bool godan_base_is_dict = vh::isVerbInDictionary(dict_manager, godan_cand.base_form);
         const bool comma_clause_chaining =
             vh::isCommaClauseChainingRenyokei(codepoints, start_pos, renyokei_end, dict_manager);
-        bool prefer_suru = !causative_follows && !passive_follows && !ichidan_base_is_dict &&
-                           (suru_cand.confidence > ichidan_cand.confidence);
-        bool prefer_godan = !causative_follows && !passive_follows && !ichidan_base_is_dict &&
-                            (!comma_clause_chaining || godan_base_is_dict) &&
+        const char32_t continuation = renyokei_end < codepoints.size() ? codepoints[renyokei_end] : U'\0';
+        const bool negative_aux_follows =
+            continuation == U'な' && renyokei_end + 1 < codepoints.size() && codepoints[renyokei_end + 1] == U'い';
+        const bool follows_topic_particle = start_pos > 0 && dict_manager != nullptr && [&] {
+          const auto* preceding = dict_manager->lookupExact(extractSubstring(codepoints, start_pos - 1, start_pos),
+                                                            core::PartOfSpeech::Particle);
+          return preceding != nullptr && preceding->extended_pos == core::ExtendedPOS::ParticleTopic;
+        }();
+        const bool follows_quotative_determiner =
+            negative_aux_follows && renyokei_end + 5 <= codepoints.size() && dict_manager != nullptr &&
+            dict_manager->lookupExact(extractSubstring(codepoints, renyokei_end + 2, renyokei_end + 5),
+                                      core::PartOfSpeech::Determiner) != nullptr;
+        // The negative auxiliary resolves the shared i-row surface as an
+        // Ichidan irrealis only in a predicate slot.  Without that syntactic
+        // evidence, a lexical noun plus independent ない (頼り+ない) remains
+        // equally valid and must not be displaced by a fabricated verb.
+        const bool negative_predicate_context =
+            negative_aux_follows && (vh::followsCaseParticle(dict_manager, codepoints, start_pos) ||
+                                     follows_topic_particle || follows_quotative_determiner);
+        bool prefer_suru = !causative_follows && !passive_follows && !negative_predicate_context &&
+                           !ichidan_base_is_dict && (suru_cand.confidence > ichidan_cand.confidence);
+        bool prefer_godan = !causative_follows && !passive_follows && !negative_predicate_context &&
+                            !ichidan_base_is_dict && (!comma_clause_chaining || godan_base_is_dict) &&
                             (godan_cand.confidence > ichidan_cand.confidence);
         // Use different thresholds for e-row vs i-row patterns:
         // - I-row (じ, み, etc.): lower threshold (0.28) - these are distinctively verb stems
@@ -127,17 +146,14 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         // only to a verb renyokei/mizenkei, so the verb reading of a noun homograph
         // must survive (感じます → 感じ(VERB) + ます; 感じさせる → 感じ(VERB) + させる,
         // not 感じ(NOUN) + さ + せる); standalone 感じ stays NOUN.
-        const char32_t continuation = renyokei_end < codepoints.size() ? codepoints[renyokei_end] : U'\0';
         bool verb_aux_follows = continuation == U'た' || continuation == U'て' ||
                                 vh::masuAuxFollowsAt(codepoints, renyokei_end) || causative_follows || passive_follows;
         // A dictionary-verified single-kanji Ichidan base followed by て and
         // a contracted progressive or past marker is a te-form boundary
-        // (見+てる, 見+て+た), not a fabricated verb such as 見てる.
+        // (見+てる, 見+て+ん, 見+て+た), not a fabricated verb such as 見てる.
         const bool single_kanji_te_form = is_single_kanji && first_hira == U'て' &&
-                                          (continuation == U'た' || continuation == U'る') &&
+                                          (continuation == U'た' || continuation == U'る' || continuation == U'ん') &&
                                           vh::isSingleKanjiIchidan(codepoints[start_pos]);
-        const bool negative_aux_follows =
-            continuation == U'な' && renyokei_end + 1 < codepoints.size() && codepoints[renyokei_end + 1] == U'い';
         // An Ichidan verb uses the same stem before the classical negative
         // auxiliaries ぬ/ず/ざる/ざれ as it does before ない.  In this
         // environment the candidate surface is the full stem, so recover its
@@ -433,10 +449,11 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
           bool absorbs_focus_particle =
               !base_is_dict_verb && vh::endsWithFocusParticleTail(dict_manager, codepoints, start_pos, renyokei_end);
           if ((!surface_is_dict_entry || base_is_dict_verb) && !absorbs_focus_particle) {
-            float base_cost = (causative_follows || passive_follows)
-                                  ? candidate::verb_cost::kStrongBonus
-                                  : candidate::confidenceScaledCost(verb_opts.bonus_ichidan, ichidan_cand.confidence,
-                                                                    verb_opts.confidence_cost_scale_small);
+            float base_cost =
+                (causative_follows || passive_follows || follows_kanji_sahen_predicate || follows_kanji_predicate)
+                    ? candidate::verb_cost::kStrongBonus
+                    : candidate::confidenceScaledCost(verb_opts.bonus_ichidan, ichidan_cand.confidence,
+                                                      verb_opts.confidence_cost_scale_small);
             auto renyokei_candidate =
                 makeVerbCandidate(surface, start_pos, renyokei_end, base_cost, ichidan_cand.base_form,
                                   grammar::verbTypeToConjType(ichidan_cand.verb_type), true, CandidateOrigin::VerbKanji,
@@ -581,17 +598,17 @@ void appendGodanSaRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
             }
             // Single kanji + 1 hiragana is lexically ambiguous: 心+し+て is a
             // productive noun + する chain, while 熱し+て is the continuative
-            // of lexical 熱す. A following connective/past cell proves the
-            // inflectional shape but cannot distinguish those lemmas, so an
-            // unregistered candidate must not use that continuation as lexical
-            // evidence. Open-class Godan-sa verbs are retained through L2.
+            // of lexical 熱す. A preceding case-marked argument resolves that
+            // ambiguity in favour of a predicate (時間を要し+た); otherwise an
+            // unregistered candidate must not use its inflectional follower as
+            // lexical evidence.
             const bool inflectional_continuation =
                 renyokei_end < codepoints.size() &&
                 (codepoints[renyokei_end] == U'て' || codepoints[renyokei_end] == U'た');
-            if (inflectional_continuation) {
+            if (inflectional_continuation && !follows_case_particle) {
               continue;
             }
-            non_dict_penalty = bigram_cost::kStrong;
+            non_dict_penalty = follows_case_particle ? candidate::verb_cost::kStrongBonus : bigram_cost::kStrong;
           } else {
             // Block kanji+まし pattern (false godan-sa from verb+ます renyoukei)
             // E.g., 来まし → 来ます (false), 出まし → 出ます (false)
@@ -621,17 +638,21 @@ void appendGodanSaRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
       // A fabricated godan-sa stem must not swallow a copula: a copula closes
       // a predicate, so it cannot sit inside a verb stem. Where the whole
       // hiragana run is one (紙+どし+た), the sequence is a nominal predicate.
-      // Other auxiliary tails are left alone — まし and らし do continue a
-      // genuine stem (増しました, 荒らした). An attested base still reaches the
-      // dictionary path.
+      // The conjectural らし is a closed auxiliary, while an attested base
+      // such as 荒らす keeps its dictionary path. An unverified candidate must
+      // not absorb that auxiliary into a fabricated godan-sa stem.
       // @see fabricated closed-class absorption guards (verb_candidates_helpers.h)
       if (dict_manager != nullptr && renyokei_end >= kanji_end + 2 &&
           !vh::isVerbInDictionary(dict_manager, best_sa.base_form)) {
         std::string hiragana_tail = extractSubstring(codepoints, kanji_end, renyokei_end);
         const auto* tail_entry = dict_manager->lookupExact(hiragana_tail, core::PartOfSpeech::Auxiliary);
-        if (tail_entry != nullptr && (tail_entry->extended_pos == core::ExtendedPOS::AuxCopulaDa ||
-                                      tail_entry->extended_pos == core::ExtendedPOS::AuxCopulaDesu)) {
-          SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" hiragana tail is a copula\n");
+        const bool selects_godan_sa_onbin = renyokei_end < codepoints.size() &&
+                                            (codepoints[renyokei_end] == U'た' || codepoints[renyokei_end] == U'て');
+        if (tail_entry != nullptr &&
+            (tail_entry->extended_pos == core::ExtendedPOS::AuxCopulaDa ||
+             tail_entry->extended_pos == core::ExtendedPOS::AuxCopulaDesu ||
+             (tail_entry->extended_pos == core::ExtendedPOS::AuxConjectureRashii && !selects_godan_sa_onbin))) {
+          SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" hiragana tail is a closed auxiliary\n");
           continue;
         }
       }

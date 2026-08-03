@@ -110,6 +110,7 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
                                            const grammar::Inflection& inflection,
                                            const dictionary::DictionaryManager* dict_manager,
                                            const VerbCandidateOptions& verb_opts, bool has_complete_godan_wa_terminal,
+                                           bool has_complete_case_particle_terminal,
                                            std::vector<UnknownCandidate>& candidates);
 
 }  // namespace suzume::analysis::hiragana_verb_detail

@@ -38,7 +38,7 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
   // leaving classical negative ず after a conjunction (のみなら+ず) intact.
   if (prev.extended_pos == core::ExtendedPOS::ParticleConj && next.extended_pos == core::ExtendedPOS::AuxNegativeNu &&
       grammar::isContractedNegativeAuxiliaryLemma(next.lemma)) {
-    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
+    SUZUME_CONNECTION_ADD(bonus, sc::kPenaltyClosedClassBoundary);
   }
 
   // The conjunctive negative ずに is a single closed auxiliary form. Its
@@ -67,6 +67,14 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
       ((next.extended_pos == core::ExtendedPOS::ParticleConj && grammar::isConjunctiveParticleShi(next.surface)) ||
        (next.extended_pos == core::ExtendedPOS::VerbRenyokei && grammar::isSuruRenyokeiSurface(next.surface)))) {
     SUZUME_CONNECTION_ADD(bonus, cost::kStrong);
+  }
+
+  // A genitive phrase cannot directly host the continuative of いる. The
+  // apparent い+え path in となりのいえ is a pair of auxiliary homographs;
+  // the independently generated hiragana noun is the grammatical head.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleNo && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+      next.lemma == "いる") {
+    SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
 
   // The honorific potential construction Noun+に+なれ+ます keeps the
@@ -154,6 +162,15 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
                           cost::kDoubleVeryStrongBonus + (bare_te_homograph ? cost::kAlmostNever : cost::kNeutral));
   }
 
+  // In the colloquial explanatory form, ん is the contracted nominalizer and
+  // the following の remains independently searchable (見+て+ん+の).  The
+  // generic ParticleNo→ParticleNo row correctly rejects arbitrary duplicate
+  // particles, but this pair is a productive grammatical chain.
+  if (prev.extended_pos == core::ExtendedPOS::ParticleNo && next.extended_pos == core::ExtendedPOS::ParticleNo &&
+      grammar::isSingleHiragana(prev.surface, U'ん') && grammar::isSingleHiragana(next.surface, U'の')) {
+    SUZUME_CONNECTION_ADD(bonus, sc::kBonusContractedNominalizer);
+  }
+
   // The ん in a contracted progressive (〜てんだ) is the nominalizer の, not
   // the negative auxiliary. Exclude only that impossible immediate auxiliary
   // attachment, leaving genuine negative forms after mizenkei untouched.
@@ -162,7 +179,6 @@ float computeProgressiveHonorificBonus(const core::LatticeEdge& prev, const core
       grammar::isContractedNegativeAuxiliaryLemma(next.lemma)) {
     SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
-
   // The regional ておる/でおる contractions retain Godan-ra inflection, so
   // their conditional form attaches to a conjunctive particle (食べ+とれ+ば).
   // Keep this lemma-scoped to avoid broadly favoring a finite progressive

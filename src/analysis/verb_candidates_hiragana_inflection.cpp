@@ -42,6 +42,24 @@ bool immediatelyFollowsParticleHost(const std::vector<char32_t>& codepoints, siz
   return hasDictionaryEntryEndingAt(*dict_manager, codepoints, min_host_start, start_pos, kHostMask);
 }
 
+bool followsKanjiOrNominalHostBeforeCaseParticle(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                                 const dictionary::DictionaryManager* dict_manager,
+                                                 const dictionary::DictionaryEntry* preceding_particle) {
+  if (dict_manager == nullptr || preceding_particle == nullptr || start_pos < 2 ||
+      preceding_particle->extended_pos != core::ExtendedPOS::ParticleCase) {
+    return false;
+  }
+  const size_t particle_start = start_pos - 1;
+  if (normalize::isKanjiCodepoint(codepoints[particle_start - 1])) {
+    return true;
+  }
+  constexpr size_t kMaxHostChars = 12;
+  constexpr PartOfSpeechMask kNominalHostMask =
+      partOfSpeechMask(core::PartOfSpeech::Noun) | partOfSpeechMask(core::PartOfSpeech::Pronoun);
+  const size_t min_host_start = particle_start > kMaxHostChars ? particle_start - kMaxHostChars : 0;
+  return hasDictionaryEntryEndingAt(*dict_manager, codepoints, min_host_start, particle_start, kNominalHostMask);
+}
+
 bool startsWithParticleThenVerifiedVerb(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
                                         const std::vector<normalize::CharType>& char_types,
                                         const grammar::Inflection& inflection,
@@ -61,6 +79,21 @@ bool startsWithParticleThenVerifiedVerb(const std::vector<char32_t>& codepoints,
   const bool full_surface_is_dictionary_verb =
       dict_manager->lookupExact(full_surface, core::PartOfSpeech::Verb) != nullptr;
   const auto& full_surface_candidates = inflection.analyze(full_surface);
+  const auto* preceding_particle =
+      dict_manager->lookupExact(extractSubstring(codepoints, start_pos - 1, start_pos), core::PartOfSpeech::Particle);
+  const bool complete_terminal_after_case_particle =
+      followsKanjiOrNominalHostBeforeCaseParticle(codepoints, start_pos, dict_manager, preceding_particle) &&
+      std::any_of(full_surface_candidates.begin(), full_surface_candidates.end(), [&](const auto& candidate) {
+        return grammar::isGodanVerbType(candidate.verb_type) && candidate.base_form == full_surface &&
+               candidate.morphemes.empty() && candidate.confidence >= candidate::kParticleVerbBoundaryMinConfidence;
+      });
+  // A complete Godan terminal immediately after a case particle occupies the
+  // predicate slot. Its internal particle homograph (もどる, はしる) cannot
+  // establish a competing particle boundary just because the suffix happens
+  // to be registered as an auxiliary.
+  if (complete_terminal_after_case_particle) {
+    return false;
+  }
   const bool follows_particle_host = immediatelyFollowsParticleHost(codepoints, start_pos, dict_manager);
   for (size_t particle_end = start_pos + 1; particle_end <= max_particle_end; ++particle_end) {
     std::string particle_surface = extractSubstring(codepoints, start_pos, particle_end);
@@ -178,6 +211,7 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
                                            const grammar::Inflection& inflection,
                                            const dictionary::DictionaryManager* dict_manager,
                                            const VerbCandidateOptions& verb_opts, bool has_complete_godan_wa_terminal,
+                                           bool has_complete_case_particle_terminal,
                                            std::vector<UnknownCandidate>& candidates) {
   // A closed-class particle followed by a dictionary-verified verb inflection
   // is a grammatical boundary, never the stem of an unknown hiragana verb.
@@ -388,6 +422,14 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
       continue;  // Skip - dictionary has non-verb entry for this surface
     }
 
+    // A non-dictionary run ending in -げなく is a nominal/adjectival げ
+    // construction followed by the negative continuative, not a terminal
+    // Godan verb.  Preserve the productive boundary rather than accepting a
+    // fabricated base whose surface merely happens to end in く.
+    if (!is_dictionary_verb && utf8::endsWith(surface, "げなく")) {
+      continue;
+    }
+
     // Filter out volitional-shaped surfaces (お-row kana + う) of dictionary-
     // attested verbs. A conjugated verb surface can end in う only as its
     // dictionary form (しまう, まよう, おもう), in which case it equals the
@@ -576,6 +618,21 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
       }
     }
 
+    // At the case-particle predicate boundary, retain the complete Godan
+    // analysis that licensed the scan. An e-row + る spelling also admits an
+    // Ichidan hypothesis in isolation, but it cannot replace the structurally
+    // complete terminal reading here.
+    if (has_complete_case_particle_terminal && end_pos == hiragana_end) {
+      for (const auto& candidate : all_candidates) {
+        if (grammar::isGodanVerbType(candidate.verb_type) && candidate.base_form == surface &&
+            candidate.morphemes.empty() && candidate.confidence >= verb_opts.confidence_standard) {
+          best = candidate;
+          looks_like_ichidan_dict_form = false;
+          break;
+        }
+      }
+    }
+
     // Only accept verb types (not IAdjective) with sufficient confidence
     // Lower threshold for dictionary-verified verbs, past/te forms, and ichidan dict forms
     // Ichidan dict forms get very low threshold (0.28) because pure hiragana stems
@@ -657,6 +714,16 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
       // Lower cost for higher confidence matches
       float base_cost =
           candidate::confidenceScaledCost(verb_opts.base_cost_high, best.confidence, verb_opts.confidence_cost_scale);
+
+      // A complete Godan terminal directly after a case particle has an
+      // independently determined predicate boundary. This is structural
+      // evidence, not lexical evidence: it permits kana verbs whose stem
+      // contains a particle homograph (犬とはしる, 家にもどる) to compete with
+      // the otherwise cheap particle chain.
+      if (has_complete_case_particle_terminal && end_pos == hiragana_end && best.base_form == surface &&
+          best.morphemes.empty() && grammar::isGodanVerbType(best.verb_type)) {
+        base_cost += bigram_cost::kVeryStrongBonus;
+      }
 
       // Give significant bonus for dictionary-verified hiragana verbs
       // This helps them beat the particle+adj+particle split path
@@ -789,12 +856,27 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
         char32_t next_after = (end_pos < codepoints.size()) ? codepoints[end_pos] : 0;
         bool licenses_renyokei =
             (next_after == U'ま' || next_after == U'そ' || next_after == U'な' || next_after == U'た' ||
-             next_after == U'や' || next_after == U'に' || next_after == U'つ');
+             next_after == U'や' || next_after == U'に' || next_after == U'つ' ||
+             vh::isCommaClauseChainingRenyokei(codepoints, start_pos, end_pos, dict_manager));
         if (!licenses_renyokei) {
           base_cost += scorer::kPenaltyUnverifiedVerbLemma;
           SUZUME_DEBUG_LOG_VERBOSE("[VERB_PENALTY] \"" << surface << "\" unverified_bare_renyokei +"
                                                        << scorer::kPenaltyUnverifiedVerbLemma << "\n");
         }
+      }
+
+      // A bare Ichidan continuative before past た has a closed right boundary.
+      // When it also follows a nominal case-marked argument, retain that
+      // predicate reading over a whole-span unknown noun (友と+わかれ+た).
+      if (!is_dictionary_verb && end_pos < codepoints.size() && codepoints[end_pos] == U'た' &&
+          best.morphemes.empty() && grammar::isIRowCodepoint(codepoints[end_pos - 1]) &&
+          followsKanjiOrNominalHostBeforeCaseParticle(
+              codepoints, start_pos, dict_manager,
+              dict_manager == nullptr || start_pos == 0
+                  ? nullptr
+                  : dict_manager->lookupExact(extractSubstring(codepoints, start_pos - 1, start_pos),
+                                              core::PartOfSpeech::Particle))) {
+        base_cost += candidate::verb_cost::kModerateBonus;
       }
 
       // Penalty for hiragana verb candidates containing auxiliary chains
@@ -827,7 +909,20 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
           vh::embedsTeFormMiruAuxiliary(codepoints, start_pos, end_pos);
       const bool ends_with_focus_particle = vh::endsWithFocusParticleTail(dict_manager, codepoints, start_pos, end_pos);
       const bool is_exact_dictionary_verb = vh::hasDictionaryEntry(dict_manager, surface, core::PartOfSpeech::Verb);
-      if (!is_exact_dictionary_verb && (embeds_te_miru || ends_with_focus_particle)) {
+      bool embeds_te_conditional_auxiliary = false;
+      if (is_conditional && dict_manager != nullptr) {
+        const size_t conditional_stem_end = end_pos - 1;
+        for (size_t te_pos = start_pos + 1; te_pos + 1 < conditional_stem_end; ++te_pos) {
+          if (codepoints[te_pos] == core::hiragana::kTe &&
+              dict_manager->lookupExact(extractSubstring(codepoints, te_pos + 1, conditional_stem_end),
+                                        core::PartOfSpeech::Verb) != nullptr) {
+            embeds_te_conditional_auxiliary = true;
+            break;
+          }
+        }
+      }
+      if (!is_exact_dictionary_verb &&
+          (embeds_te_miru || ends_with_focus_particle || embeds_te_conditional_auxiliary)) {
         continue;
       }
 

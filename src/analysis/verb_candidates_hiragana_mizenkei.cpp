@@ -328,8 +328,13 @@ void appendIchidanRareruCandidates(const std::vector<char32_t>& codepoints, size
       continue;
     }
 
-    // Get lemma from dictionary if available
-    std::string lemma = vh::lookupVerbLemma(dict_manager, stem, base_form);
+    // A direct dictionary match for the reconstructed lemma resolves an
+    // otherwise ambiguous stem cell.  For example, the historical やむ
+    // conditional and the Ichidan やめる share やめ, but only the complete
+    // latter lemma licenses the passive construction here.
+    std::string lemma = vh::isVerbInDictionary(dict_manager, base_form)
+                            ? base_form
+                            : vh::lookupVerbLemma(dict_manager, stem, base_form);
 
     // A stem can be a homograph of a different inflection.  In particular,
     // the classical する form せ must not be reinterpreted as the continuative

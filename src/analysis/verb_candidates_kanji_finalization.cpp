@@ -401,6 +401,13 @@ void appendSelectedKanjiVerbCandidate(const std::vector<char32_t>& codepoints, s
       base_cost += candidate::kAdjSplitForcePenalty;
       SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +2.0 (compound_adj_penalty)\n");
     }
+    // A noun stem followed by terminal る is a productive denominal verb
+    // (事故る). Its lexical noun evidence licenses the derivation itself, so
+    // it must not be priced as the same unsupported kanji run as a fabricated
+    // multi-kanji verb.
+    const bool productive_denominal_ru = !in_dict && best.base_form == surface && utf8::endsWith(surface, "る") &&
+                                         !best.stem.empty() && vh::isNounInDictionary(dict_manager, best.stem);
+
     // Penalize 2+-kanji verb candidates whose base form is not in dict
     // Most real 2-kanji verbs (行う, 伴う, etc.) are in the dictionary.
     // False 2-kanji patterns like 柿食えば (柿 + 食えば) have base 柿食う
@@ -409,7 +416,8 @@ void appendSelectedKanjiVerbCandidate(const std::vector<char32_t>& codepoints, s
     // in any dictionary is likewise noun+verb over-merge or a suru-compound
     // (全部食べちゃった misparsed with 全部食 as a fake verb stem); real 2-kanji
     // verbs are dict entries, so they are unaffected by widening the range.
-    if (kanji_count >= 2 && !in_dict && !is_multi_kanji_godan_wa_renyokei && !follows_reduplicated_noun) {
+    if (kanji_count >= 2 && !in_dict && !productive_denominal_ru && !is_multi_kanji_godan_wa_renyokei &&
+        !follows_reduplicated_noun) {
       base_cost += bigram_cost::kRare;
       SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +1.0 (two_kanji_non_dict_penalty)\n");
     }
@@ -559,8 +567,8 @@ void appendSelectedKanjiVerbCandidate(const std::vector<char32_t>& codepoints, s
     // genuine verb even though its multi-kanji stem is absent from the
     // dictionary; exempt it from the exceeds_dict_length penalty so its
     // renyokei competes with the noun split before the ます auxiliary.
-    bool has_suffix = in_dict || recognized_ichidan || recognized_godan || sokuonbin_stem_verified ||
-                      is_multi_kanji_godan_wa_renyokei;
+    bool has_suffix = in_dict || productive_denominal_ru || recognized_ichidan || recognized_godan ||
+                      sokuonbin_stem_verified || is_multi_kanji_godan_wa_renyokei;
     // Determine extended_pos based on verb type and surface ending
     // Godan-wa verbs ending in い are renyokei (戦い), not onbinkei
     // Godan-ka/ga verbs ending in い are onbinkei (書い, 泳い)
@@ -610,7 +618,7 @@ void appendSelectedKanjiVerbCandidate(const std::vector<char32_t>& codepoints, s
     // e.g., 感じた → stem 感じ is dict NOUN, so skip (prefer 感じ(NOUN) + た(AUX))
     // This prevents nominalized verb renyokei forms from appearing as conjugated verbs
     // The stem for ichidan ta-form is the renyokei (e.g., 感じ for 感じた)
-    if (best.verb_type == grammar::VerbType::Ichidan && !best.stem.empty() &&
+    if (best.verb_type == grammar::VerbType::Ichidan && !productive_denominal_ru && !best.stem.empty() &&
         vh::isNounInDictionary(dict_manager, best.stem)) {
       SUZUME_DEBUG_LOG("[VERB_SKIP] \"" << surface << "\" stem \"" << best.stem
                                         << "\" is dict NOUN, skipping ichidan ta-form\n");

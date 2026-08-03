@@ -258,6 +258,28 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
                                        size_t hiragana_end, const grammar::Inflection& inflection,
                                        const dictionary::DictionaryManager* dict_manager,
                                        std::vector<UnknownCandidate>& candidates) {
+  // The colloquial negative contracts the Godan-ra irrealis and ない as
+  // stem+ん+ない (分かん+ない ← 分かる).  The existing mizenkei scan keys on
+  // the visible a-row mora, which this contraction has removed, so rebuild
+  // the ra-row terminal from the stem immediately before ん instead.
+  for (size_t n_pos = kanji_end + 1; n_pos + 2 < hiragana_end; ++n_pos) {
+    if (codepoints[n_pos] != U'ん' || codepoints[n_pos + 1] != U'な' || codepoints[n_pos + 2] != U'い') {
+      continue;
+    }
+    const std::string stem = extractSubstring(codepoints, start_pos, n_pos);
+    const std::string base_form = stem + "る";
+    if (!vh::isVerifiedVerbBase(dict_manager, inflection, base_form,
+                                candidate::verb_cost::kConstructedVerbMinConfidence, true)) {
+      continue;
+    }
+    const std::string surface = extractSubstring(codepoints, start_pos, n_pos + 1);
+    candidates.push_back(makeVerbCandidate(surface, start_pos, n_pos + 1, candidate::verb_cost::kStandardBonus,
+                                           base_form, dictionary::ConjugationType::GodanRa, true,
+                                           CandidateOrigin::VerbKanji, candidate::kVerifiedConfidence,
+                                           "kanji_n_onbin_nai", core::ExtendedPOS::VerbMizenkei));
+    break;
+  }
+
   // A passive may follow a Godan stem with more than one okurigana mora
   // (明かさ+れる).  Locate the A-row mora immediately before an explicit れ,
   // then validate the complete observed inflection.  Requiring that れ fixes

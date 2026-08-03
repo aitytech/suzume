@@ -17,6 +17,52 @@ namespace suzume::analysis::counter_detail {
 
 namespace {
 
+bool isChainCounterKanji(char32_t codepoint) {
+  // 泊 is a duration unit even though it is not part of the narrower temporal
+  // property used by 後/前 rules. 割 is the ratio head that licenses 五分.
+  return normalize::isTemporalCounterKanji(codepoint) || codepoint == U'泊' || codepoint == U'割';
+}
+
+void appendCounterChainCandidate(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                 std::vector<UnknownCandidate>& candidates) {
+  // A time/date or ratio chain consists of two or more numeral+counter units:
+  // 十時三十分, 二泊三日, 二〇二五年三月, 三割五分. Its internal counters cannot
+  // become search boundaries merely because the next character is hiragana.
+  if (start_pos > 0 && isChainCounterKanji(codepoints[start_pos - 1])) {
+    return;
+  }
+
+  size_t scan = start_pos;
+  size_t unit_count = 0;
+  while (scan < codepoints.size()) {
+    const size_t numeral_start = scan;
+    while (scan < codepoints.size() && normalize::isNumeralCodepoint(codepoints[scan])) {
+      ++scan;
+    }
+    if (scan == numeral_start || scan >= codepoints.size() || !isChainCounterKanji(codepoints[scan])) {
+      break;
+    }
+    ++scan;
+    ++unit_count;
+  }
+  if (unit_count < 2) {
+    return;
+  }
+
+  std::string surface = extractSubstring(codepoints, start_pos, scan);
+  if (surface.empty()) {
+    return;
+  }
+  auto chain_candidate =
+      makeCandidate(surface, start_pos, scan, core::PartOfSpeech::Noun, candidate::kCounterChainMergeBonus, false,
+                    CandidateOrigin::Counter, core::ExtendedPOS::NounNumber);
+  chain_candidate.lemma = surface;
+#ifdef SUZUME_DEBUG_INFO
+  chain_candidate.pattern = "counter_chain_merge";
+#endif
+  candidates.push_back(std::move(chain_candidate));
+}
+
 // A lexicalized duration unit is emitted as one search token, and an optional
 // following kanji completes it into a longer closed unit (三ヶ月+間, 一時間+目).
 // The two duration spellings below differ only in the kana that heads the unit
@@ -32,9 +78,11 @@ void appendDurationCandidates(const std::vector<char32_t>& codepoints, size_t st
   if (surface.empty()) {
     return;
   }
-  auto cand =
-      makeCandidate(surface, start_pos, unit_end, core::PartOfSpeech::Noun, candidate::kNumeralKanaMonthMergeBonus,
-                    false, CandidateOrigin::Counter, core::ExtendedPOS::NounNumber);
+  const bool completion_follows = unit_end < codepoints.size() && codepoints[unit_end] == completion;
+  const float unit_cost =
+      completion_follows ? candidate::kNumeralKanaMonthMergeBonus : candidate::kDurationCounterMergeBonus;
+  auto cand = makeCandidate(surface, start_pos, unit_end, core::PartOfSpeech::Noun, unit_cost, false,
+                            CandidateOrigin::Counter, core::ExtendedPOS::NounNumber);
   cand.lemma = surface;
 #ifdef SUZUME_DEBUG_INFO
   cand.pattern = unit_pattern;
@@ -60,6 +108,8 @@ void appendTemporalCounterCandidates(const std::vector<char32_t>& codepoints, si
                                      const std::vector<normalize::CharType>& char_types,
                                      const dictionary::DictionaryManager* dict_manager,
                                      std::vector<UnknownCandidate>& candidates) {
+  appendCounterChainCandidate(codepoints, start_pos, candidates);
+
   // Month counters admit all three common kana spellings between a numeral and
   // 月 (一か月, 一ヶ月, 一ケ月). Keep the complete duration together before
   // any following comparison expression.
@@ -146,14 +196,19 @@ void appendTemporalCounterCandidates(const std::vector<char32_t>& codepoints, si
       // Unlike 後/前 (single-kanji dict relation nouns), the split-off 半 only
       // exists as a generic kanji_seq NOUN, which the single-kanji-noun →
       // hiragana-verb compound protection penalizes before かかっ/すぎ etc.
-      // Emit it as a NounNumber quantity token so that connection scoring can
-      // recognize it as a legitimate pre-verb quantity (三時間|半|かかった).
+      // In a continuing predicate it is a quantity noun (三時間|半|かかった),
+      // while at a clause boundary it is the compositional suffix of the
+      // duration expression (一時間|半。).
       if (suffix_is_half) {
         std::string half_surface = extractSubstring(codepoints, scan, scan + 1);
         if (!half_surface.empty()) {
-          auto half_cand =
-              makeCandidate(half_surface, scan, scan + 1, core::PartOfSpeech::Noun, candidate::kCounterHalfSuffixCost,
-                            false, CandidateOrigin::Counter, core::ExtendedPOS::NounNumber);
+          const size_t after_half = scan + 1;
+          const bool closes_clause = after_half == codepoints.size() ||
+                                     normalize::classifyChar(codepoints[after_half]) == normalize::CharType::Symbol;
+          auto half_cand = makeCandidate(half_surface, scan, after_half,
+                                         closes_clause ? core::PartOfSpeech::Suffix : core::PartOfSpeech::Noun,
+                                         candidate::kCounterHalfSuffixCost, false, CandidateOrigin::Counter,
+                                         closes_clause ? core::ExtendedPOS::Suffix : core::ExtendedPOS::NounNumber);
           half_cand.lemma = half_surface;
 #ifdef SUZUME_DEBUG_INFO
           half_cand.pattern = "counter_half_suffix";

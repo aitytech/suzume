@@ -54,6 +54,7 @@ EntrySpecRange getAuxiliaryEntries() {
       // remains lexical; this negative stem is auxiliary only in the
       // conditional construction, where its connection is gated by scorer rules.
       aux("いけ", "いける", EPOS::AuxPotential),
+      verb("いけ", "いける", EPOS::VerbRenyokei),  // dialectal obligation before ん
 
       // Negation - ぬ/ず (文語否定)
       aux("ぬ", "ぬ", EPOS::AuxNegativeNu),
@@ -79,6 +80,7 @@ EntrySpecRange getAuxiliaryEntries() {
       // 連体形 なる (壮大なる, 静かなる): kept distinct from the verb なる (成る) by the higher
       // AuxClassicalNari category cost, winning only via the AdjNaAdj/Noun→なる→Noun bigram bonus.
       aux("なる", "なり", EPOS::AuxClassicalNari),
+      aux("なれ", "なり", EPOS::AuxClassicalNari),  // 已然形 (重要なれば)
       aux("けり", "けり", EPOS::AuxClassicalKeri),  // 過去・詠嘆 (なりけり)
       aux("ける", "けり", EPOS::AuxClassicalKeri),  // Adnominal form (なりける)
       aux("けれ", "けり", EPOS::AuxClassicalKeri),  // 已然形 (見ければ)
@@ -659,6 +661,7 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("いません", "いる", EPOS::AuxAspectIru),
       aux("いない", "いる", EPOS::AuxAspectIru),
       aux("いなかった", "いる", EPOS::AuxAspectIru),
+      aux("いれ", "いる", EPOS::AuxAspectIru),  // katei-kei before ば
       aux("いれば", "いる", EPOS::AuxAspectIru),
 
       // Progressive/Continuous - おる (humble/dialectal form of いる)
@@ -751,6 +754,7 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("しまっ", "しまう", EPOS::AuxAspectShimau),  // te-form/ta-form stem
       aux("しまい", "しまう", EPOS::AuxAspectShimau),  // negative stem
       aux("しまわ", "しまう", EPOS::AuxAspectShimau),  // irrealis before negative auxiliary
+      aux("もう", "しまう", EPOS::AuxAspectShimau),    // western contraction: てしまう → てもうた
       // 仕舞う is the standard kanji spelling of the same closed-class
       // completive auxiliary. Register its full Godan-wa paradigm so all
       // following inflections retain the auxiliary boundary after a te-form.
@@ -798,12 +802,17 @@ EntrySpecRange getAuxiliaryEntries() {
       // で remains excluded: 出たい must be で(出る連用形)+たい.
       aux("とく", "とく", EPOS::AuxAspectOku),
       aux("どく", "どく", EPOS::AuxAspectOku),
+      aux("おい", "おく", EPOS::AuxAspectOku),  // renyokei after て
       // MeCab compat: とい/どい (renyokei) + た/て instead of といた/どいた
       aux("とい", "とく", EPOS::AuxAspectOku),
       aux("どい", "どく", EPOS::AuxAspectOku),
-      // Godan-ka kateikei and its colloquial conditional (書い+とけ+ば,
-      // 書い+ときゃ). The volitional cell とこ/どこ is left out: it collides with
-      // the interrogative どこ and the formal noun とこ.
+      // Godan-ka kateikei, volitional, and colloquial conditional
+      // (書い+とけ+ば, 書い+とこ+う, 書い+ときゃ). The volitional cells are
+      // retained as auxiliaries here; their selection is licensed by the
+      // preceding onbin and following volitional auxiliary, so homographic
+      // lexical readings remain available elsewhere.
+      aux("とこ", "とく", EPOS::AuxAspectOku),
+      aux("どこ", "どく", EPOS::AuxAspectOku),
       // Godan-ka mizenkei, which the negative and the contracted obligation
       // chains select (書い+とか+ない, 飲ん+どか+なきゃ+いけ+ない). とか also
       // spells the adverbial particle, so its subsidiary reading is admitted

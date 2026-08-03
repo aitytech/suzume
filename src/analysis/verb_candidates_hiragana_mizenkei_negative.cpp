@@ -241,6 +241,24 @@ void appendMizenkeiNegativeCandidates(const std::vector<char32_t>& codepoints, s
     const float auxiliary_ambiguity =
         aux_len == 1 && !is_in_dict ? candidate::verb_cost::kMonomoraNegativeIrrealisPenalty : bigram_cost::kNeutral;
     cost_negative += std::max(sa_row_ambiguity, auxiliary_ambiguity);
+    // A case particle immediately before the stem supplies a predicate slot,
+    // so the classical negative is stronger evidence than the opaque-noun
+    // fallback (資料を+しら+ぬ).  This remains tied to the auxiliary class,
+    // rather than granting every one-mora continuation the same discount.
+    const auto* following_auxiliary =
+        dict_manager == nullptr ? nullptr
+                                : dict_manager->lookupExact(extractSubstring(codepoints, end_pos, end_pos + aux_len),
+                                                            core::PartOfSpeech::Auxiliary);
+    const auto* preceding_particle =
+        start_pos == 0 || dict_manager == nullptr
+            ? nullptr
+            : dict_manager->lookupExact(extractSubstring(codepoints, start_pos - 1, start_pos),
+                                        core::PartOfSpeech::Particle);
+    if (!is_in_dict && following_auxiliary != nullptr &&
+        following_auxiliary->extended_pos == core::ExtendedPOS::AuxNegativeNu && preceding_particle != nullptr &&
+        preceding_particle->extended_pos == core::ExtendedPOS::ParticleCase) {
+      cost_negative += candidate::verb_cost::kStrongBonus;
+    }
     // Unverified stems starting with a formal noun are noun + verb sequences
     // (わけわから+ない should split as わけ + わから + ない)
     if (!is_in_dict && hasFormalNounPrefixBoundary(dict_manager, codepoints, start_pos, mizenkei_end)) {
@@ -351,6 +369,19 @@ void appendMizenkeiNakyaCandidates(const std::vector<char32_t>& codepoints, size
 void appendNOnbinNaiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t hiragana_end,
                                const grammar::Inflection& inflection, const dictionary::DictionaryManager* dict_manager,
                                std::vector<UnknownCandidate>& candidates) {
+  // The progressive negative also contracts productively: V+ていられない
+  // becomes V+て+らん+ない.  The reduced tail is not a lexical adjective;
+  // emit the oracle's nominal residual only after the full te+らん+ない frame
+  // proves the contraction.
+  if (start_pos > 0 && start_pos + 3 < codepoints.size() && codepoints[start_pos - 1] == U'て' &&
+      codepoints[start_pos] == U'ら' && codepoints[start_pos + 1] == U'ん' && codepoints[start_pos + 2] == U'な' &&
+      codepoints[start_pos + 3] == U'い') {
+    candidates.push_back(makeNounCandidate(extractSubstring(codepoints, start_pos, start_pos + 2), start_pos,
+                                           start_pos + 2, candidate::verb_cost::kStrongBonus, true,
+                                           CandidateOrigin::VerbHiragana, core::ExtendedPOS::Noun,
+                                           "contracted_progressive_negative"));
+  }
+
   // Pattern: stem + ん + ない where stem + る is a godan-ra verb
   for (size_t n_pos = start_pos + 1; n_pos < hiragana_end; ++n_pos) {
     if (codepoints[n_pos] != U'ん')

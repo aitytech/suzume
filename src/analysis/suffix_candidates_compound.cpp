@@ -19,6 +19,7 @@
 #include "suffix_candidates.h"
 #include "tokenizer_utils.h"
 #include "unknown.h"
+#include "verb_candidates.h"
 #include "verb_candidates_helpers.h"
 
 namespace suzume::analysis {
@@ -131,6 +132,28 @@ bool isNominalBoundaryParticle(const dictionary::DictionaryEntry& entry) {
                                                        entry.extended_pos == core::ExtendedPOS::ParticleAdverbial ||
                                                        entry.extended_pos == core::ExtendedPOS::ParticleNo ||
                                                        entry.extended_pos == core::ExtendedPOS::ParticleBinding);
+}
+
+// A selected nominal-head rescue supplies an otherwise unavailable open-class
+// noun after an attributive selector. It must not swallow a dictionary formal
+// noun and the case particle that follows it (ない+わけ+に+は), because that
+// closed pair already exposes the searchable boundary.
+bool absorbsFormalNounCaseParticle(const dictionary::DictionaryManager* dict_manager,
+                                   const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  if (dict_manager == nullptr || end_pos <= start_pos + 1) {
+    return false;
+  }
+  for (size_t formal_end = start_pos + 1; formal_end < end_pos; ++formal_end) {
+    const auto* formal_noun =
+        dict_manager->lookupExact(extractSubstring(codepoints, start_pos, formal_end), core::PartOfSpeech::Noun);
+    const auto* case_particle =
+        dict_manager->lookupExact(extractSubstring(codepoints, formal_end, end_pos), core::PartOfSpeech::Particle);
+    if (formal_noun != nullptr && formal_noun->extended_pos == core::ExtendedPOS::NounFormal &&
+        case_particle != nullptr && case_particle->extended_pos == core::ExtendedPOS::ParticleCase) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool hasInternalNominalParticleBoundary(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
@@ -464,7 +487,8 @@ void generateSelectedNominalHeadCandidates(const std::vector<char32_t>& codepoin
     }
     if (isAdjectiveNominalizationSa(dict_manager, codepoints, start_pos, head_end) ||
         has_productive_adjective_nominalization ||
-        (mixed_head && hasInternalNominalParticleBoundary(codepoints, start_pos, head_end, dict_manager))) {
+        (mixed_head && hasInternalNominalParticleBoundary(codepoints, start_pos, head_end, dict_manager)) ||
+        absorbsFormalNounCaseParticle(dict_manager, codepoints, start_pos, head_end)) {
       continue;
     }
     bool has_exact_noun = false;
@@ -498,6 +522,42 @@ void generateSelectedNominalHeadCandidates(const std::vector<char32_t>& codepoin
         hasAuxiliaryChainDecomposition(codepoints, start_pos, head_end, dict_manager) ||
         (!has_attributive_selector &&
          hasAuxiliaryParticleDecomposition(codepoints, start_pos, head_end, dict_manager))) {
+      continue;
+    }
+
+    // A selected nominal head cannot swallow a completed predicate followed
+    // by one auxiliary.  Unlike an auxiliary-only chain, this shape starts
+    // with an open-class continuative (降り+たる), so test its two grammatical
+    // components directly.  It keeps a genitive selector from converting the
+    // entire inflected predicate into an unknown noun.
+    bool contains_predicate_auxiliary_boundary = false;
+    for (size_t split = start_pos + 1; split < head_end; ++split) {
+      const auto* predicate =
+          dict_manager->lookupExact(extractSubstring(codepoints, start_pos, split), core::PartOfSpeech::Verb);
+      const auto* auxiliary =
+          dict_manager->lookupExact(extractSubstring(codepoints, split, head_end), core::PartOfSpeech::Auxiliary);
+      if (predicate != nullptr && predicate->extended_pos == core::ExtendedPOS::VerbRenyokei && auxiliary != nullptr) {
+        contains_predicate_auxiliary_boundary = true;
+        break;
+      }
+    }
+    if (contains_predicate_auxiliary_boundary) {
+      continue;
+    }
+
+    // A selector may rescue an unknown nominal head, but it cannot turn a
+    // complete te-form predicate into a noun.  In particular, the productive
+    // し+て form must retain both morphemes before a following particle instead
+    // of becoming a selected nominal head.  Consult the shared hiragana verb
+    // generator rather than special-casing して, so every independently
+    // established te-form receives the same protection.
+    const auto predicate_candidates =
+        generateHiraganaVerbCandidates(codepoints, start_pos, char_types, inflection, dict_manager);
+    const bool has_complete_te_predicate =
+        std::any_of(predicate_candidates.begin(), predicate_candidates.end(), [head_end](const auto& predicate) {
+          return predicate.end == head_end && predicate.extended_pos == core::ExtendedPOS::VerbTeForm;
+        });
+    if (has_complete_te_predicate) {
       continue;
     }
 

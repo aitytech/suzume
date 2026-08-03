@@ -68,7 +68,7 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
       (isGodanRenyokeiOfLemma(prev.surface, prev.lemma) && !utf8::endsWith(prev.lemma, "す"));
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AuxTenseTa &&
       non_sa_godan_renyokei) {
-    SUZUME_CONNECTION_ADD(bonus, cost::kSevere);
+    SUZUME_CONNECTION_ADD(bonus, sc::kPenaltyIncompatibleInflection);
   }
 
   // An onbin form is selected precisely for て/た attachment and cannot be
@@ -76,6 +76,15 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
   // so a registered nominal search unit wins in overlaps such as a particle
   // followed by a noun whose suffix is also a dictionary verb form.
   if (prev.extended_pos == core::ExtendedPOS::VerbOnbinkei && next.extended_pos == core::ExtendedPOS::ParticleCase) {
+    SUZUME_CONNECTION_ADD(bonus, sc::kPenaltyIncompatibleInflection);
+  }
+
+  // An euphonic cell closes on て/た, unless the following continuative is a
+  // recognized subsidiary predicate.  Otherwise a short homograph can split a
+  // dictionary continuative before polite ます (おっしゃい+ます).
+  if (prev.extended_pos == core::ExtendedPOS::VerbOnbinkei && next.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+      grammar::isPureHiragana(next.surface) && !grammar::isSubsidiaryHonorificRenyokei(next.surface) &&
+      !grammar::isModalSubsidiaryRenyokei(next.surface)) {
     SUZUME_CONNECTION_ADD(bonus, cost::kSevere);
   }
 
@@ -100,7 +109,7 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei &&
       prev.surface.size() >= core::kTwoJapaneseCharBytes &&  // At least 2 chars (Aれ, e.g. かれ)
       utf8::endsWith(prev.surface, "れ") && next.surface == "た" &&
-      next.extended_pos == core::ExtendedPOS::AuxTenseTa) {
+      next.extended_pos == core::ExtendedPOS::AuxTenseTa && grammar::containsKanji(prev.surface)) {
     const std::string_view before_re = utf8::dropLastChar(prev.surface);
     if (grammar::verbTypeFromARowCodepoint(utf8::decodeLastChar(before_re)) != grammar::VerbType::Unknown) {
       SUZUME_CONNECTION_ADD(bonus, cost::kSevere);  // Cancel VerbRenyokei→た bonus
@@ -171,6 +180,14 @@ float computeTaFormVolitionalBonus(const core::LatticeEdge& prev, const core::La
     SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   if (passive_volitional)
     SUZUME_CONNECTION_ADD(bonus, cost::kDoubleVeryStrongBonus);
+
+  // The literary volitional む selects an irrealis form, never a
+  // continuative. Reject a fabricated kanji+し renyokei before む while
+  // retaining the licensed 読ま+む-style mizenkei boundary.
+  if (next.extended_pos == core::ExtendedPOS::AuxVolitional && utf8::equalsAny(next.surface, {"む"}) &&
+      prev.extended_pos == core::ExtendedPOS::VerbRenyokei) {
+    SUZUME_CONNECTION_ADD(bonus, cost::kSevere);
+  }
 
   return bonus;
 }

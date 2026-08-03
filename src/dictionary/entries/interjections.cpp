@@ -13,6 +13,8 @@ EntrySpecRange getInterjectionEntries() {
       intj("おや"),    // Mild surprise or notice
       intj("うわ"),    // Surprise
       intj("うわっ"),  // Surprise (emphatic)
+      intj("いや"),    // Disagreement/reluctance
+      intj("いやー"),  // Prolonged conversational variant
       intj("わあ"),    // Amazement
       intj("へえ"),    // Interest
       intj("ふーん"),  // Understanding/Disinterest

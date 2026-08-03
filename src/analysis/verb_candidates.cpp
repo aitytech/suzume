@@ -235,8 +235,26 @@ void generateKatakanaVerbCandidates(const std::vector<char32_t>& codepoints, siz
     return;                                                               // Skip this candidate - force split path
   }
 
+  // The surface って is ambiguous between a verb's te-form and the
+  // quotative particle.  A full unknown-verb candidate cannot resolve that
+  // lexical ambiguity: it would make every katakana noun look like a
+  // godan-ra verb.  Leave the boundary to the verified sokuonbin path below.
+  const bool starts_quotative_tte = hira_part.size() >= 6 && hira_part.compare(0, 6, "って") == 0;
+
+  // A katakana stem of two or more morae productively forms a denominal
+  // terminal verb with る (テンパる, バグる). This is a morphological rule,
+  // not a lexical list: the complete terminal shape is enough evidence, while
+  // the one-mora stems remain with the ordinary ambiguity handling below.
+  if (kata_end - start_pos >= 2 && hira_part == "る") {
+    const std::string surface = extractSubstring(codepoints, start_pos, hira_end);
+    candidates.push_back(makeVerbCandidate(surface, start_pos, hira_end, verb_opts.base_cost_standard, surface,
+                                           dictionary::ConjugationType::GodanRa, true, CandidateOrigin::VerbKatakana,
+                                           candidate::kNoConfidence, "katakana_denominal_ru",
+                                           core::ExtendedPOS::VerbShuushikei));
+  }
+
   // Try different ending lengths, starting from longest
-  for (size_t end_pos = hira_end; end_pos > kata_end; --end_pos) {
+  for (size_t end_pos = hira_end; !starts_quotative_tte && end_pos > kata_end; --end_pos) {
     std::string surface = extractSubstring(codepoints, start_pos, end_pos);
 
     if (surface.empty()) {
@@ -290,12 +308,15 @@ void generateKatakanaVerbCandidates(const std::vector<char32_t>& codepoints, siz
         std::string kata_part = extractSubstring(codepoints, start_pos, kata_end);
         std::string base_form = kata_part + "る";  // Assume godan-ra (most common for slang)
 
-        // Skip if katakana stem is already a dict noun (e.g., フェラ, ネタ)
-        // These should be noun+って, not verb sokuonbin+て
-        bool skip_sokuonbin = verb_helpers::isNounInDictionary(dict_manager, kata_part);
+        // The shape alone cannot distinguish a katakana noun followed by the
+        // quotative particle from a godan-ra te-form.  Require lexical
+        // evidence for the reconstructed verb lemma; otherwise preserve the
+        // noun + って boundary.
+        bool skip_sokuonbin = !verb_helpers::isVerbInDictionary(dict_manager, base_form);
         if (skip_sokuonbin) {
           SUZUME_DEBUG_VERBOSE_BLOCK {
-            SUZUME_DEBUG_STREAM << "[VERB_SKIP] \"" << kata_part << "\" is dict noun, skip katakana_sokuonbin\n";
+            SUZUME_DEBUG_STREAM << "[VERB_SKIP] \"" << base_form
+                                << "\" is not a verified verb, skip katakana_sokuonbin\n";
           }
         } else {
           // Neutral cost — let bigram connections decide between verb+て and noun+って

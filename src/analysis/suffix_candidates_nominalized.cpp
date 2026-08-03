@@ -35,6 +35,14 @@ bool hasNominalizedNounParticleContinuation(const std::vector<char32_t>& codepoi
          !startsLongerNonParticleEntry(codepoints, end_pos, dict_manager);
 }
 
+bool hasInferredVerbContinuative(const grammar::Inflection& inflection, std::string_view surface) {
+  const auto& analyses = inflection.analyze(surface);
+  return std::any_of(analyses.begin(), analyses.end(), [](const auto& analysis) {
+    return analysis.verb_type != grammar::VerbType::Unknown && analysis.verb_type != grammar::VerbType::IAdjective &&
+           analysis.suffix.empty();
+  });
+}
+
 // A clause-final particle selects a completed nominal host just as a case
 // particle does (重み|ね). Read the closed class from the dictionary so the
 // homographic classical auxiliary remains available after verbal forms.
@@ -180,6 +188,25 @@ bool hasClosedSuffixBoundary(const std::vector<char32_t>& codepoints, size_t sta
       }
       return true;
     }
+    // A classical auxiliary is a complete closed-class morpheme and cannot be
+    // swallowed by a generated noun (確認+けり).  The conjectural らし needs a
+    // narrower condition because it is also the continuative ending in
+    // productive nouns such as 山+暮らし+を.
+    const auto* auxiliary = dict_manager->lookupExact(suffix, core::PartOfSpeech::Auxiliary);
+    const bool overlaps_final_verb_continuative = ends_in_verb_continuative && split + 2 >= end_pos;
+    if (auxiliary != nullptr && core::isClassicalAuxiliaryType(auxiliary->extended_pos) &&
+        !overlaps_final_verb_continuative) {
+      return true;
+    }
+    if (auxiliary != nullptr && auxiliary->extended_pos == core::ExtendedPOS::AuxConjectureRashii) {
+      const bool rashii_paradigm_continues =
+          end_pos < codepoints.size() &&
+          (codepoints[end_pos] == U'い' || codepoints[end_pos] == U'さ' || codepoints[end_pos] == U'く' ||
+           codepoints[end_pos] == U'か' || codepoints[end_pos] == U'け');
+      if (rashii_paradigm_continues) {
+        return true;
+      }
+    }
   }
   return false;
 }
@@ -232,9 +259,9 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
   // Common nominalization endings (renyokei stems)
   bool is_nominalization_ending =
       (first_hiragana == U'け' || first_hiragana == U'げ' || first_hiragana == U'せ' || first_hiragana == U'い' ||
-       first_hiragana == U'り' || first_hiragana == U'ち' || first_hiragana == U'き' || first_hiragana == U'ぎ' ||
-       first_hiragana == U'し' || first_hiragana == U'ま' || first_hiragana == U'み' || first_hiragana == U'び' ||
-       first_hiragana == U'え' || first_hiragana == U'れ' || first_hiragana == U'め');
+       first_hiragana == U'り' || first_hiragana == U'ら' || first_hiragana == U'ち' || first_hiragana == U'き' ||
+       first_hiragana == U'ぎ' || first_hiragana == U'し' || first_hiragana == U'ま' || first_hiragana == U'み' ||
+       first_hiragana == U'び' || first_hiragana == U'え' || first_hiragana == U'れ' || first_hiragana == U'め');
 
   if (!is_nominalization_ending) {
     return;
@@ -261,6 +288,14 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
   // Skip potential suru-verb patterns: 漢字2字+し followed by suru-auxiliary
   // e.g., 勉強しちゃった → 勉強 + し + ちゃっ + た (not 勉強し + ちゃった)
   size_t kanji_count = kanji_end - start_pos;
+  // 暮らし is a productive continuative-form nominal head.  Preceding kanji
+  // form its modifier rather than an opaque compound (山+暮らし, 田舎+暮らし),
+  // so only the final kanji owns this nominalization candidate.  A lexicalized
+  // compound such as 一人暮らし remains available through its dictionary entry.
+  if (first_hiragana == U'ら' && kanji_count > 1 && kanji_end + 1 < codepoints.size() &&
+      codepoints[kanji_end + 1] == U'し') {
+    return;
+  }
   // When a multi-kanji nominal prefix precedes a longer verified verb
   // continuative, this start position owns only the prefix. Do not emit a
   // nominalized candidate spanning the right-hand verb (総合|見直し,
@@ -345,20 +380,32 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
           }
         }
       }
-      // Generate 2-hiragana candidate
-      const bool crosses_closed_suffix = hasClosedSuffixBoundary(codepoints, start_pos, hiragana_end + 1, dict_manager);
+      const std::string surface = extractSubstring(codepoints, start_pos, hiragana_end + 1);
+      const bool has_particle_continuation =
+          hasNominalizedNounParticleContinuation(codepoints, hiragana_end + 1, dict_manager);
+      const bool selects_nominal_host = selectsNominalHost(dict_manager, codepoints, char_types, hiragana_end + 1);
+      const bool has_explicit_nominal_selector =
+          has_particle_continuation ||
+          (hiragana_end + 1 < char_types.size() && char_types[hiragana_end + 1] == normalize::CharType::Hiragana &&
+           selects_nominal_host);
+      const bool has_inferred_verb_continuative = hasInferredVerbContinuative(inflection, surface);
+      // A single-kanji stem followed by two hiragana can be a productive
+      // deverbal noun when a particle, copula, or light verb explicitly
+      // selects a nominal host. In that frame, a homographic closed suffix
+      // cannot erase the complete continuative.
+      const bool crosses_closed_suffix =
+          hasClosedSuffixBoundary(codepoints, start_pos, hiragana_end + 1, dict_manager) &&
+          !(kanji_count == 1 && has_inferred_verb_continuative && has_explicit_nominal_selector);
       if (!trailing_shi_is_suru && !second_starts_classical_conjectural_auxiliary && !crosses_closed_suffix) {
-        std::string surface = extractSubstring(codepoints, start_pos, hiragana_end + 1);
         if (!surface.empty()) {
           float nom2_cost = 0.8F;
-          const bool has_particle_continuation =
-              hasNominalizedNounParticleContinuation(codepoints, hiragana_end + 1, dict_manager);
-          if (has_particle_continuation ||
+          if (has_particle_continuation || selects_nominal_host ||
               isGenitiveClauseFinalNominal(codepoints, char_types, start_pos, hiragana_end + 1)) {
             nom2_cost += candidate::kNominalizedNounParticleBonus;
           }
-          auto cand = makeCandidate(surface, start_pos, hiragana_end + 1, core::PartOfSpeech::Noun, nom2_cost,
-                                    has_particle_continuation, CandidateOrigin::NominalizedNoun);
+          auto cand =
+              makeCandidate(surface, start_pos, hiragana_end + 1, core::PartOfSpeech::Noun, nom2_cost,
+                            has_particle_continuation || selects_nominal_host, CandidateOrigin::NominalizedNoun);
 #ifdef SUZUME_DEBUG_INFO
           cand.confidence = 0.8F;
           cand.pattern = "nominalized_2hira";
@@ -467,11 +514,19 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
       const bool has_hiragana_noun_continuation =
           namesDictionaryVerbContinuative(dict_manager, codepoints, kanji_end) &&
           hasParticleFinalHiraganaNounContinuation(codepoints, char_types, kanji_end + 1, dict_manager);
+      // The honorific construction お+連用形名詞+いただく keeps the deverbal
+      // search unit intact (お目通し+いただければ).  Its prefix and receptive
+      // auxiliary are structural evidence that the preceding kanji-plus-し
+      // span is nominalized; without it the shorter kanji noun plus a
+      // fabricated し(する) can win solely on connection cost.
+      const bool has_humble_auxiliary_continuation =
+          start_pos > 0 && grammar::isHonorificPrefix(extractSubstring(codepoints, start_pos - 1, start_pos)) &&
+          verb_helpers::itadakuParadigmStartsAt(codepoints, kanji_end + 1);
       const bool has_temporal_nominal_continuation =
           grammar::startsClosedTemporalNominal(extractSubstring(codepoints, kanji_end + 1, codepoints.size()));
       if (has_particle_continuation || has_final_particle_continuation ||
           isGenitiveClauseFinalNominal(codepoints, char_types, start_pos, kanji_end + 1) ||
-          has_temporal_nominal_continuation || has_hiragana_noun_continuation) {
+          has_temporal_nominal_continuation || has_hiragana_noun_continuation || has_humble_auxiliary_continuation) {
         nom1_cost += candidate::kNominalizedNounParticleBonus;
       }
       // Deverbal compound noun (連用形転成名詞の複合). The longest verified
@@ -519,7 +574,19 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
       const bool ends_on_dictionary_adjective =
           kanji_count >= 2 && verb_helpers::isAdjectiveInDictionary(
                                   dict_manager, extractSubstring(codepoints, kanji_end - 1, kanji_end + 1));
-      const bool crosses_closed_suffix = hasClosedSuffixBoundary(codepoints, start_pos, kanji_end + 1, dict_manager);
+      const bool has_explicit_nominal_selector =
+          has_particle_continuation ||
+          (kanji_end + 1 < char_types.size() && char_types[kanji_end + 1] == normalize::CharType::Hiragana &&
+           selectsNominalHost(dict_manager, codepoints, char_types, kanji_end + 1));
+      // A particle-selected continuative compound is a complete nominal even
+      // when its final mora is homographic with a classical auxiliary. For
+      // example, 山登りを has productive verb-shape evidence plus a case
+      // particle; treating its final り as an auxiliary would erase the
+      // compound search unit. An unselected literary chain still keeps the
+      // closed-class boundary.
+      const bool crosses_closed_suffix =
+          hasClosedSuffixBoundary(codepoints, start_pos, kanji_end + 1, dict_manager) &&
+          !(hasInferredVerbContinuative(inflection, surface) && has_explicit_nominal_selector);
       if (!skip_nom_single_kanji_shi && !crosses_closed_suffix && !ends_on_dictionary_adjective) {
         // The verified compound is a construction the grammar recognizes, not
         // an opaque run, so it is exempt from the dictionary-length penalty the

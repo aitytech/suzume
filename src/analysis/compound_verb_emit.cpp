@@ -24,6 +24,12 @@ bool containsNegativeAuxiliary(const std::vector<char32_t>& codepoints, size_t s
   return false;
 }
 
+bool followsClosedSuffix(const std::vector<char32_t>& codepoints, size_t start_pos,
+                         const dictionary::DictionaryManager& dict_manager) {
+  return start_pos > 0 && dict_manager.lookupExact(extractSubstring(codepoints, start_pos - 1, start_pos),
+                                                   core::PartOfSpeech::Suffix) != nullptr;
+}
+
 bool consumesSahenConditional(const std::vector<char32_t>& codepoints, size_t start_pos, size_t compound_end_pos,
                               const dictionary::DictionaryManager& dict_manager) {
   if (compound_end_pos <= start_pos + 2 || compound_end_pos + 1 >= codepoints.size() ||
@@ -70,8 +76,13 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
                                                   << " v2_start=" << v2_start << "\n");
   // After checking all V2 entries, use the best match if found
   if (best_match.matched_len > 0) {
+    // A kanji+し compound may begin after a closed suffix (時間 / 話し込ん,
+    // 長い / 間 / 話し込ん).  A bare adjacent kanji has no such boundary
+    // evidence and must not license a compound from inside a Sino compound
+    // (提出 -> 提 / 出し忘れ).
     if (verb_helpers::startsInsideKanjiRunBeforeShi(codepoints, start_pos) &&
-        !grammar::isHumbleHonorificLemma(best_match.compound_base)) {
+        !grammar::isHumbleHonorificLemma(best_match.compound_base) &&
+        !followsClosedSuffix(codepoints, start_pos, dict_manager)) {
       return;
     }
     if (start_pos > 0 && normalize::isKanjiCodepoint(codepoints[start_pos - 1]) &&

@@ -117,8 +117,19 @@ void setNominalParticleCosts(BigramMatrix& table) {
       // noun, and only for the particles on this side of the class.
       {EPOS::NounFormal, EPOS::ParticleAdverbial, cost::kVeryStrongBonus},
       {EPOS::ParticleNo, EPOS::NounFormal, cost::kStrongBonus},
+      // A genitive particle also heads an adnominal predicate. Preserve the
+      // continuative verb before a classical auxiliary (風の+吹き+たる) over
+      // the homographic deverbal-noun reading.
+      {EPOS::ParticleNo, EPOS::VerbRenyokei, cost::kStrongBonus},
+      // Two genitive particles cannot be adjacent. When a hiragana noun ends
+      // in の, the first mora belongs to that noun (あけぼの+の), not to a
+      // duplicated particle chain.
+      {EPOS::ParticleNo, EPOS::ParticleNo, cost::kAlmostNever},
       {EPOS::AuxAspectIru, EPOS::NounFormal, cost::kVeryStrongBonus},
       {EPOS::ParticleQuote, EPOS::NounFormal, cost::kVeryStrongBonus},
+      // The obligation predicate after a quotation particle remains an
+      // auxiliary chain (…ん+と+いけ+ん), rather than reopening い as an
+      // independent continuative followed by the dialectal particle けん.
   };
   applyRules(table, kRules, sizeof(kRules) / sizeof(kRules[0]));
 }

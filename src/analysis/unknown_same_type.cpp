@@ -64,6 +64,7 @@ bool isRightBoundaryParticle(char32_t code_point) {
     case U'で':
     case U'へ':
     case U'と':
+    case U'ば':
       return true;
     default:
       return false;
@@ -90,6 +91,24 @@ bool isInternalParticleChar(char32_t code_point) {
     default:
       return false;
   }
+}
+
+bool startsClosedNativeNumber(const std::vector<char32_t>& codepoints, size_t pos) {
+  if (pos + 2 >= codepoints.size()) {
+    return false;
+  }
+  const char32_t first = codepoints[pos];
+  const char32_t second = codepoints[pos + 1];
+  const char32_t third = codepoints[pos + 2];
+  if ((first == U'ひ' && second == U'と' && third == U'つ') || (first == U'ふ' && second == U'た' && third == U'つ') ||
+      (first == U'み' && second == U'っ' && third == U'つ') || (first == U'よ' && second == U'っ' && third == U'つ') ||
+      (first == U'い' && second == U'つ' && third == U'つ') || (first == U'む' && second == U'っ' && third == U'つ') ||
+      (first == U'な' && second == U'な' && third == U'つ') || (first == U'や' && second == U'っ' && third == U'つ')) {
+    return true;
+  }
+  return pos + 3 < codepoints.size() &&
+         ((first == U'こ' && second == U'こ' && third == U'の' && codepoints[pos + 3] == U'つ') ||
+          (first == U'と' && second == U'お' && third == U'の' && codepoints[pos + 3] == U'つ'));
 }
 
 // Length of a dictionary auxiliary starting at @p pos that is itself bound on
@@ -263,6 +282,46 @@ bool startsAtDictionaryVerbContinuative(const std::vector<char32_t>& codepoints,
                                                             normalize::encodeUtf8(core::hiragana::kRu));
 }
 
+// A same-type run may begin at the final okurigana of a dictionary terminal
+// verb rather than its renyokei (書く+だべ).  Once that verb is present, a
+// following closed auxiliary belongs to it and cannot be absorbed into the
+// run.  Limit the probe to the local candidate window used by this generator.
+bool startsAfterDictionaryVerb(const std::vector<char32_t>& codepoints,
+                               const std::vector<normalize::CharType>& char_types, size_t start_pos, size_t run_end,
+                               const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || start_pos == 0 || start_pos >= run_end ||
+      char_types[start_pos - 1] != normalize::CharType::Kanji) {
+    return false;
+  }
+  for (size_t verb_end = start_pos + 1; verb_end <= run_end; ++verb_end) {
+    if (dict_manager->lookupExact(extractSubstring(codepoints, start_pos - 1, verb_end), core::PartOfSpeech::Verb) !=
+        nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// A same-type run can also begin inside a dictionary adjective's okurigana
+// (静か+な). Keep the copular cell available instead of promoting that tail to
+// an unknown noun solely because a following nominalizer resembles a noun
+// frame.
+bool startsAfterDictionaryAdjective(const std::vector<char32_t>& codepoints,
+                                    const std::vector<normalize::CharType>& char_types, size_t start_pos,
+                                    size_t run_end, const dictionary::DictionaryManager* dict_manager) {
+  if (dict_manager == nullptr || start_pos == 0 || start_pos >= run_end ||
+      char_types[start_pos - 1] != normalize::CharType::Kanji) {
+    return false;
+  }
+  for (size_t adjective_end = start_pos + 1; adjective_end <= run_end; ++adjective_end) {
+    if (dict_manager->lookupExact(extractSubstring(codepoints, start_pos - 1, adjective_end),
+                                  core::PartOfSpeech::Adjective) != nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codepoints, size_t start_pos,
@@ -316,6 +375,16 @@ void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codep
         }
       }
       return;
+    }
+    // A genitive の closes before a dictionary formal noun. Do not manufacture
+    // a particle-homographic unknown noun across that boundary (不変+の+もの).
+    if (first_char == U'の' && dict_manager_ != nullptr && start_pos + 1 < codepoints.size()) {
+      const size_t probe_end = std::min(codepoints.size(), start_pos + static_cast<size_t>(5));
+      for (const auto& match : dict_manager_->lookup(extractSubstring(codepoints, start_pos + 1, probe_end), 0)) {
+        if (match.entry != nullptr && match.entry->extended_pos == core::ExtendedPOS::NounFormal) {
+          return;
+        }
+      }
     }
     // Only は, に, へ, の can start hiragana nouns
     if (first_char == U'は' || first_char == U'に' || first_char == U'へ' || first_char == U'の') {
@@ -417,9 +486,8 @@ void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codep
     // For hiragana, break at common particle characters to avoid
     // swallowing particles into unknown words (e.g., don't create "ぎをみじん")
     if (start_type == normalize::CharType::Hiragana) {
-      // Always break at を and が (case particles that never start words)
-      // This applies even if we started with a particle character
-      if (curr_char == U'を' || curr_char == U'が') {
+      // を cannot occur within a native hiragana word.
+      if (curr_char == U'を') {
         break;
       }
       // For non-particle starts, particle characters usually mark word
@@ -448,8 +516,10 @@ void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codep
         }
         // Common particles は, に, へ + で, と, も, か (word boundaries)
         // Note: Don't include「や」as it's also the stem of「やる」verb
+        const bool closes_genitive_negative_noun = curr_char == U'が' && end_pos + 3 < codepoints.size() &&
+                                                   codepoints[end_pos + 2] == U'の' && codepoints[end_pos + 3] == U'な';
         if (curr_char == U'は' || curr_char == U'に' || curr_char == U'へ' || curr_char == U'で' ||
-            curr_char == U'と' || curr_char == U'も' || curr_char == U'か') {
+            curr_char == U'と' || curr_char == U'も' || curr_char == U'か' || closes_genitive_negative_noun) {
           char32_t seq_first_char = codepoints[start_pos];
           if (crossed_particle_pos != SIZE_MAX || seq_first_char == U'を' || seq_first_char == U'が') {
             break;  // Stop before the particle character
@@ -467,7 +537,11 @@ void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codep
   const size_t first_candidate_length = starts_non_word_run ? end_pos - start_pos : 1;
   const bool starts_at_dictionary_verb_continuative =
       start_type == normalize::CharType::Hiragana &&
-      startsAtDictionaryVerbContinuative(codepoints, char_types, start_pos, dict_manager_);
+      (startsAtDictionaryVerbContinuative(codepoints, char_types, start_pos, dict_manager_) ||
+       startsAfterDictionaryVerb(codepoints, char_types, start_pos, end_pos, dict_manager_));
+  const bool starts_after_dictionary_adjective =
+      start_type == normalize::CharType::Hiragana &&
+      startsAfterDictionaryAdjective(codepoints, char_types, start_pos, end_pos, dict_manager_);
   for (size_t len = first_candidate_length; len <= end_pos - start_pos; ++len) {
     size_t candidate_end = start_pos + len;
     std::string surface = extractSubstring(codepoints, start_pos, candidate_end);
@@ -478,16 +552,74 @@ void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codep
           isRightBoundaryParticle(codepoints[candidate_end])) {
         continue;
       }
+      // A kana run beginning on the okurigana of a dictionary verb cannot
+      // absorb a following closed auxiliary.  The first mora belongs to the
+      // preceding continuative/terminal verb (書く+だべ, 書く+き); retaining an
+      // opaque same-type edge would erase both independently licensed
+      // boundaries.
+      if (starts_at_dictionary_verb_continuative && len > 1 && dict_manager_ != nullptr) {
+        bool embeds_closed_auxiliary = false;
+        for (size_t split = start_pos + 1; split < candidate_end; ++split) {
+          if (dict_manager_->lookupExact(extractSubstring(codepoints, split, candidate_end),
+                                         core::PartOfSpeech::Auxiliary) != nullptr) {
+            embeds_closed_auxiliary = true;
+            break;
+          }
+        }
+        if (embeds_closed_auxiliary) {
+          continue;
+        }
+      }
       const bool closes_particle_bracketed_hiragana_noun =
           start_type == normalize::CharType::Hiragana && crossed_particle_pos != SIZE_MAX &&
           candidate_end == crossed_particle_pos + 1 && candidate_end < codepoints.size() &&
           isRightBoundaryParticle(codepoints[candidate_end]);
+      // After a past auxiliary, a following hiragana noun beginning with り
+      // must remain available as a nominal host. Otherwise the preceding た
+      // absorbs its first mora as the listing particle たり (買っ+た+りんご).
+      const bool closes_past_tari_collision_noun =
+          start_type == normalize::CharType::Hiragana && start_pos > 0 && len >= 2 &&
+          codepoints[start_pos - 1] == U'た' && codepoints[start_pos] == U'り' &&
+          (candidate_end == codepoints.size() ||
+           (candidate_end < codepoints.size() && isRightBoundaryParticle(codepoints[candidate_end])));
+      const bool has_verb_tail_after_ri =
+          closes_past_tari_collision_noun && dict_manager_ != nullptr &&
+          dict_manager_->lookupExact(extractSubstring(codepoints, start_pos + 1, candidate_end),
+                                     core::PartOfSpeech::Verb) != nullptr;
+      const bool has_inflected_verb_reading =
+          closes_past_tari_collision_noun && std::any_of(inflection_.analyze(surface).begin(),
+                                                         inflection_.analyze(surface).end(), [](const auto& analysis) {
+                                                           return analysis.verb_type != grammar::VerbType::Unknown &&
+                                                                  analysis.verb_type != grammar::VerbType::IAdjective &&
+                                                                  !analysis.morphemes.empty() &&
+                                                                  analysis.confidence > candidate::kNoOriginConfidence;
+                                                         });
+      const bool has_contracted_progressive_tail =
+          closes_past_tari_collision_noun && len >= 2 &&
+          grammar::isContractedProgressiveSurface(extractSubstring(codepoints, candidate_end - 2, candidate_end));
+      const bool precedes_closed_native_number =
+          start_type == normalize::CharType::Hiragana && startsClosedNativeNumber(codepoints, candidate_end);
+      const bool closes_genitive_negative_noun =
+          start_type == normalize::CharType::Hiragana && candidate_end - start_pos >= 2 &&
+          !starts_at_dictionary_verb_continuative && !starts_after_dictionary_adjective &&
+          candidate_end + 1 < codepoints.size() && codepoints[candidate_end] == U'の' &&
+          codepoints[candidate_end + 1] == U'な';
       // Particle-start hiragana sequences are potential nouns (はし, はな, にく)
       // Use NOUN POS instead of OTHER to avoid exceeds_dict_length penalty
-      core::PartOfSpeech pos = (started_with_particle || closes_particle_bracketed_hiragana_noun)
+      core::PartOfSpeech pos = (started_with_particle || closes_particle_bracketed_hiragana_noun ||
+                                (closes_past_tari_collision_noun && !has_verb_tail_after_ri &&
+                                 !has_inflected_verb_reading && !has_contracted_progressive_tail) ||
+                                precedes_closed_native_number || closes_genitive_negative_noun)
                                    ? core::PartOfSpeech::Noun
                                    : getPosForType(start_type);
       float cost = getCostForType(start_type, len);
+      if (closes_past_tari_collision_noun && !has_verb_tail_after_ri && !has_inflected_verb_reading &&
+          !has_contracted_progressive_tail) {
+        cost = candidate::kSelectedNominalShortHeadCost;
+      }
+      if (precedes_closed_native_number || closes_genitive_negative_noun) {
+        cost = candidate::kSelectedNominalShortHeadCost + bigram_cost::kDoubleVeryStrongBonus;
+      }
       if (has_formal_noun_na_adjective_boundary && len >= 2) {
         cost += candidate::kFormalNounNaAdjectiveBoundaryPenalty;
       }
@@ -589,10 +721,46 @@ void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codep
         cost += (candidate_end > crossed_particle_pos + 1) ? scorer::scale::kStrong : scorer::scale::kMinor;
       }
 
+      // The conditional particle ば cannot close an open nominal run. A listed
+      // noun such as ことば retains its dictionary edge, while an unverified
+      // hiragana fallback must leave the particle available at the boundary.
+      if (start_type == normalize::CharType::Hiragana && !started_with_particle && dict_manager_ != nullptr &&
+          candidate_end > start_pos + 1) {
+        const auto* final_particle = dict_manager_->lookupExact(
+            extractSubstring(codepoints, candidate_end - 1, candidate_end), core::PartOfSpeech::Particle);
+        if (final_particle != nullptr && final_particle->extended_pos == core::ExtendedPOS::ParticleConj &&
+            codepoints[candidate_end - 1] == U'ば') {
+          continue;
+        }
+      }
+
+      // A closed interjection cannot host the nominalizing suffix さ. When
+      // that shape occurs, retain a complete unknown noun candidate as the
+      // only grammatical lexical reading (うわ+さ -> うわさ), rather than
+      // letting the suffix expose the interjection as an independent token.
+      if (start_type == normalize::CharType::Hiragana && !started_with_particle && len >= 3 &&
+          codepoints[candidate_end - 1] == U'さ' && dict_manager_ != nullptr) {
+        const bool follows_prefix =
+            start_pos > 0 && dict_manager_->lookupExact(extractSubstring(codepoints, start_pos - 1, start_pos),
+                                                        core::PartOfSpeech::Prefix) != nullptr;
+        const auto* interjection = dict_manager_->lookupExact(
+            extractSubstring(codepoints, start_pos, candidate_end - 1), core::PartOfSpeech::Interjection);
+        if (interjection != nullptr && !follows_prefix) {
+          auto noun_candidate = makeCandidate(surface, start_pos, candidate_end, core::PartOfSpeech::Noun,
+                                              candidate::kSelectedNominalShortHeadCost,
+                                              /*has_suffix=*/true, CandidateOrigin::SameType);
+#ifdef SUZUME_DEBUG_INFO
+          noun_candidate.pattern = "interjection_nominal_boundary";
+#endif
+          candidates.push_back(std::move(noun_candidate));
+        }
+      }
+
       // Penalize hiragana sequences starting with particle characters
       // These could be nouns (はし, はな, にく, にゃんこ) but are less likely than
       // the particle interpretation, unless the particle path has connection penalties
-      bool has_suffix = false;
+      bool has_suffix = closes_past_tari_collision_noun && !has_verb_tail_after_ri && !has_inflected_verb_reading &&
+                        !has_contracted_progressive_tail;
       if (started_with_particle) {
         if (len == 1) {
           continue;  // Single-char particle-start never forms a noun alone
@@ -638,6 +806,22 @@ void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codep
           }
         }
         if (heads_bound_suffix && len > 1) {
+          continue;
+        }
+      }
+      // A quantity head cannot be joined to the one-kanji stem of a following
+      // sokuonbin predicate. The sequence is a noun phrase plus a verb
+      // (二件|残っ, 複数|残っ), never an unknown compound noun ending at the
+      // predicate stem. This also leaves the っ available to the verb edge.
+      if (start_type == normalize::CharType::Kanji && len >= 3 && candidate_end < codepoints.size() &&
+          codepoints[candidate_end] == U'っ') {
+        const size_t head_end = candidate_end - 1;
+        const bool numeral_counter_head = head_end >= start_pos + 2 &&
+                                          normalize::isCounterKanji(codepoints[head_end - 1]) &&
+                                          normalize::isNumeralCodepoint(codepoints[head_end - 2]);
+        const bool quantity_noun_head = head_end >= start_pos + 2 && codepoints[head_end - 1] == U'数' &&
+                                        normalize::isKanjiCodepoint(codepoints[head_end - 2]);
+        if (numeral_counter_head || quantity_noun_head) {
           continue;
         }
       }
@@ -870,7 +1054,13 @@ void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codep
               : nullptr;
       const bool is_genitive_particle =
           single_particle != nullptr && single_particle->extended_pos == core::ExtendedPOS::ParticleNo && curr == U'の';
-      if (scan - start_pos >= 3 && (isRightBoundaryParticle(curr) || is_genitive_particle)) {
+      // In …のの…, the first の may be the final mora of the preceding
+      // hiragana noun while the second is the genitive marker. Keep scanning
+      // through that first mora so the noun candidate can claim it; the
+      // particle-particle bigram remains a safety net for malformed paths.
+      const bool repeats_genitive =
+          is_genitive_particle && scan + 1 < codepoints.size() && codepoints[scan + 1] == U'の';
+      if (scan - start_pos >= 3 && (isRightBoundaryParticle(curr) || (is_genitive_particle && !repeats_genitive))) {
         break;
       }
       // A multi-character particle immediately after the first mora can be
@@ -1120,6 +1310,16 @@ void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codep
         if (selected_nominal && !exact_reading_owns_context) {
           noun_cost += scorer::kBonusDoubleVeryStrong;
         }
+        // A substantive hiragana run at a clause boundary or immediately
+        // before genitive の is a complete nominal head when no lexical or
+        // inflected predicate analysis owns the same surface (りんご、
+        // たなばたの夜). This is weaker than a two-sided case-particle frame,
+        // but it must still outrank the fallback Other-token alternative.
+        const bool closes_unverified_nominal_head = (right_clause || right_genitive_after_substantive_run) &&
+                                                    !exact_reading_owns_context && !has_inflected_predicate_reading;
+        if (closes_unverified_nominal_head) {
+          noun_cost += scorer::scale::kStrongBonus;
+        }
         if (right_genitive_after_internal_particle) {
           noun_cost += scorer::scale::kStrongBonus;
         }
@@ -1136,7 +1336,7 @@ void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codep
           noun_cost += scorer::scale::kMinorBonus;
         }
         auto noun_cand = makeCandidate(promoted_surface, start_pos, scan, core::PartOfSpeech::Noun, noun_cost,
-                                       /*has_suffix=*/true, CandidateOrigin::SameType);
+                                       /*has_suffix=*/true, CandidateOrigin::BracketedNoun);
         noun_cand.bracketed_noun_rescue = !copula_selected_predicate_homograph;
         noun_cand.requires_left_content_edge = left_particle_bracket;
         noun_cand.requires_left_attributive_edge =

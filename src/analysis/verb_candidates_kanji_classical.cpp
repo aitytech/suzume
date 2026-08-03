@@ -161,6 +161,33 @@ HaRowLicense haRowCellLicense(core::ExtendedPOS cell, const std::vector<char32_t
   return license;
 }
 
+// Classical lower-bigrade verbs have the continuative/irrealis vowel へ
+// (終へ+ぬ, 終へ+た).  The surface is otherwise indistinguishable from the
+// direction particle, so emit it only when a following auxiliary names the
+// predicate boundary.  The historical terminal ふ is retained as the lemma;
+// the current public conjugation enum has no lower-bigrade row.
+void appendClassicalShimoNidanCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
+                                         size_t hiragana_end, const dictionary::DictionaryManager* dict_manager,
+                                         std::vector<UnknownCandidate>& candidates) {
+  if (kanji_end != start_pos + 1 || kanji_end >= hiragana_end || codepoints[kanji_end] != U'へ') {
+    return;
+  }
+  const size_t end_pos = kanji_end + 1;
+  const bool follows_auxiliary = dictionaryTailFollowsAt(
+      codepoints, end_pos, dict_manager, core::PartOfSpeech::Auxiliary,
+      {core::ExtendedPOS::AuxNegativeNu, core::ExtendedPOS::AuxTenseTa, core::ExtendedPOS::AuxClassicalKeri,
+       core::ExtendedPOS::AuxClassicalPerfect, core::ExtendedPOS::AuxVolitional});
+  if (!follows_auxiliary) {
+    return;
+  }
+  const std::string surface = extractSubstring(codepoints, start_pos, end_pos);
+  const std::string lemma = extractSubstring(codepoints, start_pos, kanji_end) + "ふ";
+  candidates.push_back(makeVerbCandidate(surface, start_pos, end_pos, candidate::verb_cost::kClassicalHaRowLicensedCost,
+                                         lemma, dictionary::ConjugationType::GodanWa, true, CandidateOrigin::VerbKanji,
+                                         candidate::kNoConfidence, "classical_shimo_nidan",
+                                         core::ExtendedPOS::VerbRenyokei));
+}
+
 }  // namespace
 
 void appendClassicalHaRowCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
@@ -197,6 +224,7 @@ void appendClassicalHaRowCandidates(const std::vector<char32_t>& codepoints, siz
     candidates.push_back(std::move(candidate));
     SUZUME_DEBUG_LOG_VERBOSE("[VERB_CAND] " << surface << " classical_ha_row lemma=" << lemma << "\n");
   }
+  appendClassicalShimoNidanCandidates(codepoints, start_pos, kanji_end, hiragana_end, dict_manager, candidates);
 }
 
 size_t appendKuNominalizationCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,

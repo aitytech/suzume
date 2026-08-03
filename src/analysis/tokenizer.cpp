@@ -40,6 +40,42 @@ bool isShapeDerivedOrigin(core::CandidateOrigin origin) {
          origin == core::CandidateOrigin::SameType || origin == core::CandidateOrigin::Alphanumeric;
 }
 
+bool isClosedClassEdge(const core::LatticeEdge& edge) {
+  return core::isParticleType(edge.extended_pos) || edge.pos == core::PartOfSpeech::Auxiliary ||
+         edge.pos == core::PartOfSpeech::Conjunction || edge.pos == core::PartOfSpeech::Determiner ||
+         edge.pos == core::PartOfSpeech::Pronoun || edge.pos == core::PartOfSpeech::Prefix ||
+         edge.pos == core::PartOfSpeech::Suffix;
+}
+
+void diagnoseGeneratedSpanBoundaries(const core::Lattice& lattice) {
+  SUZUME_DEBUG_BLOCK {
+    for (size_t pos = 0; pos < lattice.textLength(); ++pos) {
+      for (uint32_t candidate_id : lattice.edgeIdsAt(pos)) {
+        const core::LatticeEdge& candidate = lattice.getEdge(candidate_id);
+        if (candidate.fromDictionary()) {
+          continue;
+        }
+        for (size_t inner_pos = candidate.start; inner_pos < candidate.end; ++inner_pos) {
+          for (uint32_t inner_id : lattice.edgeIdsAt(inner_pos)) {
+            const core::LatticeEdge& inner = lattice.getEdge(inner_id);
+            if (inner.id == candidate.id || !inner.fromDictionary() || !isClosedClassEdge(inner) ||
+                inner.start <= candidate.start || inner.end >= candidate.end) {
+              continue;
+            }
+            SUZUME_DEBUG_STREAM << "[SPAN_VIOLATION] generated=\"" << candidate.surface << "\" span=" << candidate.start
+                                << "-" << candidate.end << " contains=" << inner.surface << "\" "
+                                << core::posToString(inner.pos) << " span=" << inner.start << "-" << inner.end << "\n";
+          }
+        }
+        if (candidate.conj_type != dictionary::ConjugationType::None && !candidate.lemma.empty() &&
+            candidate.lemma == candidate.surface) {
+          SUZUME_DEBUG_STREAM << "[SPAN_VIOLATION] inflected=\"" << candidate.surface << "\" has identical lemma\n";
+        }
+      }
+    }
+  }
+}
+
 }  // namespace
 
 Tokenizer::Tokenizer(const dictionary::DictionaryManager& dict_manager, const Scorer& scorer,
@@ -109,6 +145,7 @@ core::Lattice Tokenizer::buildLattice(std::string_view text, const std::vector<c
   }
 
   clampHeuristicBonusesInUserDictSpans(lattice);
+  diagnoseGeneratedSpanBoundaries(lattice);
 
   return lattice;
 }

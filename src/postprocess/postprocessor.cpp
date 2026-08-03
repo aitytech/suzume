@@ -275,10 +275,13 @@ std::vector<core::Morpheme> Postprocessor::mergeVerbRenyokeiMono(std::vector<cor
 
   for (size_t i = 0; i < morphemes.size(); ++i) {
     // Check: VERB + もの(formal noun) → compound NOUN
-    // e.g., 食べ+もの → 食べもの, 飲み+もの → 飲みもの, 乗り+もの → 乗りもの
+    // e.g., 食べ+もの → 食べもの, 飲み+もの → 飲みもの, 乗り+もの → 乗りもの.
+    // A generated pure-hiragana continuative has only inflectional evidence;
+    // without lexical evidence it keeps the formal-noun boundary (たて+もの)
+    // instead of being promoted to a compound search unit.
     if (i + 1 < morphemes.size() && morphemes[i].pos == core::PartOfSpeech::Verb &&
         morphemes[i].conj_form == grammar::ConjForm::Renyokei && morphemes[i + 1].surface == "もの" &&
-        morphemes[i + 1].isFormalNoun()) {
+        morphemes[i + 1].isFormalNoun() && morphemes[i].origin != core::CandidateOrigin::VerbHiragana) {
       core::Morpheme merged = morphemes[i];
       resolver::mergeInto(merged, morphemes[i + 1]);
       resolver::retagNounSurface(merged);

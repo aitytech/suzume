@@ -193,6 +193,17 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
                             candidate::kHighOriginConfidence, "kuru_negative_nai", core::ExtendedPOS::VerbMizenkei));
     }
 
+    // 来る is irregular rather than ichidan, but its modern volitional still
+    // spells the y-row stem plus the separate auxiliary (来よ+う).
+    if (kanji_char == U'来' && kanji_end + 1 < codepoints.size() && codepoints[kanji_end] == U'よ' &&
+        codepoints[kanji_end + 1] == U'う') {
+      const std::string surface = extractSubstring(codepoints, start_pos, kanji_end + 1);
+      candidates.push_back(makeVerbCandidate(surface, start_pos, kanji_end + 1, candidate::verb_cost::kStrongBonus,
+                                             "来る", dictionary::ConjugationType::Kuru, true,
+                                             CandidateOrigin::VerbKanji, candidate::kHighOriginConfidence,
+                                             "kuru_modern_volitional", core::ExtendedPOS::VerbMizenkei));
+    }
+
     if (vh::isSingleKanjiIchidan(kanji_char)) {
       // Check if followed by a polite ます-family auxiliary or negative auxiliary.
       // The ます family (ます/まし(た)/ませ(ん)/ましょ(う)) attaches only to a verb
@@ -204,6 +215,11 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
       char32_t h1 = codepoints[kanji_end];
       char32_t h2 = (kanji_end + 1 < codepoints.size()) ? codepoints[kanji_end + 1] : 0;
       bool is_polite_aux = vh::masuAuxFollowsAt(codepoints, kanji_end);
+      // Modern ichidan volitional keeps the y-row stem and the auxiliary
+      // boundary (見よ+う, 来よ+う).  The bare kanji is the renyokei/mizenkei
+      // spelling in other cells, but emitting it here would let formal noun
+      // よう absorb the stem.
+      bool is_modern_volitional = h1 == U'よ' && h2 == U'う';
       // Negative auxiliary ない and its conjugations:
       // ない (終止/連体), なく (連用), なかっ (た接続), なけれ (仮定), なきゃ (口語縮約仮定)
       bool is_negative_aux = vh::naiNegativeFollowsAt(codepoints, kanji_end);
@@ -299,6 +315,15 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
                   ? core::ExtendedPOS::VerbRenyokei
                   : core::ExtendedPOS::Unknown));
         }
+      }
+
+      if (is_modern_volitional) {
+        const std::string surface = extractSubstring(codepoints, start_pos, kanji_end + 1);
+        const std::string base_form = extractSubstring(codepoints, start_pos, kanji_end) + "る";
+        candidates.push_back(makeVerbCandidate(surface, start_pos, kanji_end + 1, candidate::verb_cost::kStrongBonus,
+                                               base_form, dictionary::ConjugationType::Ichidan, true,
+                                               CandidateOrigin::VerbKanji, candidate::kHighOriginConfidence,
+                                               "single_kanji_ichidan_volitional", core::ExtendedPOS::VerbMizenkei));
       }
 
       // Also handle た and て patterns for single-kanji Ichidan verbs
