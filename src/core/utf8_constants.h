@@ -148,101 +148,56 @@ using suzume::core::kTwoJapaneseCharBytes;
   return s.find(substr) != std::string_view::npos;
 }
 
-/// Check if string contains any of the given patterns
-/// @param s The string to check
-/// @param patterns List of patterns to search for
-/// @return true if s contains any of the patterns
-[[nodiscard]] inline bool containsAny(std::string_view s, std::initializer_list<std::string_view> patterns) noexcept {
-  for (const auto& pattern : patterns) {
-    if (s.find(pattern) != std::string_view::npos) {
-      return true;
-    }
-  }
-  return false;
-}
+namespace detail {
 
-/// Check a named fixed-size pattern table without maintaining a separate count.
-template <typename Entry, size_t Size>
-[[nodiscard]] bool containsAny(std::string_view s, const Entry (&patterns)[Size]) noexcept {
-  for (const std::string_view pattern : patterns) {
-    if (s.find(pattern) != std::string_view::npos) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/// Check if string equals any of the given values
-/// @param s The string to check
-/// @param values List of values to compare against
-/// @return true if s equals any of the values
-[[nodiscard]] inline bool equalsAny(std::string_view s, std::initializer_list<std::string_view> values) noexcept {
-  for (const auto& value : values) {
-    if (s == value) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/// Check a named fixed-size value table without maintaining a separate count.
-template <typename Entry, size_t Size>
-[[nodiscard]] bool equalsAny(std::string_view s, const Entry (&values)[Size]) noexcept {
+/// The one membership scan behind the containsAny/equalsAny/…Any families.
+/// Both the braced-list and the named-table overloads route here: a braced
+/// list cannot deduce a range parameter, so the pair of entry points is
+/// required, but the test itself is stated once.
+template <typename Values, typename Match>
+[[nodiscard]] bool anyOf(const Values& values, Match match) noexcept {
   for (const std::string_view value : values) {
-    if (s == value) {
+    if (match(value)) {
       return true;
     }
   }
   return false;
 }
 
-/// Check if string ends with any of the given suffixes
-/// @param s The string to check
-/// @param suffixes List of suffixes to check
-/// @return true if s ends with any of the suffixes
-[[nodiscard]] inline bool endsWithAny(std::string_view s, std::initializer_list<std::string_view> suffixes) noexcept {
-  for (const auto& suffix : suffixes) {
-    if (s.size() >= suffix.size() && s.substr(s.size() - suffix.size()) == suffix) {
-      return true;
-    }
-  }
-  return false;
-}
+constexpr auto kContains = [](std::string_view s, std::string_view pattern) noexcept {
+  return s.find(pattern) != std::string_view::npos;
+};
+constexpr auto kEquals = [](std::string_view s, std::string_view value) noexcept { return s == value; };
+constexpr auto kEndsWith = [](std::string_view s, std::string_view suffix) noexcept {
+  return s.size() >= suffix.size() && s.substr(s.size() - suffix.size()) == suffix;
+};
+constexpr auto kStartsWith = [](std::string_view s, std::string_view prefix) noexcept {
+  return s.size() >= prefix.size() && s.substr(0, prefix.size()) == prefix;
+};
 
-/// Check a named fixed-size suffix table without maintaining a separate count.
-template <typename Entry, size_t Size>
-[[nodiscard]] bool endsWithAny(std::string_view s, const Entry (&suffixes)[Size]) noexcept {
-  for (const std::string_view suffix : suffixes) {
-    if (s.size() >= suffix.size() && s.substr(s.size() - suffix.size()) == suffix) {
-      return true;
-    }
-  }
-  return false;
-}
+}  // namespace detail
 
-/// Check if string starts with any of the given prefixes
-/// @param s The string to check
-/// @param prefixes List of prefixes to check
-/// @return true if s starts with any of the prefixes
-[[nodiscard]] inline bool startsWithAny(std::string_view s, std::initializer_list<std::string_view> prefixes) noexcept {
-  for (const auto& prefix : prefixes) {
-    if (s.size() >= prefix.size() && s.substr(0, prefix.size()) == prefix) {
-      return true;
-    }
+/// Declare a membership family over a braced list and over a named fixed-size
+/// table, so a table never has to carry a separate element count.
+#define SUZUME_UTF8_ANY_FAMILY(name, match)                                                                     \
+  [[nodiscard]] inline bool name(std::string_view s, std::initializer_list<std::string_view> values) noexcept { \
+    return detail::anyOf(values, [s](std::string_view value) { return match(s, value); });                      \
+  }                                                                                                             \
+  template <typename Entry, size_t Size>                                                                        \
+  [[nodiscard]] bool name(std::string_view s, const Entry(&values)[Size]) noexcept {                            \
+    return detail::anyOf(values, [s](std::string_view value) { return match(s, value); });                      \
   }
-  return false;
-}
 
-/// Check a named fixed-size prefix table without maintaining a separate count.
-template <typename Entry, size_t Size>
-[[nodiscard]] bool startsWithAny(std::string_view s, const Entry (&prefixes)[Size]) noexcept {
-  for (const std::string_view prefix : prefixes) {
-    if (s.size() >= prefix.size() && s.substr(0, prefix.size()) == prefix) {
-      return true;
-    }
-  }
-  return false;
-}
+/// True if s contains any of the given patterns.
+SUZUME_UTF8_ANY_FAMILY(containsAny, detail::kContains)
+/// True if s equals any of the given values.
+SUZUME_UTF8_ANY_FAMILY(equalsAny, detail::kEquals)
+/// True if s ends with any of the given suffixes.
+SUZUME_UTF8_ANY_FAMILY(endsWithAny, detail::kEndsWith)
+/// True if s starts with any of the given prefixes.
+SUZUME_UTF8_ANY_FAMILY(startsWithAny, detail::kStartsWith)
+
+#undef SUZUME_UTF8_ANY_FAMILY
 
 /// Get the last N bytes of a string as a string_view
 /// @param s The source string
