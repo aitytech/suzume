@@ -185,6 +185,32 @@ class Lattice {
   TextStorage text_storage_;                                  // Backing store for every string an edge holds
 };
 
+/**
+ * @brief Whether any edge ending at end_pos satisfies pred
+ * @note Takes the predicate as a template parameter so the test inlines; this
+ *       runs inside candidate generation on every boundary.
+ */
+template <typename Pred>
+bool anyEdgeEndingAt(const Lattice& lattice, size_t end_pos, Pred pred) {
+  for (const uint32_t edge_id : lattice.edgeIdsEndingAt(end_pos)) {
+    if (pred(lattice.getEdge(edge_id))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** @brief Whether any edge starting at start_pos satisfies pred */
+template <typename Pred>
+bool anyEdgeStartingAt(const Lattice& lattice, size_t start_pos, Pred pred) {
+  for (const uint32_t edge_id : lattice.edgeIdsAt(start_pos)) {
+    if (pred(lattice.getEdge(edge_id))) {
+      return true;
+    }
+  }
+  return false;
+}
+
 }  // namespace suzume::core
 
 #endif  // SUZUME_CORE_LATTICE_H_

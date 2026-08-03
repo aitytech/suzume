@@ -413,22 +413,14 @@ bool startsInsideRegisteredNoun(const dictionary::DictionaryManager& dict_manage
 }
 
 bool hasPrecedingPartOfSpeech(const core::Lattice& lattice, size_t end_pos, PartOfSpeechMask pos_mask) {
-  for (const uint32_t edge_id : lattice.edgeIdsEndingAt(end_pos)) {
-    const auto& edge = lattice.getEdge(edge_id);
-    if ((pos_mask & partOfSpeechMask(edge.pos)) != 0) {
-      return true;
-    }
-  }
-  return false;
+  return core::anyEdgeEndingAt(lattice, end_pos, [pos_mask](const core::LatticeEdge& edge) {
+    return (pos_mask & partOfSpeechMask(edge.pos)) != 0;
+  });
 }
 
 bool hasPrecedingExtendedPOS(const core::Lattice& lattice, size_t end_pos, core::ExtendedPOS extended_pos) {
-  for (const uint32_t edge_id : lattice.edgeIdsEndingAt(end_pos)) {
-    if (lattice.getEdge(edge_id).extended_pos == extended_pos) {
-      return true;
-    }
-  }
-  return false;
+  return core::anyEdgeEndingAt(
+      lattice, end_pos, [extended_pos](const core::LatticeEdge& edge) { return edge.extended_pos == extended_pos; });
 }
 
 namespace {
