@@ -28,6 +28,7 @@ src/analysis/compound_verb_forms.cpp	0	0	0
 src/analysis/compound_verb_match.cpp	0	4	0
 src/analysis/compound_verb_verify.cpp	0	0	0
 src/analysis/compound_verb_voice.cpp	0	0	0
+src/analysis/dictionary_probe.h	0	0	0
 src/analysis/join_candidates.h	0	0	0
 src/analysis/join_compound_verb.cpp	0	0	0
 src/analysis/join_compound_verb_hiragana.cpp	0	0	0
@@ -50,7 +51,7 @@ src/analysis/scorer_connection_rules_renyokei.cpp	8	4	98
 src/analysis/scorer_connection_rules_suffix.cpp	1	8	68
 src/analysis/scorer_connection_rules_verb.cpp	8	0	12
 src/analysis/scorer_connection_rules_voice.cpp	2	2	28
-src/analysis/scorer_constants.h	1	90	0
+src/analysis/scorer_constants.h	0	90	0
 src/analysis/scorer_options_loader.cpp	0	2	0
 src/analysis/scorer_options_loader.h	0	0	0
 src/analysis/scorer_word_cost.cpp	5	26	9

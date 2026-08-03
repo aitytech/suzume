@@ -10,6 +10,7 @@
 #include <cstdint>
 
 #include "adjective_candidates.h"
+#include "analysis/dictionary_probe.h"
 #include "analysis/scorer_constants.h"
 #include "analysis/unknown.h"
 #include "candidate_constants.h"
@@ -200,22 +201,16 @@ bool decomposesIntoMultipleParticles(const std::vector<char32_t>& codepoints, si
 
 bool isFollowedByNominalParticle(const std::vector<char32_t>& codepoints, size_t end_pos,
                                  const dictionary::DictionaryManager* dict_manager) {
-  if (dict_manager == nullptr || end_pos >= codepoints.size()) {
-    return false;
-  }
-  const size_t maximum_end = std::min(codepoints.size(), end_pos + 3);
-  for (size_t particle_end = end_pos + 1; particle_end <= maximum_end; ++particle_end) {
-    const auto* entry =
-        dict_manager->lookupExact(extractSubstring(codepoints, end_pos, particle_end), core::PartOfSpeech::Particle);
-    if (entry != nullptr && (entry->extended_pos == core::ExtendedPOS::ParticleCase ||
-                             entry->extended_pos == core::ExtendedPOS::ParticleTopic ||
-                             entry->extended_pos == core::ExtendedPOS::ParticleAdverbial ||
-                             entry->extended_pos == core::ExtendedPOS::ParticleBinding ||
-                             entry->extended_pos == core::ExtendedPOS::ParticleNo)) {
-      return true;
-    }
-  }
-  return false;
+  // Longest nominal-selecting particle in the closed class is three codepoints.
+  constexpr size_t kParticleProbe = 3;
+  return hasDictionaryEntryFrom(dict_manager, codepoints, end_pos, 1, kParticleProbe, core::PartOfSpeech::Particle,
+                                [](const dictionary::DictionaryEntry& entry) {
+                                  return entry.extended_pos == core::ExtendedPOS::ParticleCase ||
+                                         entry.extended_pos == core::ExtendedPOS::ParticleTopic ||
+                                         entry.extended_pos == core::ExtendedPOS::ParticleAdverbial ||
+                                         entry.extended_pos == core::ExtendedPOS::ParticleBinding ||
+                                         entry.extended_pos == core::ExtendedPOS::ParticleNo;
+                                });
 }
 
 // Phonologically impossible hiragana word starts: small kana (拗音・促音), the
@@ -293,13 +288,8 @@ bool startsAfterDictionaryVerb(const std::vector<char32_t>& codepoints,
       char_types[start_pos - 1] != normalize::CharType::Kanji) {
     return false;
   }
-  for (size_t verb_end = start_pos + 1; verb_end <= run_end; ++verb_end) {
-    if (dict_manager->lookupExact(extractSubstring(codepoints, start_pos - 1, verb_end), core::PartOfSpeech::Verb) !=
-        nullptr) {
-      return true;
-    }
-  }
-  return false;
+  return hasDictionaryEntryFrom(dict_manager, codepoints, start_pos - 1, 2, run_end - start_pos + 1,
+                                core::PartOfSpeech::Verb, [](const dictionary::DictionaryEntry&) { return true; });
 }
 
 // A same-type run can also begin inside a dictionary adjective's okurigana
@@ -313,13 +303,8 @@ bool startsAfterDictionaryAdjective(const std::vector<char32_t>& codepoints,
       char_types[start_pos - 1] != normalize::CharType::Kanji) {
     return false;
   }
-  for (size_t adjective_end = start_pos + 1; adjective_end <= run_end; ++adjective_end) {
-    if (dict_manager->lookupExact(extractSubstring(codepoints, start_pos - 1, adjective_end),
-                                  core::PartOfSpeech::Adjective) != nullptr) {
-      return true;
-    }
-  }
-  return false;
+  return hasDictionaryEntryFrom(dict_manager, codepoints, start_pos - 1, 2, run_end - start_pos + 1,
+                                core::PartOfSpeech::Adjective, [](const dictionary::DictionaryEntry&) { return true; });
 }
 
 }  // namespace

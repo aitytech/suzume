@@ -3,6 +3,7 @@
  * @brief Dictionary-backed verb candidate helpers
  */
 
+#include "analysis/dictionary_probe.h"
 #include "core/debug.h"
 #include "normalize/char_type.h"
 #include "normalize/utf8.h"
@@ -161,15 +162,14 @@ bool startsInsideDictionaryAuxiliary(const std::vector<char32_t>& codepoints, si
   const size_t first_start = start_pos > kAuxiliaryLookback ? start_pos - kAuxiliaryLookback : 0;
   const size_t probe_end = std::min(codepoints.size(), start_pos + kAuxiliaryProbe);
   for (size_t auxiliary_start = first_start; auxiliary_start < start_pos; ++auxiliary_start) {
-    for (size_t auxiliary_end = start_pos + 1; auxiliary_end <= probe_end; ++auxiliary_end) {
-      const auto* auxiliary = dict_manager->lookupExact(extractSubstring(codepoints, auxiliary_start, auxiliary_end),
-                                                        core::PartOfSpeech::Auxiliary);
-      // Only the terminal polite copula itself owns this interior.  Its
-      // inflected dictionary cells (でし/でしたら) can occur across an ordinary
-      // conjunctive-particle boundary, as in 読んでしまう.
-      if (auxiliary != nullptr && auxiliary->surface.compare("です") == 0) {
-        return true;
-      }
+    // Only the terminal polite copula itself owns this interior.  Its
+    // inflected dictionary cells (でし/でしたら) can occur across an ordinary
+    // conjunctive-particle boundary, as in 読んでしまう.
+    if (hasDictionaryEntryFrom(
+            dict_manager, codepoints, auxiliary_start, start_pos + 1 - auxiliary_start, probe_end - auxiliary_start,
+            core::PartOfSpeech::Auxiliary,
+            [](const dictionary::DictionaryEntry& auxiliary) { return auxiliary.surface.compare("です") == 0; })) {
+      return true;
     }
   }
   return false;
@@ -177,19 +177,12 @@ bool startsInsideDictionaryAuxiliary(const std::vector<char32_t>& codepoints, si
 
 bool startsWithMultiMoraDictionaryParticle(const std::vector<char32_t>& codepoints, size_t start_pos,
                                            const dictionary::DictionaryManager* dict_manager) {
-  if (dict_manager == nullptr || start_pos >= codepoints.size()) {
-    return false;
-  }
   constexpr size_t kMinimumParticleLength = 2;
   constexpr size_t kParticleProbe = 4;
-  const size_t probe_end = std::min(codepoints.size(), start_pos + kParticleProbe);
-  for (size_t particle_end = start_pos + kMinimumParticleLength; particle_end <= probe_end; ++particle_end) {
-    const auto* entry = dict_manager->lookupExact(extractSubstring(codepoints, start_pos, particle_end));
-    if (entry != nullptr && entry->extended_pos == core::ExtendedPOS::ParticleBinding) {
-      return true;
-    }
-  }
-  return false;
+  return hasDictionaryEntryFrom(dict_manager, codepoints, start_pos, kMinimumParticleLength, kParticleProbe,
+                                core::PartOfSpeech::Unknown, [](const dictionary::DictionaryEntry& entry) {
+                                  return entry.extended_pos == core::ExtendedPOS::ParticleBinding;
+                                });
 }
 
 bool embedsAuxiliaryOnOnbinStem(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
@@ -202,11 +195,10 @@ bool embedsAuxiliaryOnOnbinStem(const std::vector<char32_t>& codepoints, size_t 
     if (onbin != U'い' && onbin != U'ん' && onbin != U'っ') {
       continue;
     }
-    for (size_t aux_end = aux_start + 1; aux_end <= end_pos; ++aux_end) {
-      if (dict_manager->lookupExact(extractSubstring(codepoints, aux_start, aux_end), core::PartOfSpeech::Auxiliary) !=
-          nullptr) {
-        return true;
-      }
+    if (hasDictionaryEntryFrom(dict_manager, codepoints, aux_start, 1, end_pos - aux_start,
+                               core::PartOfSpeech::Auxiliary,
+                               [](const dictionary::DictionaryEntry&) { return true; })) {
+      return true;
     }
   }
   return false;
@@ -214,19 +206,10 @@ bool embedsAuxiliaryOnOnbinStem(const std::vector<char32_t>& codepoints, size_t 
 
 bool auxiliaryFollowsAt(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
                         size_t pos, bool (*accept)(core::ExtendedPOS)) {
-  if (dict_manager == nullptr || pos >= codepoints.size()) {
-    return false;
-  }
   constexpr size_t kAuxiliaryProbe = 3;
-  const size_t max_end = std::min(codepoints.size(), pos + kAuxiliaryProbe);
-  for (size_t aux_end = pos + 1; aux_end <= max_end; ++aux_end) {
-    const auto* entry =
-        dict_manager->lookupExact(extractSubstring(codepoints, pos, aux_end), core::PartOfSpeech::Auxiliary);
-    if (entry != nullptr && accept(entry->extended_pos)) {
-      return true;
-    }
-  }
-  return false;
+  return hasDictionaryEntryFrom(
+      dict_manager, codepoints, pos, 1, kAuxiliaryProbe, core::PartOfSpeech::Auxiliary,
+      [accept](const dictionary::DictionaryEntry& entry) { return accept(entry.extended_pos); });
 }
 
 bool classicalAuxiliaryFollowsAt(const dictionary::DictionaryManager* dict_manager,
@@ -256,20 +239,12 @@ bool classicalAuxiliaryFollowsAt(const dictionary::DictionaryManager* dict_manag
 
 bool predicateAuxiliaryFollowsAt(const dictionary::DictionaryManager* dict_manager,
                                  const std::vector<char32_t>& codepoints, size_t pos) {
-  if (dict_manager == nullptr || pos >= codepoints.size()) {
-    return false;
-  }
   constexpr size_t kAuxiliaryProbe = 4;
-  const size_t max_end = std::min(codepoints.size(), pos + kAuxiliaryProbe);
-  for (size_t aux_end = pos + 1; aux_end <= max_end; ++aux_end) {
-    const auto* entry =
-        dict_manager->lookupExact(extractSubstring(codepoints, pos, aux_end), core::PartOfSpeech::Auxiliary);
-    if (entry != nullptr && entry->extended_pos != core::ExtendedPOS::AuxCopulaDa &&
-        entry->extended_pos != core::ExtendedPOS::AuxCopulaDesu) {
-      return true;
-    }
-  }
-  return false;
+  return hasDictionaryEntryFrom(dict_manager, codepoints, pos, 1, kAuxiliaryProbe, core::PartOfSpeech::Auxiliary,
+                                [](const dictionary::DictionaryEntry& entry) {
+                                  return entry.extended_pos != core::ExtendedPOS::AuxCopulaDa &&
+                                         entry.extended_pos != core::ExtendedPOS::AuxCopulaDesu;
+                                });
 }
 
 bool endsWithParticleTailOfPos(const dictionary::DictionaryManager* dict_manager,
@@ -359,12 +334,11 @@ bool embedsCaseParticle(const dictionary::DictionaryManager* dict_manager, const
       continue;
     }
     const size_t max_len = std::min(kMaxParticleLen, end_pos - particle_start - 1);
-    for (size_t particle_len = 1; particle_len <= max_len; ++particle_len) {
-      const auto* entry =
-          dict_manager->lookupExact(extractSubstring(codepoints, particle_start, particle_start + particle_len));
-      if (entry != nullptr && entry->extended_pos == core::ExtendedPOS::ParticleCase) {
-        return true;
-      }
+    if (hasDictionaryEntryFrom(dict_manager, codepoints, particle_start, 1, max_len, core::PartOfSpeech::Unknown,
+                               [](const dictionary::DictionaryEntry& entry) {
+                                 return entry.extended_pos == core::ExtendedPOS::ParticleCase;
+                               })) {
+      return true;
     }
   }
   return false;
@@ -372,9 +346,6 @@ bool embedsCaseParticle(const dictionary::DictionaryManager* dict_manager, const
 
 size_t negativeAuxiliaryLengthAt(const dictionary::DictionaryManager* dict_manager,
                                  const std::vector<char32_t>& codepoints, size_t pos) {
-  if (dict_manager == nullptr || pos >= codepoints.size()) {
-    return 0;
-  }
   // Longest negative auxiliary in the closed class is four codepoints (なけりゃ).
   constexpr size_t kMaxAuxLen = 4;
   // The negative paradigm has one-mora members too (ぬ, ず, ね, ん, じ). They are
@@ -382,16 +353,11 @@ size_t negativeAuxiliaryLengthAt(const dictionary::DictionaryManager* dict_manag
   // auxiliary because it is also spelled like the end of an ordinary word, so
   // callers that build a candidate on this answer price the one-mora case.
   constexpr size_t kMinAuxLen = 1;
-  const size_t max_len = std::min(kMaxAuxLen, codepoints.size() - pos);
-  for (size_t aux_len = max_len; aux_len >= kMinAuxLen; --aux_len) {
-    const auto* entry =
-        dict_manager->lookupExact(extractSubstring(codepoints, pos, pos + aux_len), core::PartOfSpeech::Auxiliary);
-    if (entry != nullptr && (entry->extended_pos == core::ExtendedPOS::AuxNegativeNai ||
-                             entry->extended_pos == core::ExtendedPOS::AuxNegativeNu)) {
-      return aux_len;
-    }
-  }
-  return 0;
+  return longestDictionaryEntryLengthFrom(dict_manager, codepoints, pos, kMinAuxLen, kMaxAuxLen,
+                                          core::PartOfSpeech::Auxiliary, [](const dictionary::DictionaryEntry& entry) {
+                                            return entry.extended_pos == core::ExtendedPOS::AuxNegativeNai ||
+                                                   entry.extended_pos == core::ExtendedPOS::AuxNegativeNu;
+                                          });
 }
 
 bool opensOnClosedClassWordTail(const dictionary::DictionaryManager* dict_manager,

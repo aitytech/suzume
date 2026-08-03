@@ -9,6 +9,7 @@
 #include "adjective_candidates.h"
 #include "adjective_candidates_internal.h"
 #include "analysis/candidate_constants.h"
+#include "analysis/dictionary_probe.h"
 #include "analysis/scorer_constants.h"
 #include "core/debug.h"
 #include "core/utf8_constants.h"
@@ -98,12 +99,10 @@ bool containsDictionaryVerbBoundary(const std::vector<char32_t>& codepoints, siz
     return false;
   }
   constexpr size_t kMinimumVerbLength = 2;
-  for (size_t verb_start = start_pos + 1; verb_start < end_pos; ++verb_start) {
-    for (size_t verb_end = verb_start + kMinimumVerbLength; verb_end < end_pos; ++verb_end) {
-      if (dict_manager->lookupExact(extractSubstring(codepoints, verb_start, verb_end), core::PartOfSpeech::Verb) !=
-          nullptr) {
-        return true;
-      }
+  for (size_t verb_start = start_pos + 1; verb_start + 1 < end_pos; ++verb_start) {
+    if (hasDictionaryEntryFrom(dict_manager, codepoints, verb_start, kMinimumVerbLength, end_pos - 1 - verb_start,
+                               core::PartOfSpeech::Verb, [](const dictionary::DictionaryEntry&) { return true; })) {
+      return true;
     }
   }
   return false;

@@ -6,6 +6,7 @@
 #include <algorithm>
 
 #include "adjective_candidates.h"
+#include "analysis/dictionary_probe.h"
 #include "candidate_constants.h"
 #include "core/debug.h"
 #include "core/utf8_constants.h"
@@ -69,11 +70,9 @@ bool boundarySplitsDictionaryParticle(const dictionary::DictionaryManager* dict_
   const size_t scan_start = (end_pos > kanji_end + 1) ? end_pos - 2 : kanji_end;
   const size_t probe_end = std::min(codepoints.size(), end_pos + 2);
   for (size_t start = scan_start; start < end_pos; ++start) {
-    for (size_t stop = end_pos + 1; stop <= probe_end; ++stop) {
-      if (dict_manager->lookupExact(extractSubstring(codepoints, start, stop), core::PartOfSpeech::Particle) !=
-          nullptr) {
-        return true;
-      }
+    if (hasDictionaryEntryFrom(dict_manager, codepoints, start, end_pos + 1 - start, probe_end - start,
+                               core::PartOfSpeech::Particle, [](const dictionary::DictionaryEntry&) { return true; })) {
+      return true;
     }
   }
   return false;
@@ -91,20 +90,15 @@ bool boundarySplitsDictionaryParticle(const dictionary::DictionaryManager* dict_
  */
 bool startsWithConjunctiveParticle(const dictionary::DictionaryManager* dict_manager,
                                    const std::vector<char32_t>& codepoints, size_t kanji_end, size_t end_pos) {
-  if (dict_manager == nullptr) {
+  if (dict_manager == nullptr || end_pos <= kanji_end) {
     return false;
   }
   constexpr size_t kMinimumParticleLength = 2;
   constexpr size_t kParticleProbe = 4;
-  const size_t probe_end = std::min(end_pos, kanji_end + kParticleProbe);
-  for (size_t particle_end = kanji_end + kMinimumParticleLength; particle_end <= probe_end; ++particle_end) {
-    const auto* entry =
-        dict_manager->lookupExact(extractSubstring(codepoints, kanji_end, particle_end), core::PartOfSpeech::Particle);
-    if (entry != nullptr && entry->extended_pos == core::ExtendedPOS::ParticleConj) {
-      return true;
-    }
-  }
-  return false;
+  return hasDictionaryEntryFrom(
+      dict_manager, codepoints, kanji_end, kMinimumParticleLength, std::min(kParticleProbe, end_pos - kanji_end),
+      core::PartOfSpeech::Particle,
+      [](const dictionary::DictionaryEntry& entry) { return entry.extended_pos == core::ExtendedPOS::ParticleConj; });
 }
 
 bool isAdjectiveNominalizationSa(const dictionary::DictionaryManager* dict_manager,
