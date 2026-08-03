@@ -147,6 +147,10 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
     // Ichidan-looking stem here would fabricate verbs such as られ+ちゃう.
     const std::string following_surface = extractSubstring(codepoints, end_pos, hiragana_end);
     bool is_followed_by_renyokei_aux = startsWithRenyokeiAuxiliary(following_surface);
+    const auto* following_auxiliary =
+        dict_manager != nullptr ? dict_manager->lookupExact(following_surface, core::PartOfSpeech::Auxiliary) : nullptr;
+    const bool is_followed_by_classical_adnominal_tari =
+        following_auxiliary != nullptr && following_auxiliary->extended_pos == core::ExtendedPOS::AuxClassicalTari;
     const bool is_followed_by_masu = vh::masuAuxFollowsAt(codepoints, end_pos) && !leading_de_after_hatsuonbin;
     if (leading_de_after_hatsuonbin) {
       is_followed_by_renyokei_aux = false;
@@ -163,7 +167,8 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
       is_followed_by_nai = true;
     }
     if (!is_followed_by_te_ta && !is_followed_by_masu && !godan_ta_before_declared_renyokei_aux &&
-        !is_followed_by_renyokei_conj && !is_followed_by_reba && !is_followed_by_nai) {
+        !is_followed_by_renyokei_conj && !is_followed_by_classical_adnominal_tari && !is_followed_by_reba &&
+        !is_followed_by_nai) {
       continue;
     }
 
@@ -203,8 +208,9 @@ void appendHiraganaDerivedCandidates(const std::vector<char32_t>& codepoints, si
     const bool stem_is_closed_auxiliary =
         vh::hasDictionaryEntry(dict_manager, stem_surface, core::PartOfSpeech::Auxiliary);
     const grammar::VerbType godan_type = grammar::verbTypeFromIRowCodepoint(stem_end_char);
-    if (!stem_is_closed_auxiliary && (is_followed_by_masu || is_followed_by_renyokei_conj || godan_sa_before_te_ta ||
-                                      godan_ta_before_declared_renyokei_aux)) {
+    if (!stem_is_closed_auxiliary &&
+        (is_followed_by_masu || is_followed_by_renyokei_conj || is_followed_by_classical_adnominal_tari ||
+         godan_sa_before_te_ta || godan_ta_before_declared_renyokei_aux)) {
       if (godan_type != grammar::VerbType::Unknown) {
         std::string godan_base = extractSubstring(codepoints, start_pos, end_pos - 1) +
                                  std::string(grammar::godanBaseSuffixFromIRow(stem_end_char));

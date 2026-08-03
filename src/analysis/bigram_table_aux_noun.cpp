@@ -104,6 +104,11 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       {EPOS::AuxCausative, EPOS::ParticleCase, cost::kAlmostNever},
       {EPOS::AuxCausative, EPOS::ParticleTopic, cost::kAlmostNever},
 
+      // A causative auxiliary cannot attach directly to a copula. A surface
+      // such as し+だった must instead be licensed as a lexical noun before
+      // the copula; a causative predicate needs a finite ending first.
+      {EPOS::AuxCausative, EPOS::AuxCopulaDa, cost::kAlmostNever},
+
       // Honorific subsidiary negative: いただけ+ない, なさら+ない. Keep
       // the dependent auxiliary reading ahead of a homographic lexical verb.
       {EPOS::AuxHonorific, EPOS::AuxNegativeNai, cost::kDoubleVeryStrongBonus},

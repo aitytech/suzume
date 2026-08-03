@@ -43,13 +43,14 @@ void appendVerifiedTailGodanTaCompoundCandidates(const std::vector<char32_t>& co
                                                  std::vector<UnknownCandidate>& candidates) {
   // A non-nominal kanji prefix can productively compound with a known one-kanji
   // GodanTa verb (先立つ, 先立ち, 先立って). The verified tail fixes the conjugation
-  // class, while rejecting a dictionary noun prefix preserves object+verb paths
-  // such as 本|立つ.
+  // class, while rejecting a dictionary non-verb prefix preserves an existing
+  // lexical or grammatical boundary (本|立つ, 三日+間|待つ). A productive
+  // compound prefix has no independent non-verb evidence at this position.
   if (dict_manager == nullptr || kanji_end != start_pos + 2 || kanji_end >= codepoints.size()) {
     return;
   }
   std::string prefix = extractSubstring(codepoints, start_pos, start_pos + 1);
-  if (vh::isNounInDictionary(dict_manager, prefix)) {
+  if (vh::hasNonVerbDictionaryEntry(dict_manager, prefix)) {
     return;
   }
   std::string stem = extractSubstring(codepoints, start_pos, kanji_end);

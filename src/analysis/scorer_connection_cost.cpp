@@ -530,13 +530,15 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
     SUZUME_CONNECTION_ADD(surface_bonus, cost::kVeryRare);  // 1.8
   }
 
-  // The attributive copula な normally takes a noun or nominalizer.  It
-  // cannot directly precede an arbitrary conjunction: only the
-  // nominalizer-led なので/なのに forms are valid.  This keeps a closed
-  // particle such as など from being split into な+ど while preserving those
+  // The attributive copula な takes a noun or nominalizer. It cannot directly
+  // precede a case particle, nor can it precede an arbitrary conjunction: only
+  // the nominalizer-led なので/なのに forms are valid. This keeps a noun whose
+  // last mora is な intact before a case particle (ひらがな+を), and keeps a
+  // closed particle such as など from being split into な+ど while preserving
   // productive copular constructions.
   if (prev.extended_pos == core::ExtendedPOS::AuxCopulaDa && grammar::isAttributiveCopulaNa(prev.surface) &&
-      next.extended_pos == core::ExtendedPOS::ParticleConj && !utf8::startsWith(next.surface, "の")) {
+      (next.extended_pos == core::ExtendedPOS::ParticleCase ||
+       (next.extended_pos == core::ExtendedPOS::ParticleConj && !utf8::startsWith(next.surface, "の")))) {
     SUZUME_CONNECTION_ADD(surface_bonus, cost::kVeryRare);  // Cancel the -0.8 bonus and add penalty
   }
 
@@ -657,17 +659,14 @@ float Scorer::connectionCost(const core::LatticeEdge& prev, const core::LatticeE
     SUZUME_CONNECTION_ADD(surface_bonus, cost::kRare);  // 1.0: must exceed NOUN→VERB_連用 bonus
   }
 
-  // Penalty for VerbRenyokei → で (any interpretation)
+  // Penalty for VerbRenyokei → で as a conjunctive particle.
   // Ichidan te-form only uses て (食べ+て, 見+て), NOT で
   // Godan te-form with で uses onbinkei (飲ん+で, 読ん+で), not renyokei
-  // AUX_断定(で) only attaches to nouns/na-adj (静かで, 学生で), not verbs
+  // The parallel copula rule is category-wide in bigram_table_verb_adj.cpp.
   // Without this, kanji+り nouns like 夏祭り get falsely parsed as VERB_連用
-  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && utf8::startsWith(next.surface, "で")) {
-    if (next.extended_pos == core::ExtendedPOS::ParticleConj) {
-      SUZUME_CONNECTION_ADD(surface_bonus, cost::kMinor);  // +0.5 to cancel the -0.5 bigram bonus
-    } else if (next.extended_pos == core::ExtendedPOS::AuxCopulaDa) {
-      SUZUME_CONNECTION_ADD(surface_bonus, cost::kMinor);  // Penalize invalid VERB_連用→断定
-    }
+  if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && utf8::startsWith(next.surface, "で") &&
+      next.extended_pos == core::ExtendedPOS::ParticleConj) {
+    SUZUME_CONNECTION_ADD(surface_bonus, cost::kMinor);  // +0.5 to cancel the -0.5 bigram bonus
   }
 
   // Penalty for single-kanji ADJ_語幹 → AuxGaru

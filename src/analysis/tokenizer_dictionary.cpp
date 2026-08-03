@@ -191,6 +191,57 @@ bool startsInsideVerifiedPredicate(const core::Lattice& lattice, size_t start_po
   return false;
 }
 
+// A kana determiner can begin at the final mora of a productive verb
+// continuative (たなびき+たる, not たなび+きたる).  Probe the predicate run
+// following the nearest particle that can introduce a predicate, and permit a
+// suffix probe because the confidence scorer deliberately discounts long
+// all-hiragana stems while still recognizing their productive tail.  An
+// immediately preceding particle means the determiner starts at a real
+// boundary and must remain available (そして+きたる).
+bool hasProductiveContinuativeCrossingDeterminer(const core::Lattice& lattice, const grammar::Inflection& inflection,
+                                                 const dictionary::DictionaryManager& dict_manager,
+                                                 const std::vector<char32_t>& codepoints, size_t determiner_start) {
+  if (determiner_start == 0 || !grammar::isIRowCodepoint(codepoints[determiner_start])) {
+    return false;
+  }
+
+  size_t host_start = determiner_start > kDictionaryLookbehindChars ? determiner_start - kDictionaryLookbehindChars : 0;
+  for (size_t boundary = determiner_start; boundary > host_start; --boundary) {
+    const bool follows_predicate_introducing_particle =
+        core::anyEdgeEndingAt(lattice, boundary, [](const core::LatticeEdge& edge) {
+          return edge.extended_pos == core::ExtendedPOS::ParticleCase ||
+                 edge.extended_pos == core::ExtendedPOS::ParticleNo ||
+                 edge.extended_pos == core::ExtendedPOS::ParticleTopic ||
+                 edge.extended_pos == core::ExtendedPOS::ParticleBinding ||
+                 edge.extended_pos == core::ExtendedPOS::ParticleAdverbial;
+        });
+    if (follows_predicate_introducing_particle) {
+      host_start = boundary;
+      break;
+    }
+  }
+  if (host_start == determiner_start) {
+    return false;
+  }
+
+  for (size_t probe_start = host_start; probe_start < determiner_start; ++probe_start) {
+    const std::string continuative = extractSubstring(codepoints, probe_start, determiner_start + 1);
+    if (dict_manager.lookupExact(continuative, core::PartOfSpeech::Verb) != nullptr) {
+      return true;
+    }
+    const auto inflection_candidates = inflection.analyze(continuative);
+    if (std::any_of(inflection_candidates.begin(), inflection_candidates.end(),
+                    [](const grammar::InflectionCandidate& inflection_candidate) {
+                      return inflection_candidate.verb_type != grammar::VerbType::IAdjective &&
+                             !inflection_candidate.suffix.empty() &&
+                             inflection_candidate.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence;
+                    })) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool canSegmentAsParticles(const dictionary::DictionaryManager& dict_manager, const std::vector<char32_t>& codepoints,
                            size_t start_pos, size_t end_pos) {
   return maximalSegmentCount(dict_manager, codepoints, start_pos, end_pos, core::PartOfSpeech::Particle) > 0;
@@ -434,6 +485,21 @@ bool hasPrecedingNominal(const core::Lattice& lattice, size_t start_pos) {
   constexpr PartOfSpeechMask kNominalMask =
       partOfSpeechMask(core::PartOfSpeech::Noun) | partOfSpeechMask(core::PartOfSpeech::Pronoun);
   return hasPrecedingPartOfSpeech(lattice, start_pos, kNominalMask);
+}
+
+// An L2 noun can begin with another L2 noun by accident (は+にわ inside
+// はにわ).  At sentence start the longer registered noun owns the span; after
+// a completed nominal, the same first mora can instead be a productive topic
+// particle and the suffix noun remains available.
+bool startsInsideSentenceInitialDictionaryNoun(const dictionary::DictionaryManager& dict_manager, std::string_view text,
+                                               size_t start_pos) {
+  if (start_pos == 0) {
+    return false;
+  }
+  const auto sentence_initial = dict_manager.lookup(text, 0);
+  return std::any_of(sentence_initial.begin(), sentence_initial.end(), [start_pos](const auto& result) {
+    return result.entry != nullptr && result.entry->pos == core::PartOfSpeech::Noun && result.length > start_pos;
+  });
 }
 
 // A two-mora conjunction candidate can straddle the productive boundary in
@@ -1033,6 +1099,20 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // grammatical categories remain available, so this changes only the
     // ownership relation among exact Noun homographs.
     if (result.entry->pos == core::PartOfSpeech::Noun && result.length < longest_noun) {
+      continue;
+    }
+    if (result.entry->pos == core::PartOfSpeech::Noun &&
+        startsInsideSentenceInitialDictionaryNoun(dict_manager_, text, start_pos)) {
+      continue;
+    }
+    // A registered noun beginning with a topic-particle homograph can absorb
+    // that productive boundary after another nominal (そこ+は+にわ).  Require
+    // both closed-class evidence for the first mora and L2 noun evidence for
+    // the suffix, so a standalone lexical noun (はにわ) remains whole.
+    if (result.entry->pos == core::PartOfSpeech::Noun && result.length > 1 && hasPrecedingNominal(lattice, start_pos) &&
+        lookupResultsHaveExtendedPOS(lookup_results, core::ExtendedPOS::ParticleTopic, 1) &&
+        dict_manager_.lookupExact(extractSubstring(codepoints, start_pos + 1, end_pos), core::PartOfSpeech::Noun) !=
+            nullptr) {
       continue;
     }
 
@@ -1692,25 +1772,13 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     }
 
     // A pure-hiragana adnominal begins with a kana that is also an inflectional
-    // ending, so it cannot start where a dictionary verb continuative already
-    // straddles the boundary (書き+たる, not 書+きたる).  The kanji spelling of
-    // the same adnominal is unaffected, as is any position where no verb form
-    // spans the split.
-    if (result.entry->pos == core::PartOfSpeech::Determiner && start_pos > 0 &&
-        normalize::isKanjiCodepoint(codepoints[start_pos - 1])) {
-      const std::string continuative = extractSubstring(codepoints, start_pos - 1, start_pos + 1);
-      const bool is_dictionary_continuative =
-          dict_manager_.lookupExact(continuative, core::PartOfSpeech::Verb) != nullptr;
-      const bool is_productive_continuative =
-          std::any_of(inflection_.analyze(continuative).begin(), inflection_.analyze(continuative).end(),
-                      [](const grammar::InflectionCandidate& inflection_candidate) {
-                        return inflection_candidate.verb_type != grammar::VerbType::IAdjective &&
-                               !inflection_candidate.suffix.empty() &&
-                               inflection_candidate.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence;
-                      });
-      if (is_dictionary_continuative || is_productive_continuative) {
-        continue;
-      }
+    // ending, so it cannot start where a productive verb continuative already
+    // straddles the boundary (書き+たる, たなびき+たる).  A real boundary
+    // immediately before the determiner and unrelated kana contexts remain
+    // untouched.
+    if (result.entry->pos == core::PartOfSpeech::Determiner &&
+        hasProductiveContinuativeCrossingDeterminer(lattice, inflection_, dict_manager_, codepoints, start_pos)) {
+      continue;
     }
 
     // The historical terminal component ふ is meaningful only after a kanji

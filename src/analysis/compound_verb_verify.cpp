@@ -206,8 +206,10 @@ CompoundV1Verification verifyCompoundVerbV1(const CompoundV1VerificationRequest&
       const std::string v1_renyokei(text.substr(start_byte, v1_renyokei_end - start_byte));
       if (verb_helpers::hasNonVerbDictionaryEntry(&dict_manager, v1_renyokei)) {
         const auto inflection_candidate = inflection.getBest(v1_renyokei);
+        const bool is_complete_dictionary_adjective =
+            dict_manager.lookupExact(v1_renyokei, core::PartOfSpeech::Adjective) != nullptr;
         const bool productive_godan_compound =
-            !is_ichidan && kanji_count == 1 &&
+            !is_complete_dictionary_adjective && !is_ichidan && kanji_count == 1 &&
             inflection_candidate.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence &&
             inflection_candidate.base_form == v1_base;
         if (!productive_godan_compound) {

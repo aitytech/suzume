@@ -14,6 +14,13 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // VerbRenyokei → AuxTenseMasu (食べ+ます) - strong bonus
       {EPOS::VerbRenyokei, EPOS::AuxTenseMasu, cost::kStrongBonus},
 
+      // A bare continuative verb form is nominalized before a copula
+      // (帰り+だ, 急ぎ+だった), so prefer the parallel noun
+      // reading over a fabricated lexical verb when both are available.
+      // This generalizes the former surface-only penalty for で to every
+      // inflected form of the copula without prohibiting nominal use.
+      {EPOS::VerbRenyokei, EPOS::AuxCopulaDa, cost::kMinor},
+
       // VerbRenyokei → AuxDesireTai (食べ+たい) - strong bonus
       {EPOS::VerbRenyokei, EPOS::AuxDesireTai, cost::kStrongBonus},
 
