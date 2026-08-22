@@ -677,21 +677,10 @@ bool followsConjunctiveTeDe(const core::Lattice& lattice, size_t start_pos) {
   return false;
 }
 
-bool hasMizenkeiNegativeAlternative(const dictionary::DictionaryManager& dict_manager, std::string_view text,
-                                    size_t byte_offset, const std::vector<char32_t>& codepoints, size_t start_pos,
-                                    size_t candidate_length) {
-  if (candidate_length < 2 || start_pos + candidate_length > codepoints.size()) {
-    return false;
-  }
-  for (const auto& alternative : dict_manager.lookup(text, byte_offset)) {
-    if (alternative.entry != nullptr && alternative.entry->extended_pos == core::ExtendedPOS::VerbMizenkei &&
-        alternative.length + 1 == candidate_length && codepoints[start_pos + alternative.length] == U'ん') {
-      return true;
-    }
-  }
-  return false;
-}
-
+// A candidate span whose last character is the contracted negative ん competes
+// with a dictionary irrealis one character shorter.  Both the formal-noun and
+// the irrealis reading of the span are decided by the same evidence, so they
+// ask this one question rather than each carrying its own scan.
 bool hasShorterMizenkeiBeforeNegative(const dictionary::DictionaryManager& dict_manager, std::string_view text,
                                       size_t byte_offset, const std::vector<char32_t>& codepoints, size_t start_pos,
                                       size_t candidate_length) {
@@ -984,8 +973,8 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     size_t end_pos = start_pos + result.length;
 
     if (result.entry->extended_pos == core::ExtendedPOS::NounFormal && followsNegativeQuote(lattice, start_pos) &&
-        hasMizenkeiNegativeAlternative(dict_manager_, text, byteOffsetAt(byte_offsets, start_pos), codepoints,
-                                       start_pos, result.length)) {
+        hasShorterMizenkeiBeforeNegative(dict_manager_, text, byteOffsetAt(byte_offsets, start_pos), codepoints,
+                                         start_pos, result.length)) {
       continue;
     }
     if (result.entry->pos == core::PartOfSpeech::Verb && followsNegativeQuote(lattice, start_pos) &&
