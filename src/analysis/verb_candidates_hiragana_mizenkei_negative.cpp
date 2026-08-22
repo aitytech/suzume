@@ -68,6 +68,39 @@ bool hasFormalNounStemHomograph(const dictionary::DictionaryManager* dict_manage
   return entry != nullptr && entry->extended_pos == core::ExtendedPOS::NounFormal;
 }
 
+// What a derived irrealis is worth as evidence: whether some reading of the
+// analysed form reconstructs the same verb, whether the base form is attested,
+// and whether it is an unattested sa-row irrealis.
+struct MizenkeiEvidence {
+  bool is_valid_verb;
+  bool is_in_dict;
+  bool unattested_sa_irrealis;
+};
+
+// The gates below differ only in the form they analyse — the auxiliary the text
+// actually carries, or the equivalent ない form — and weigh the result the same
+// way afterwards, so they ask for it here rather than each repeating the scan.
+MizenkeiEvidence judgeMizenkeiForms(const dictionary::DictionaryManager* dict_manager,
+                                    const grammar::Inflection& inflection, const std::string& full_form,
+                                    const GodanMizenkeiForms& forms, const std::vector<char32_t>& codepoints,
+                                    size_t start_pos, size_t mizenkei_end) {
+  MizenkeiEvidence evidence{};
+  for (const auto& cand : inflection.analyze(full_form)) {
+    if (cand.verb_type == forms.verb_type && cand.base_form == forms.base_form) {
+      evidence.is_valid_verb = true;
+      break;
+    }
+  }
+  evidence.is_in_dict = vh::isVerbInDictionary(dict_manager, forms.base_form);
+  if (!evidence.is_valid_verb) {
+    evidence.is_valid_verb = evidence.is_in_dict;
+  }
+  const bool formal_noun_stem_homograph = hasFormalNounStemHomograph(dict_manager, codepoints, start_pos, mizenkei_end);
+  evidence.unattested_sa_irrealis = forms.verb_type == grammar::VerbType::GodanSa && !evidence.is_in_dict &&
+                                    grammar::isPureHiragana(forms.stem) && !formal_noun_stem_homograph;
+  return evidence;
+}
+
 // An unverified mizenkei may start by absorbing a particle before a real verb
 // (に+行かない, は+ならない, も+ならない).  Preserve that closed-class
 // boundary when the remainder reconstructs to a dictionary verb.
@@ -184,29 +217,15 @@ void appendMizenkeiNegativeCandidates(const std::vector<char32_t>& codepoints, s
     }
     grammar::VerbType verb_type = forms.verb_type;
     const std::string& mizenkei_surface = forms.mizenkei_surface;
-    const std::string& stem = forms.stem;
     const std::string& base_form = forms.base_form;
 
     // Validate: analyze the full form (including the auxiliary) to check if it's a valid verb
-    std::string full_form = mizenkei_surface + extractSubstring(codepoints, end_pos, end_pos + aux_len);
-    const auto& analysis = inflection.analyze(full_form);
-    bool is_valid_verb = false;
-    for (const auto& cand : analysis) {
-      if (cand.verb_type == verb_type && cand.base_form == base_form) {
-        is_valid_verb = true;
-        break;
-      }
-    }
-
-    // Also check if base form exists in dictionary
-    bool is_in_dict = vh::isVerbInDictionary(dict_manager, base_form);
-    if (!is_valid_verb) {
-      is_valid_verb = is_in_dict;
-    }
-    const bool formal_noun_stem_homograph =
-        hasFormalNounStemHomograph(dict_manager, codepoints, start_pos, mizenkei_end);
-    const bool unattested_sa_irrealis = verb_type == grammar::VerbType::GodanSa && !is_in_dict &&
-                                        grammar::isPureHiragana(stem) && !formal_noun_stem_homograph;
+    const std::string full_form = mizenkei_surface + extractSubstring(codepoints, end_pos, end_pos + aux_len);
+    const MizenkeiEvidence evidence =
+        judgeMizenkeiForms(dict_manager, inflection, full_form, forms, codepoints, start_pos, mizenkei_end);
+    const bool is_valid_verb = evidence.is_valid_verb;
+    const bool is_in_dict = evidence.is_in_dict;
+    const bool unattested_sa_irrealis = evidence.unattested_sa_irrealis;
     // Reject a fabricated mizenkei that merely absorbs a trailing adverbial
     // particle (みるしか / やるしか = verb + しか, never the 未然形 of a non-word).
     if (!is_in_dict && endsWithParticleAfterVerb(dict_manager, inflection, codepoints, start_pos, mizenkei_end)) {
@@ -313,28 +332,16 @@ void appendMizenkeiNakyaCandidates(const std::vector<char32_t>& codepoints, size
     }
     grammar::VerbType verb_type = forms.verb_type;
     const std::string& mizenkei_surface = forms.mizenkei_surface;
-    const std::string& stem = forms.stem;
     const std::string& base_form = forms.base_form;
 
     // Validate: analyze the equivalent ない form to confirm it is a valid verb.
     // E.g., for やら validate やらない → やる (godan-ra). Dictionary is a fallback.
-    std::string full_form = mizenkei_surface + "ない";
-    const auto& analysis = inflection.analyze(full_form);
-    bool is_valid_verb = false;
-    for (const auto& cand : analysis) {
-      if (cand.verb_type == verb_type && cand.base_form == base_form) {
-        is_valid_verb = true;
-        break;
-      }
-    }
-    bool is_in_dict = vh::isVerbInDictionary(dict_manager, base_form);
-    if (!is_valid_verb) {
-      is_valid_verb = is_in_dict;
-    }
-    const bool formal_noun_stem_homograph =
-        hasFormalNounStemHomograph(dict_manager, codepoints, start_pos, mizenkei_end);
-    const bool unattested_sa_irrealis = verb_type == grammar::VerbType::GodanSa && !is_in_dict &&
-                                        grammar::isPureHiragana(stem) && !formal_noun_stem_homograph;
+    const std::string full_form = mizenkei_surface + "ない";
+    const MizenkeiEvidence evidence =
+        judgeMizenkeiForms(dict_manager, inflection, full_form, forms, codepoints, start_pos, mizenkei_end);
+    const bool is_valid_verb = evidence.is_valid_verb;
+    const bool is_in_dict = evidence.is_in_dict;
+    const bool unattested_sa_irrealis = evidence.unattested_sa_irrealis;
     if (!is_valid_verb) {
       continue;
     }
