@@ -226,19 +226,13 @@ bool hasDictionaryContentEndingAt(const std::vector<char32_t>& codepoints, size_
   }
   constexpr size_t kContentLookback = 4;
   const size_t first = boundary > kContentLookback ? boundary - kContentLookback : 0;
-  for (size_t start = first; start < boundary; ++start) {
-    const std::string surface = suzume::analysis::extractSubstring(codepoints, start, boundary);
-    constexpr suzume::analysis::PartOfSpeechMask kContentMask =
-        suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Noun) |
-        suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Pronoun) |
-        suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Adverb) |
-        suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Adjective) |
-        suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Verb);
-    if (suzume::analysis::hasExactPartOfSpeech(*dict_manager, surface, kContentMask)) {
-      return true;
-    }
-  }
-  return false;
+  constexpr suzume::analysis::PartOfSpeechMask kContentMask =
+      suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Noun) |
+      suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Pronoun) |
+      suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Adverb) |
+      suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Adjective) |
+      suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Verb);
+  return suzume::analysis::hasDictionaryEntryEndingAt(*dict_manager, codepoints, first, boundary, kContentMask);
 }
 
 bool isGeneratedPredicate(const std::vector<char32_t>& codepoints, size_t start, size_t end,
