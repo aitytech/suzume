@@ -293,6 +293,12 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // The same holds for an adverbial particle (いつまで+たっ+て+も, never
       // いつまで+た+って+も).
       {EPOS::ParticleAdverbial, EPOS::AuxTenseTa, cost::kSevere},
+      // A pronoun is a nominal, so it reaches the past through the copula
+      // (これ+だっ+た) and never hosts the tense auxiliary directly. Without
+      // this the voiced past だ can pose as the copula behind an interrogative
+      // and pull a colloquial のだ clause into it (そう+なん+だ, not そう+な+ん+だ).
+      {EPOS::Pronoun, EPOS::AuxTenseTa, cost::kSevere},
+      {EPOS::PronounInterrogative, EPOS::AuxTenseTa, cost::kSevere},
 
       // AuxAspectIru → AuxTenseTa (い+た) - moderate bonus
       {EPOS::AuxAspectIru, EPOS::AuxTenseTa, cost::kModerateBonus},
@@ -521,6 +527,12 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // prohibition ends on the conjunctive particle, and the closing particle
       // is the only thing that can follow it there.
       {EPOS::ParticleConj, EPOS::ParticleFinal, cost::kModerateBonus},
+
+      // The negative auxiliary inflects like an i-adjective and closes a clause
+      // the same way (行か+ない+か, 〜じゃ+ない+ね), so it earns the AdjBasic
+      // bonus. Without it the homographic adjective ない wins that position on
+      // the connection alone and takes the copula in front of it down with it.
+      {EPOS::AuxNegativeNai, EPOS::ParticleFinal, cost::kModerateBonus},
 
   };
   applyRules(table, kRules, sizeof(kRules) / sizeof(kRules[0]));

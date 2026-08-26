@@ -2137,6 +2137,107 @@
       ],
       "id": "umamigaaru",
       "input": "うまみがある"
+    },
+    {
+      "description": "Negative auxiliary is not absorbed into a deverbal noun before a particle",
+      "expected": [
+        {
+          "lemma": "ためす",
+          "pos": "Verb",
+          "surface": "ためさ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "分かる",
+          "pos": "Verb",
+          "surface": "分から"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "tamesanaito_karanai",
+      "input": "ためさないと分からない"
+    },
+    {
+      "description": "Godan-sa irrealis before the negative keeps its boundary in a conditional",
+      "expected": [
+        {
+          "lemma": "まわす",
+          "pos": "Verb",
+          "surface": "まわさ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "開く",
+          "pos": "Verb",
+          "surface": "開か"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "mawasanaito_kanai",
+      "input": "まわさないと開かない"
+    },
+    {
+      "description": "Contracted copula plus negative auxiliary before a final particle chain",
+      "expected": [
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "できる"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "じゃ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        },
+        {
+          "lemma": "な",
+          "pos": "Particle",
+          "surface": "な"
+        }
+      ],
+      "id": "dekirunji_naikana",
+      "input": "できるんじゃないかな"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",
