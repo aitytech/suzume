@@ -282,6 +282,13 @@ EntrySpecRange getAuxiliaryEntries() {
       aux("しめ", "しむ", EPOS::AuxCausative),    // 未然/連用形
       aux("しむる", "しむ", EPOS::AuxCausative),  // 連体形
       aux("しむれ", "しむ", EPOS::AuxCausative),  // 已然形
+      // The same auxiliary re-inflected as an Ichidan verb, which is the only
+      // shape it still takes in modern prose (知らしめる, 書かしめれば). Without
+      // these cells the terminal is read as the lexical verb it is homographic
+      // with, and the irrealis host in front of it gets absorbed into a
+      // fabricated compound.
+      aux("しめる", "しめる", EPOS::AuxCausative),  // 終止/連体形
+      aux("しめれ", "しめる", EPOS::AuxCausative),  // 仮定形
 
       // Desiderative - たい (願望)
       aux("たい", "たい", EPOS::AuxDesireTai),

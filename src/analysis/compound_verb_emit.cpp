@@ -108,6 +108,16 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
       SUZUME_DEBUG_LOG_VERBOSE("[COMPOUND_EMIT] rejected appearance auxiliary\n");
       return;
     }
+    // A causative auxiliary is a lexical V2 only behind an i-row continuative
+    // (抱き+しめる, 噛み+しめる). Everywhere else the same surface is the
+    // auxiliary closing a causative chain on an irrealis host (知ら+しめる,
+    // 読ま+せ+しめ), and joining it into a compound erases the voice boundary
+    // the chain is built from.
+    if (closed_auxiliary != nullptr && closed_auxiliary->extended_pos == core::ExtendedPOS::AuxCausative &&
+        (v2_start == 0 || !grammar::isIRowCodepoint(codepoints[v2_start - 1]))) {
+      SUZUME_DEBUG_LOG_VERBOSE("[COMPOUND_EMIT] rejected causative auxiliary V2\n");
+      return;
+    }
 
     // Build the compound verb surface
     std::string compound_surface(text.substr(start_byte, compound_end_byte - start_byte));

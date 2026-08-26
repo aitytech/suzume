@@ -787,6 +787,140 @@
       ],
       "id": "saseru",
       "input": "掃除させる"
+    },
+    {
+      "description": "資料を読ませた。 - regression test",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読ま"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_maseta_2",
+      "input": "資料を読ませた。"
+    },
+    {
+      "description": "来しめる。 - regression test",
+      "expected": [
+        {
+          "lemma": "来る",
+          "pos": "Verb",
+          "surface": "来"
+        },
+        {
+          "lemma": "しめる",
+          "pos": "Auxiliary",
+          "surface": "しめる"
+        }
+      ],
+      "id": "shimeru",
+      "input": "来しめる。"
+    },
+    {
+      "description": "抱きしめる。 - regression test",
+      "expected": [
+        {
+          "lemma": "抱きしめる",
+          "pos": "Verb",
+          "surface": "抱きしめる"
+        }
+      ],
+      "id": "kishimeru",
+      "input": "抱きしめる。"
+    },
+    {
+      "description": "握りしめる。 - regression test",
+      "expected": [
+        {
+          "lemma": "握りしめる",
+          "pos": "Verb",
+          "surface": "握りしめる"
+        }
+      ],
+      "id": "rishimeru",
+      "input": "握りしめる。"
+    },
+    {
+      "description": "知らしめる。 - regression test",
+      "expected": [
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知ら"
+        },
+        {
+          "lemma": "しめる",
+          "pos": "Auxiliary",
+          "surface": "しめる"
+        }
+      ],
+      "id": "rashimeru",
+      "input": "知らしめる。"
+    },
+    {
+      "description": "書かしめれば。 - regression test",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書か"
+        },
+        {
+          "lemma": "しめる",
+          "pos": "Auxiliary",
+          "surface": "しめれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "kashimereba",
+      "input": "書かしめれば。"
+    },
+    {
+      "description": "戸をしめる。 - regression test",
+      "expected": [
+        {
+          "lemma": "戸",
+          "pos": "Noun",
+          "surface": "戸"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "しめる",
+          "pos": "Verb",
+          "surface": "しめる"
+        }
+      ],
+      "id": "woshimeru",
+      "input": "戸をしめる。"
     }
   ],
   "description": "verb_causative tests",
