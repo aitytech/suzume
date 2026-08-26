@@ -2459,6 +2459,28 @@
       ],
       "id": "go_woo_ishimasu",
       "input": "ご確認をお願いします"
+    },
+    {
+      "description": "A deverbal noun whose okurigana spells a listed particle keeps its own boundary",
+      "expected": [
+        {
+          "lemma": "隔たり",
+          "pos": "Noun",
+          "surface": "隔たり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "感じる",
+          "pos": "Verb",
+          "surface": "感じる"
+        }
+      ],
+      "id": "tariwo_jiru",
+      "input": "隔たりを感じる"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",
