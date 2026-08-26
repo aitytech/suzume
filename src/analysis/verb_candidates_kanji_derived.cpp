@@ -584,10 +584,15 @@ void appendGodanPassiveRenyokeiCandidates(const std::vector<char32_t>& codepoint
             // verbs such as 生まれる use the dictionary/Ichidan path above
             // and do not reach this Godan-passive fallback.
             const bool is_passive_negative_chain = vh::naiNegativeFollowsAt(codepoints, renyokei_end);
+            // So must the polite auxiliary, for the same reason: it selects a
+            // continuative, and the continuative it selects is the passive
+            // auxiliary's own (読ま+れ+まし+た). Leaving it out split the same
+            // chain two ways depending on which cell of ます followed.
+            const bool is_passive_polite_chain = vh::masuAuxFollowsAt(codepoints, renyokei_end);
             const bool is_classical_predicate_chain =
                 classicalPredicateTailFollowsAt(codepoints, renyokei_end, dict_manager);
             if (!is_beki_pattern && !is_passive_causative_chain && !is_passive_negative_chain &&
-                !is_classical_predicate_chain) {
+                !is_passive_polite_chain && !is_classical_predicate_chain) {
               candidates.push_back(makeVerbCandidate(
                   surface, start_pos, renyokei_end, base_cost, base_lemma, dictionary::ConjugationType::Ichidan, false,
                   CandidateOrigin::VerbKanji, ichidan_confidence, "godan_passive_renyokei"));
