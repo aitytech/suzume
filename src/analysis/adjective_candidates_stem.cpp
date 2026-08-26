@@ -769,6 +769,63 @@ void appendIAdjClassicalTerminalCandidates(const std::vector<char32_t>& codepoin
   }
 }
 
+void appendIAdjOnbinRenyokeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t scan_start,
+                                       size_t scan_end, const grammar::Inflection& inflection,
+                                       const dictionary::DictionaryManager* dict_manager,
+                                       std::vector<UnknownCandidate>& candidates) {
+  // The polite continuative replaces the く of an i-adjective's renyokei with
+  // う, and the mora in front of it carries the glide that vowel change
+  // produces: an i-row kana grows its ゅ digraph (よろしく → よろしゅう) while a
+  // kanji stem keeps its spelling and only loses the く (高く → 高う). The cell
+  // is missing from the paradigm, so the run gets cut at the glide instead.
+  //
+  // Only those two shapes are admitted. A bare kana stem plus う would accept
+  // any two morae whose first plus い happens to be an adjective, which is what
+  // the formal noun よう spells.
+  for (size_t u_pos = scan_start; u_pos < scan_end; ++u_pos) {
+    if (codepoints[u_pos] != U'う' || u_pos <= start_pos) {
+      continue;
+    }
+    size_t stem_end = u_pos;
+    bool glide_shape = false;
+    if (codepoints[u_pos - 1] == U'ゅ') {
+      if (u_pos < start_pos + 2 || !grammar::isIRowCodepoint(codepoints[u_pos - 2])) {
+        continue;
+      }
+      stem_end = u_pos - 1;
+      glide_shape = true;
+    } else if (!normalize::isKanjiCodepoint(codepoints[u_pos - 1])) {
+      continue;
+    }
+    if (stem_end <= start_pos) {
+      continue;
+    }
+    const std::string lemma = extractSubstring(codepoints, start_pos, stem_end) + "い";
+    // The glide is itself the evidence: nothing else produces し+ゅ+う. Without
+    // it the shape is just a kanji stem plus う, which every wa-row Godan
+    // terminal also spells (思う, 使う), so that side needs the dictionary.
+    if (glide_shape ? !isModernIAdjective(lemma, inflection, dict_manager)
+                    : !isAdjectiveInDictionary(dict_manager, lemma)) {
+      continue;
+    }
+    UnknownCandidate onbin;
+    onbin.surface = extractSubstring(codepoints, start_pos, u_pos + 1);
+    onbin.start = start_pos;
+    onbin.end = u_pos + 1;
+    onbin.pos = core::PartOfSpeech::Adjective;
+    onbin.lemma = lemma;
+    onbin.cost = candidate::verb_cost::kStrongBonus;
+    onbin.has_suffix = true;
+    onbin.extended_pos = core::ExtendedPOS::AdjRenyokei;
+#ifdef SUZUME_DEBUG_INFO
+    onbin.origin = CandidateOrigin::AdjectiveI;
+    onbin.confidence = candidate::kIAdjKaroConfidence;
+    onbin.pattern = "i_adjective_onbin_renyokei";
+#endif
+    candidates.push_back(std::move(onbin));
+  }
+}
+
 void appendIAdjKaroCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t scan_start,
                               size_t scan_end, const grammar::Inflection& inflection,
                               const dictionary::DictionaryManager* dict_manager,

@@ -99,6 +99,8 @@ void adj_detail::appendKanjiIAdjPostVariants(const std::vector<char32_t>& codepo
   // Add mizenkei (かろ) candidates for the conjectural pattern: stem + かろ + う
   // (高かろう, 美しかろう). Shared with the pure-hiragana generator.
   appendIAdjKaroCandidates(codepoints, start_pos, kanji_end, hiragana_end, inflection, dict_manager, candidates);
+  appendIAdjOnbinRenyokeiCandidates(codepoints, start_pos, kanji_end, hiragana_end, inflection, dict_manager,
+                                    candidates);
   appendIAdjClassicalTerminalCandidates(codepoints, start_pos, kanji_end, hiragana_end, dict_manager, candidates);
   appendIAdjKaraZuCandidates(codepoints, start_pos, kanji_end, hiragana_end, inflection, dict_manager, candidates);
 

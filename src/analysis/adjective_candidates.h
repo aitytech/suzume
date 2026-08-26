@@ -147,6 +147,18 @@ void appendIAdjKaroCandidates(const std::vector<char32_t>& codepoints, size_t st
                               std::vector<UnknownCandidate>& candidates);
 
 /**
+ * @brief Append the polite continuative cell of an i-adjective (よろしゅう, 高う)
+ *
+ * The cell replaces the く of the renyokei with う; an i-row kana in front of it
+ * grows the ゅ digraph that vowel change produces, while a kanji stem keeps its
+ * spelling. Scanned the same way as the かろ cell above.
+ */
+void appendIAdjOnbinRenyokeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t scan_start,
+                                       size_t scan_end, const grammar::Inflection& inflection,
+                                       const dictionary::DictionaryManager* dict_manager,
+                                       std::vector<UnknownCandidate>& candidates);
+
+/**
  * @brief Append classical i-adjective terminal candidates (stem + し)
  *
  * The classical 終止形 closes a clause where the modern base would stand

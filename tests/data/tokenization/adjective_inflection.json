@@ -147,6 +147,214 @@
       ],
       "id": "karou_2",
       "input": "高かろう。"
+    },
+    {
+      "description": "よろしゅうございます。 - regression test",
+      "expected": [
+        {
+          "lemma": "よろしい",
+          "pos": "Adjective",
+          "surface": "よろしゅう"
+        },
+        {
+          "lemma": "ござる",
+          "pos": "Auxiliary",
+          "surface": "ござい"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "yoroshi_ugozaimasu",
+      "input": "よろしゅうございます。"
+    },
+    {
+      "description": "よろしゅう存じます。 - regression test",
+      "expected": [
+        {
+          "lemma": "よろしい",
+          "pos": "Adjective",
+          "surface": "よろしゅう"
+        },
+        {
+          "lemma": "存じる",
+          "pos": "Verb",
+          "surface": "存じ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "yoroshi_u_jimasu",
+      "input": "よろしゅう存じます。"
+    },
+    {
+      "description": "うれしゅうございます。 - regression test",
+      "expected": [
+        {
+          "lemma": "うれしい",
+          "pos": "Adjective",
+          "surface": "うれしゅう"
+        },
+        {
+          "lemma": "ござる",
+          "pos": "Auxiliary",
+          "surface": "ござい"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "ureshi_ugozaimasu",
+      "input": "うれしゅうございます。"
+    },
+    {
+      "description": "高うございます。 - regression test",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高う"
+        },
+        {
+          "lemma": "ござる",
+          "pos": "Auxiliary",
+          "surface": "ござい"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "ugozaimasu",
+      "input": "高うございます。"
+    },
+    {
+      "description": "よろしくお願いします。 - regression test",
+      "expected": [
+        {
+          "lemma": "よろしく",
+          "pos": "Adverb",
+          "surface": "よろしく"
+        },
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "願う",
+          "pos": "Verb",
+          "surface": "願い"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "yoroshikuo_ishimasu",
+      "input": "よろしくお願いします。"
+    },
+    {
+      "description": "高くない。 - regression test",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高く"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "kunai_3",
+      "input": "高くない。"
+    },
+    {
+      "description": "寒くなる。 - regression test",
+      "expected": [
+        {
+          "lemma": "寒い",
+          "pos": "Adjective",
+          "surface": "寒く"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "kunaru_2",
+      "input": "寒くなる。"
+    },
+    {
+      "description": "水のようだ。 - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Noun",
+          "surface": "よう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "noyouda_2",
+      "input": "水のようだ。"
+    },
+    {
+      "description": "そのような話。 - regression test",
+      "expected": [
+        {
+          "lemma": "その",
+          "pos": "Determiner",
+          "surface": "その"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Noun",
+          "surface": "よう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        }
+      ],
+      "id": "sonoyouna",
+      "input": "そのような話。"
     }
   ],
   "description": "adjective_inflection tests",

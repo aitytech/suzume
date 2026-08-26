@@ -443,6 +443,8 @@ void generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints
   // not emit this form, and it is gated on a decisive i-adjective base to reject the
   // verb-volitional homograph (わかろう).
   appendIAdjKaroCandidates(codepoints, start_pos, start_pos, max_hiragana_end, inflection, dict_manager, candidates);
+  appendIAdjOnbinRenyokeiCandidates(codepoints, start_pos, start_pos, max_hiragana_end, inflection, dict_manager,
+                                    candidates);
   appendIAdjClassicalTerminalCandidates(codepoints, start_pos, start_pos, max_hiragana_end, dict_manager, candidates);
   appendIAdjKaraZuCandidates(codepoints, start_pos, start_pos, max_hiragana_end, inflection, dict_manager, candidates);
 
