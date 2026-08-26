@@ -79,6 +79,12 @@ EntrySpecRange getParticleEntries() {
 
       // Quotation particles (引用助詞)
       particle("って", EPOS::ParticleQuote),
+      // Colloquial quotative closing a resolution, with the reporting verb
+      // elided (行こう+と(思う) -> 行こ+っと). The volitional contracts its う
+      // into the geminate, so the particle carries that mora and the verb keeps
+      // its o-row cell; without an edge of its own the geminate was absorbed
+      // leftward and the predicate lost its boundary (行こっ+と).
+      particle("っと", EPOS::ParticleQuote),
 
       // Final particles (終助詞)
       particle("か", EPOS::ParticleFinal),

@@ -2481,6 +2481,45 @@
       ],
       "id": "tariwo_jiru",
       "input": "隔たりを感じる"
+    },
+    {
+      "description": "The godan volitional contracts into the quotative geminate",
+      "expected": [
+        {
+          "lemma": "そろそろ",
+          "pos": "Adverb",
+          "surface": "そろそろ"
+        },
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行こ"
+        },
+        {
+          "lemma": "っと",
+          "pos": "Particle",
+          "surface": "っと"
+        }
+      ],
+      "id": "sorosoro_kottto",
+      "input": "そろそろ行こっと"
+    },
+    {
+      "description": "A mimetic whose stem ends on the o row is not a contracted volitional",
+      "expected": [
+        {
+          "lemma": "ころっと",
+          "pos": "Adverb",
+          "surface": "ころっと"
+        },
+        {
+          "lemma": "変わる",
+          "pos": "Verb",
+          "surface": "変わる"
+        }
+      ],
+      "id": "korottto_waru",
+      "input": "ころっと変わる"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",

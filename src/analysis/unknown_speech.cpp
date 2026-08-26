@@ -32,6 +32,28 @@ bool isBareVowelMora(char32_t codepoint) {
   return codepoint == U'あ' || codepoint == U'い' || codepoint == U'う' || codepoint == U'え' || codepoint == U'お';
 }
 
+// The colloquial quotative contracts a volitional う into its geminate
+// (行こう+と -> 行こ+っと), so this shape can be a predicate plus a particle
+// rather than a mimetic. A mimetic stem never spells a conjugated cell:
+// require a listed verb irrealis of at least two morae ending on the o-row
+// mora before the geminate, which a contracted volitional always leaves behind
+// and a one-mora coincidence (にこっと, ちょこっと) never does.
+bool closesContractedVolitional(const std::vector<char32_t>& codepoints, size_t tto_pos,
+                                const dictionary::DictionaryManager* dict_manager) {
+  constexpr size_t kMaxVolitionalMorae = 4;
+  if (dict_manager == nullptr || tto_pos == 0 || !grammar::isORowCodepoint(codepoints[tto_pos - 1])) {
+    return false;
+  }
+  for (size_t len = 2; len <= kMaxVolitionalMorae && len <= tto_pos; ++len) {
+    const auto* entry =
+        dict_manager->lookupExact(extractSubstring(codepoints, tto_pos - len, tto_pos), core::PartOfSpeech::Verb);
+    if (entry != nullptr && entry->extended_pos == core::ExtendedPOS::VerbMizenkei) {
+      return true;
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 void UnknownWordGenerator::generateCharacterSpeechCandidates(std::string_view /*text*/,
@@ -619,6 +641,9 @@ void UnknownWordGenerator::generateOnomatopoeiaCandidates(const std::vector<char
                                       first_cp == U'を' || first_cp == U'が' || first_cp == U'で' ||
                                       first_cp == U'と' || first_cp == U'か' || first_cp == U'の' || first_cp == U'へ';
           if (stem_len > 2 && particle_start) {
+            break;
+          }
+          if (closesContractedVolitional(codepoints, tto_pos, dict_manager_)) {
             break;
           }
           std::string surface = extractSubstring(codepoints, start_pos, adv_end);
