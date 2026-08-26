@@ -395,6 +395,10 @@ constexpr float kBosCaseParticlePenalty = scale::kMinor;
 // kana verb otherwise reads as the particle for free (のばす as の + ば + す).
 constexpr float kBosNominalizerParticlePenalty = scale::kMinor;
 constexpr float kBosHonorificAuxPenalty = 0.3F;  // Honorific auxiliary needs a preceding renyokei
+// A polite auxiliary selects a continuative, so it cannot lead a sentence
+// either. Its regional members spell ordinary kana runs, and at sentence start
+// there is nothing for them to attach to (なんしよっと read as なんし + よっと).
+constexpr float kBosPoliteAuxPenalty = scale::kRare;
 // A classical perfect り / negative ん attaches to a preceding 連用形 or 未然形,
 // so neither can lead a sentence. Without this the two auxiliaries chain into a
 // cheap closed-class fragment run that outscores an unregistered hiragana noun
@@ -464,6 +468,7 @@ constexpr std::array<BoundaryCost, static_cast<size_t>(core::ExtendedPOS::Count_
   // BOS would damage that reading before a grammatical host can disambiguate.
   table[static_cast<size_t>(core::ExtendedPOS::AuxTenseTa)].bos = kBosTensePenalty;
   table[static_cast<size_t>(core::ExtendedPOS::AuxHonorific)].bos = kBosHonorificAuxPenalty;
+  table[static_cast<size_t>(core::ExtendedPOS::AuxKuruwaPolite)].bos = kBosPoliteAuxPenalty;
   table[static_cast<size_t>(core::ExtendedPOS::AuxClassicalPerfect)].bos = kBosClassicalPerfectPenalty;
   table[static_cast<size_t>(core::ExtendedPOS::AuxNegativeNu)].bos = kBosClassicalNegativePenalty;
   table[static_cast<size_t>(core::ExtendedPOS::AuxCopulaDa)].bos = kBosCopulaPenalty;
