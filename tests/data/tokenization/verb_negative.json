@@ -594,6 +594,133 @@
       ],
       "id": "orosanai_hiragana",
       "input": "おろさない"
+    },
+    {
+      "description": "知らなかろう。 - regression test",
+      "expected": [
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知ら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "ranakarou",
+      "input": "知らなかろう。"
+    },
+    {
+      "description": "行かなかろう。 - regression test",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行か"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "kanakarou",
+      "input": "行かなかろう。"
+    },
+    {
+      "description": "食べなかろう。 - regression test",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "benakarou",
+      "input": "食べなかろう。"
+    },
+    {
+      "description": "知らない。 - regression test",
+      "expected": [
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知ら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "ranai_2",
+      "input": "知らない。"
+    },
+    {
+      "description": "知らなかった。 - regression test",
+      "expected": [
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知ら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ranakattta",
+      "input": "知らなかった。"
+    },
+    {
+      "description": "知らなければ。 - regression test",
+      "expected": [
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知ら"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "ranakereba",
+      "input": "知らなければ。"
     }
   ],
   "description": "verb_negative tests",

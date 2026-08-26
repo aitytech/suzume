@@ -789,7 +789,13 @@ void appendIAdjKaroCandidates(const std::vector<char32_t>& codepoints, size_t st
     // ない is both the adjective 無い and the negative auxiliary; in the かろ form
     // (〜ではなかろうか) the auxiliary reading dominates, so leave なかろ to the
     // auxiliary path rather than tagging it Adjective.
-    if (lemma == "ない") {
+    //
+    // The same ambiguity survives one morpheme to the left: an irrealis stem
+    // plus the auxiliary has exactly the shape of a lexical ない-adjective, and
+    // the inflection analyzer scores 知らない like 少ない. Attestation is the
+    // only thing that separates them, so a base ending in ない has to come from
+    // the dictionary rather than from the analyzer's shape guess.
+    if (lemma == "ない" || (utf8::endsWith(lemma, "ない") && !isAdjectiveInDictionary(dict_manager, lemma))) {
       continue;
     }
     const std::string whole_surface = extractSubstring(codepoints, start_pos, karo_pos + 3);

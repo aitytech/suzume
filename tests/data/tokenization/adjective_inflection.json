@@ -96,6 +96,57 @@
       ],
       "id": "c2_adverbial_control_hakanaku",
       "input": "はかなく"
+    },
+    {
+      "description": "少なかろう。 - regression test",
+      "expected": [
+        {
+          "lemma": "少ない",
+          "pos": "Adjective",
+          "surface": "少なかろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "nakarou",
+      "input": "少なかろう。"
+    },
+    {
+      "description": "危なかろう。 - regression test",
+      "expected": [
+        {
+          "lemma": "危ない",
+          "pos": "Adjective",
+          "surface": "危なかろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "nakarou_2",
+      "input": "危なかろう。"
+    },
+    {
+      "description": "高かろう。 - regression test",
+      "expected": [
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高かろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "karou_2",
+      "input": "高かろう。"
     }
   ],
   "description": "adjective_inflection tests",
