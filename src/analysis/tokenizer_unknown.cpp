@@ -1340,10 +1340,20 @@ void Tokenizer::addUnknownCandidates(core::Lattice& lattice, std::string_view te
       const bool starts_with_closed_particle =
           dict_manager_.lookupExact(extractSubstring(codepoints, candidate.start, candidate.start + 1),
                                     core::PartOfSpeech::Particle) != nullptr;
+      // A deverbal noun re-reads the continuative cell on its own. An analysis
+      // that had to match an auxiliary chain to reach the lemma describes a
+      // complete predicate instead (ためさ + ない), so nominalizing that span
+      // would bury the auxiliary — here the negation — inside the noun. The
+      // productive nominalizations reach their lemma from the bare cell and
+      // carry no chain (読み, 身なり, 隔たり).
+      const auto& span_analyses = inflection_.analyze(surface_str);
+      const bool carries_auxiliary_chain = std::any_of(
+          span_analyses.begin(), span_analyses.end(),
+          [&](const auto& analysis) { return analysis.base_form == candidate.lemma && !analysis.morphemes.empty(); });
       if (nominal_particle && !longer_dependent_follows && !has_lexical_nonverb_reading &&
           !is_complete_shii_adjective && !same_span_adjective_analysis && !crosses_complete_internal_boundary &&
           !crosses_noun_nagara_ni_boundary && !verb_reading_rejected && !bound_suffix_after_host &&
-          !candidate.has_suffix && !starts_with_closed_particle) {
+          !candidate.has_suffix && !starts_with_closed_particle && !carries_auxiliary_chain) {
         lattice.addEdge(surface_str, static_cast<uint32_t>(candidate.start), static_cast<uint32_t>(candidate.end),
                         core::PartOfSpeech::Noun,
                         getCategoryCost(core::ExtendedPOS::NounVerbal) + candidate::kNominalizedNounParticleBonus,
