@@ -2551,6 +2551,43 @@
       ],
       "id": "tatoe_shiyoutomo_mu",
       "input": "たとえ失敗しようとも進む。"
+    },
+    {
+      "description": "Registered na-adjective outranks a shorter adverb plus binding particle",
+      "expected": [
+        {
+          "lemma": "そう",
+          "pos": "Adverb",
+          "surface": "そう"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "もっとも",
+          "pos": "Adjective",
+          "surface": "もっとも"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "sousurunomomotttomoda",
+      "input": "そうするのももっともだ"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",

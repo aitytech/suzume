@@ -65,7 +65,7 @@ float computeAdjectiveDictBonus(const core::LatticeEdge& edge) {
     // neutral boundary.  The length evidence belongs to the whole registered
     // adjective, independent of its individual surface.
     if (grammar::isPureHiragana(edge.surface) && normalize::utf8Length(edge.surface) >= 4) {
-      complete_adjective_bonus += cost::kMinorBonus;
+      complete_adjective_bonus += sc::kBonusLongHiraganaNaAdjective;
     }
   } else if (isCompleteDictionaryAdjective(edge) && grammar::isPureHiragana(edge.surface) &&
              !utf8::endsWith(edge.surface, "ければ") && edge.surface != "ない" && edge.surface != "なく" &&

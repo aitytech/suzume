@@ -2381,6 +2381,33 @@
       ],
       "id": "hiragana_noun_shi_before_copula",
       "input": "ゆうべはあらしだった"
+    },
+    {
+      "description": "Adjectival reading of the degree word before the copula",
+      "expected": [
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "もっとも",
+          "pos": "Adjective",
+          "surface": "もっとも"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "soremomotttomoda",
+      "input": "それももっともだ"
     }
   ],
   "description": "Copula patterns (だ、です、である)",
