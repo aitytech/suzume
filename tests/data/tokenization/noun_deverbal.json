@@ -671,6 +671,141 @@
       ],
       "id": "keda_2",
       "input": "月末届けだ"
+    },
+    {
+      "description": "後回しにする。 - regression test",
+      "expected": [
+        {
+          "lemma": "後回し",
+          "pos": "Noun",
+          "surface": "後回し"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "shinisuru",
+      "input": "後回しにする。"
+    },
+    {
+      "description": "確認するべきだが、後回しにする。 - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べき"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "後回し",
+          "pos": "Noun",
+          "surface": "後回し"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "surubekidaga_shinisuru",
+      "input": "確認するべきだが、後回しにする。"
+    },
+    {
+      "description": "売り出しが始まる。 - regression test",
+      "expected": [
+        {
+          "lemma": "売り出し",
+          "pos": "Noun",
+          "surface": "売り出し"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "始まる",
+          "pos": "Verb",
+          "surface": "始まる"
+        }
+      ],
+      "id": "ri_shiga_maru",
+      "input": "売り出しが始まる。"
+    },
+    {
+      "description": "使い回しがきく。 - regression test",
+      "expected": [
+        {
+          "lemma": "使い回し",
+          "pos": "Noun",
+          "surface": "使い回し"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "きく",
+          "pos": "Verb",
+          "surface": "きく"
+        }
+      ],
+      "id": "i_shigakiku",
+      "input": "使い回しがきく。"
+    },
+    {
+      "description": "車輪を回す。 - regression test",
+      "expected": [
+        {
+          "lemma": "車輪",
+          "pos": "Noun",
+          "surface": "車輪"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "回す",
+          "pos": "Verb",
+          "surface": "回す"
+        }
+      ],
+      "id": "wo_su_3",
+      "input": "車輪を回す。"
     }
   ],
   "description": "noun_deverbal tests",
