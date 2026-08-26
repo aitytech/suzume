@@ -802,6 +802,20 @@ CompoundVerbMatch findCompoundVerbMatch(
     }
   }
 
+  // Nor may it override a listed particle covering the identical span. A
+  // subsidiary verb spelled in kana where its own lemma carries kanji is the
+  // marked orthography, so it cannot outrank the unmarked closed-class reading
+  // of those same kana (暮らし+より, not 暮らし寄り). The kanji spelling still
+  // forms the compound freely (立ち寄り), which is exactly the evidence the
+  // kana spelling lacks.
+  if (best_match.v2_verb != nullptr && best_match.matched_via_reading && best_match.matched_len > 0 &&
+      best_match.v2_verb->reading != nullptr &&
+      std::string_view(best_match.v2_verb->surface) != best_match.v2_verb->reading &&
+      dict_manager.lookupExact(text.substr(v2_start_byte, best_match.matched_len), core::PartOfSpeech::Particle) !=
+          nullptr) {
+    return {};
+  }
+
   return best_match;
 }
 

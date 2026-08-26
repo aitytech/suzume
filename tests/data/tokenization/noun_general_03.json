@@ -2128,6 +2128,50 @@
       ],
       "id": "shi_5",
       "input": "水清し"
+    },
+    {
+      "description": "deverbal noun before the case particle homographic with a kana verb continuative",
+      "expected": [
+        {
+          "lemma": "暮らし",
+          "pos": "Noun",
+          "surface": "暮らし"
+        },
+        {
+          "lemma": "より",
+          "pos": "Particle",
+          "surface": "より"
+        },
+        {
+          "lemma": "大事",
+          "pos": "Adjective",
+          "surface": "大事"
+        }
+      ],
+      "id": "rashiyori",
+      "input": "暮らしより大事"
+    },
+    {
+      "description": "deverbal noun before the case particle homographic with a kana verb continuative",
+      "expected": [
+        {
+          "lemma": "遊び",
+          "pos": "Noun",
+          "surface": "遊び"
+        },
+        {
+          "lemma": "より",
+          "pos": "Particle",
+          "surface": "より"
+        },
+        {
+          "lemma": "大事",
+          "pos": "Adjective",
+          "surface": "大事"
+        }
+      ],
+      "id": "biyori",
+      "input": "遊びより大事"
     }
   ],
   "description": "General nouns (part 3/3)",

@@ -31,6 +31,33 @@
       ],
       "id": "o_eshimashita",
       "input": "お伝えしました"
+    },
+    {
+      "description": "kanji-spelled subsidiary verb still forms a compound where its kana reading is a particle",
+      "expected": [
+        {
+          "lemma": "駅",
+          "pos": "Noun",
+          "surface": "駅"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "立ち寄る",
+          "pos": "Verb",
+          "surface": "立ち寄り"
+        },
+        {
+          "lemma": "休む",
+          "pos": "Verb",
+          "surface": "休む"
+        }
+      ],
+      "id": "ni_chi_ri_mu",
+      "input": "駅に立ち寄り休む"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 7/7)",

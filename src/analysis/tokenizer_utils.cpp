@@ -256,6 +256,16 @@ bool startsNominalForcingParticle(const std::vector<char32_t>& codepoints, size_
   }
 }
 
+// A non-particle entry whose own surface is also a listed particle claims the
+// span no more strongly than the particle does, so it is not evidence that the
+// position is non-particle (より is both the case particle and the continuative
+// of a kana-spelled verb).
+static bool isParticleHomograph(const dictionary::DictionaryManager& dict_manager,
+                                const dictionary::DictionaryEntry& entry) {
+  return entry.pos != core::PartOfSpeech::Particle &&
+         dict_manager.lookupExact(entry.surface, core::PartOfSpeech::Particle) != nullptr;
+}
+
 bool isNominalForcingParticle(core::ExtendedPOS extended_pos) {
   switch (extended_pos) {
     case core::ExtendedPOS::ParticleCase:
@@ -284,7 +294,7 @@ bool hasNominalForcingParticleContinuation(const std::vector<char32_t>& codepoin
     }
     if (match.entry->pos == core::PartOfSpeech::Particle && isNominalForcingParticle(match.entry->extended_pos)) {
       has_particle = true;
-    } else if (normalize::utf8Length(match.entry->surface) > 1) {
+    } else if (normalize::utf8Length(match.entry->surface) > 1 && !isParticleHomograph(*dict_manager, *match.entry)) {
       return false;
     }
   }
@@ -300,7 +310,7 @@ bool startsLongerNonParticleEntry(const std::vector<char32_t>& codepoints, size_
   const std::string probe = extractSubstring(codepoints, start_pos, probe_end);
   for (const auto& match : dict_manager->lookup(probe, 0)) {
     if (match.entry != nullptr && match.entry->pos != core::PartOfSpeech::Particle &&
-        normalize::utf8Length(match.entry->surface) > 1) {
+        normalize::utf8Length(match.entry->surface) > 1 && !isParticleHomograph(*dict_manager, *match.entry)) {
       return true;
     }
   }
