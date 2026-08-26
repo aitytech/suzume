@@ -261,9 +261,12 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
   // The colloquial negative contracts the Godan-ra irrealis and ない as
   // stem+ん+ない (分かん+ない ← 分かる).  The existing mizenkei scan keys on
   // the visible a-row mora, which this contraction has removed, so rebuild
-  // the ra-row terminal from the stem immediately before ん instead.
+  // the ra-row terminal from the stem immediately before ん instead.  The
+  // contraction is on the irrealis, not on the auxiliary, so every cell of
+  // ない takes it (分かん+なかっ+た, 分かん+なけれ+ば) — pinning the terminal
+  // cell here left the rest of the paradigm cut at the ん.
   for (size_t n_pos = kanji_end + 1; n_pos + 2 < hiragana_end; ++n_pos) {
-    if (codepoints[n_pos] != U'ん' || codepoints[n_pos + 1] != U'な' || codepoints[n_pos + 2] != U'い') {
+    if (codepoints[n_pos] != U'ん' || !vh::naiNegativeFollowsAt(codepoints, n_pos + 1)) {
       continue;
     }
     const std::string stem = extractSubstring(codepoints, start_pos, n_pos);

@@ -1256,6 +1256,79 @@
       ],
       "id": "c4_lexical_contraction_control",
       "input": "つまんないよ。"
+    },
+    {
+      "description": "分かんなかった。 - regression test",
+      "expected": [
+        {
+          "lemma": "分かる",
+          "pos": "Verb",
+          "surface": "分かん"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なかっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kannakattta",
+      "input": "分かんなかった。"
+    },
+    {
+      "description": "分かんなければ。 - regression test",
+      "expected": [
+        {
+          "lemma": "分かる",
+          "pos": "Verb",
+          "surface": "分かん"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なけれ"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        }
+      ],
+      "id": "kannakereba",
+      "input": "分かんなければ。"
+    },
+    {
+      "description": "分かんない。 - regression test",
+      "expected": [
+        {
+          "lemma": "分かる",
+          "pos": "Verb",
+          "surface": "分かん"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "kannai",
+      "input": "分かんない。"
+    },
+    {
+      "description": "つまんない。 - regression test",
+      "expected": [
+        {
+          "lemma": "つまんない",
+          "pos": "Adjective",
+          "surface": "つまんない"
+        }
+      ],
+      "id": "tsumannai",
+      "input": "つまんない。"
     }
   ],
   "description": "Contraction patterns (てる、ちゃう)",
