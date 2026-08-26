@@ -512,6 +512,8 @@ COMPOUND_VERB_V2_NOT_AFTER_SURU: frozenset[str] = frozenset(
         "まちがえる",
         "忘れる",
         "わすれる",
+        "立つ",
+        "たつ",
     }
 )
 
