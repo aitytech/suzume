@@ -2229,6 +2229,32 @@ def postprocess_adjective_nominalizer(tokens: list[dict]) -> bool:
     return changed
 
 
+def postprocess_verbal_nominalizer_mi(tokens: list[dict]) -> bool:
+    """Classify the productive nominalizing み on a verb stem as a suffix.
+
+    The subsidiary verb みる selects a te-form and nothing else, so a み that
+    follows a bare continuative cannot be one. It is the same nominalizer that
+    already comes back tagged Suffix on an adjective stem (しんど + み), and
+    leaving it as the subsidiary makes the token host a case particle no
+    predicate could take (分かり + み + が).
+    """
+    changed = False
+    for idx in range(1, len(tokens)):
+        token = tokens[idx]
+        previous = tokens[idx - 1]
+        if (
+            token.get("surface") != "み"
+            or token.get("lemma") != "みる"
+            or previous.get("pos") != "Verb"
+            or previous.get("surface", "").endswith(("て", "で"))
+        ):
+            continue
+        token["pos"] = "Suffix"
+        token["lemma"] = "み"
+        changed = True
+    return changed
+
+
 def postprocess_shortened_causative_passive(tokens: list[dict]) -> bool:
     """Classify the bound さ in a Godan shortened causative-passive chain."""
     changed = False
@@ -2859,6 +2885,7 @@ POSTPROCESSORS: tuple[tuple[str, Callable[[list[dict]], bool]], ...] = (
     ("monono-conjunction", postprocess_monono_conjunction),
     ("formal-noun-lemma", postprocess_formal_noun_lemma),
     ("adjective-nominalizer", postprocess_adjective_nominalizer),
+    ("verbal-nominalizer-mi", postprocess_verbal_nominalizer_mi),
     ("shortened-causative-passive", postprocess_shortened_causative_passive),
     ("modifier-godan-imperative", postprocess_modifier_godan_imperative),
     ("contracted-shimau-aux", postprocess_shimau_aux),
