@@ -708,6 +708,12 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       {EPOS::VerbShuushikei, EPOS::AuxClassicalKi, cost::kProhibitive},
       {EPOS::AuxTenseTa, EPOS::AuxClassicalKi, cost::kProhibitive},
       {EPOS::AuxCopulaDa, EPOS::AuxClassicalKi, cost::kProhibitive},
+      // A nominal is barred for the same reason: every host of the classical
+      // past is a continuative cell, and a free connection here let a
+      // fabricated kanji run take the mora that belongs to a classical
+      // adjective terminal (道遠+し instead of 道+遠し). The sibling けり does
+      // take a nominal predicate, and keeps its own bonus.
+      {EPOS::Noun, EPOS::AuxClassicalKi, cost::kStrong},
 
       // A passive predicate reaches the same auxiliaries through the passive's
       // own continuative (飲ま+れ+けり). Without the counterpart of the verb

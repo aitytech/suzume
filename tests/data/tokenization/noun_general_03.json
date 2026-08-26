@@ -2094,6 +2094,40 @@
       ],
       "id": "haakebono",
       "input": "春はあけぼの"
+    },
+    {
+      "description": "Classical ku-paradigm terminal on a single-kanji stem after a noun",
+      "expected": [
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        },
+        {
+          "lemma": "遠い",
+          "pos": "Adjective",
+          "surface": "遠し"
+        }
+      ],
+      "id": "shi_4",
+      "input": "道遠し"
+    },
+    {
+      "description": "Classical terminal keeps the noun boundary in front of it",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "清い",
+          "pos": "Adjective",
+          "surface": "清し"
+        }
+      ],
+      "id": "shi_5",
+      "input": "水清し"
     }
   ],
   "description": "General nouns (part 3/3)",
