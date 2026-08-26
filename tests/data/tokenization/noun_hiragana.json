@@ -242,6 +242,38 @@
       ],
       "id": "sorehayasashiikotobada",
       "input": "それはやさしいことばだ。"
+    },
+    {
+      "description": "このしごとはたいへんだ。 - regression test",
+      "expected": [
+        {
+          "lemma": "この",
+          "pos": "Determiner",
+          "surface": "この"
+        },
+        {
+          "lemma": "しごと",
+          "pos": "Noun",
+          "surface": "しごと"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "たいへん",
+          "pos": "Adjective",
+          "surface": "たいへん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "konoshigotohataihenda",
+      "input": "このしごとはたいへんだ。"
     }
   ],
   "description": "noun_hiragana tests",

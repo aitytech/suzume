@@ -573,6 +573,96 @@
       ],
       "id": "kasugiru_2",
       "input": "豊かすぎる"
+    },
+    {
+      "description": "たいへんだ。 - regression test",
+      "expected": [
+        {
+          "lemma": "たいへん",
+          "pos": "Adjective",
+          "surface": "たいへん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "taihenda",
+      "input": "たいへんだ。"
+    },
+    {
+      "description": "しずかだ。 - regression test",
+      "expected": [
+        {
+          "lemma": "しずか",
+          "pos": "Adjective",
+          "surface": "しずか"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "shizukada",
+      "input": "しずかだ。"
+    },
+    {
+      "description": "きれいだ。 - regression test",
+      "expected": [
+        {
+          "lemma": "きれい",
+          "pos": "Adjective",
+          "surface": "きれい"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "kireida",
+      "input": "きれいだ。"
+    },
+    {
+      "description": "大変だ。 - regression test",
+      "expected": [
+        {
+          "lemma": "大変",
+          "pos": "Adjective",
+          "surface": "大変"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "da_8",
+      "input": "大変だ。"
+    },
+    {
+      "description": "たいへん困った。 - regression test",
+      "expected": [
+        {
+          "lemma": "たいへん",
+          "pos": "Adverb",
+          "surface": "たいへん"
+        },
+        {
+          "lemma": "困る",
+          "pos": "Verb",
+          "surface": "困っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "taihen_ttta",
+      "input": "たいへん困った。"
     }
   ],
   "description": "Na-adjectives (ナ形容詞) (part 2/2)",

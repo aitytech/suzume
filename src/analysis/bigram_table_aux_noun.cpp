@@ -747,6 +747,12 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // (一切れ), 少々+せる off a verb stem.
       {EPOS::Adverb, EPOS::AuxPassive, cost::kStrong},
       {EPOS::Adverb, EPOS::AuxCausative, cost::kStrong},
+      // The past auxiliary attaches to a predicate's onbin stem, so an adverb
+      // cannot carry it. The pair is reachable only because だ spells both the
+      // past auxiliary and the copula, and a stem that is both an adverb and a
+      // na-adjective then takes its adverb reading in a predicate slot
+      // (たいへん+だ).
+      {EPOS::Adverb, EPOS::AuxTenseTa, cost::kSevere},
 
       // Noun → aspect auxiliary いる/くる (驚+い, 先生+き): aspect attaches only to a
       // te-form, never a bare noun (食べて+いた, 走って+きた). Prevents 間続+い+た and
