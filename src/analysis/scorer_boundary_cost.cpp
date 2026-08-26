@@ -17,7 +17,12 @@ float Scorer::bosCost(const core::LatticeEdge& edge) const {
   return sc::getBoundaryCost(edge.extended_pos).bos;
 }
 
-float Scorer::eosCost(const core::LatticeEdge& edge) const {
+float Scorer::eosCost(const core::LatticeEdge& edge, core::ExtendedPOS prev_extended_pos) const {
+  if (edge.extended_pos == core::ExtendedPOS::NounFormal && prev_extended_pos == core::ExtendedPOS::VerbRenyokei &&
+      !grammar::isSubstantiveFormalNoun(edge.surface)) {
+    return sc::kEosRenyokeiFormalNounPenalty;
+  }
+
   const sc::BoundaryCost boundary_cost = sc::getBoundaryCost(edge.extended_pos);
 
   switch (boundary_cost.eos_gate) {

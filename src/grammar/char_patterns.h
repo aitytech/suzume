@@ -140,6 +140,16 @@ bool isFusedDemo(std::string_view surface);
 /** @brief Whether a surface is the benefactive formal noun おかげ */
 bool isBenefactiveFormalNoun(std::string_view surface);
 
+/**
+ * @brief Whether a formal noun lexicalizes with a preceding 連用形
+ *
+ * もの and こと name a thing and a matter, so they combine with a continuative
+ * into a compound noun of their own (飲みもの, ねがい事, 隠し事). The remaining
+ * formal nouns stay bound there: they head a manner nominal that needs a case
+ * particle after it (読みようがない) rather than a search unit.
+ */
+bool isSubstantiveFormalNoun(std::string_view surface);
+
 /** @brief Whether a surface is the independent negative adjective ない */
 bool isIndependentNegativeAdjective(std::string_view surface);
 

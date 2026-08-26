@@ -116,6 +116,14 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // VerbMizenkei → AuxVolitional (食べ+よう) - moderate bonus
       {EPOS::VerbMizenkei, EPOS::AuxVolitional, cost::kModerateBonus},
 
+      // The volitional selects the irrealis, so a continuative before it is the
+      // wrong cell. For a vowel-stem verb the two cells share a spelling and the
+      // continuative reading otherwise wins on its left context alone
+      // (を+連用形 licenses a predicate), splitting やめよう as やめ+よう. The
+      // classical past conjecture けむ does take the continuative and shares this
+      // category; its own rule in the connection scorer cancels this cell.
+      {EPOS::VerbRenyokei, EPOS::AuxVolitional, cost::kStrong},
+
       // A Godan e-row form before ない is the stem of its productive
       // potential Ichidan predicate (見つけ出せ+ない). It is represented by
       // the same lattice class as the conditional form, so license negation.

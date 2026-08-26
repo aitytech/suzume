@@ -22,8 +22,13 @@ inline constexpr size_t kNumExtendedPosTypes = static_cast<size_t>(ExtendedPOS::
 
 // Sentence-boundary costs are linguistic, so they belong to the scorer: a
 // Scorer supplies bosCost(edge) for an edge that opens the sentence and
-// eosCost(edge) for one that closes it. Keeping them out of core also keeps
-// them inside the guardrail ratchet's named-constant rule.
+// eosCost(edge, prev) for one that closes it. Keeping them out of core also
+// keeps them inside the guardrail ratchet's named-constant rule.
+//
+// eosCost takes the preceding category because whether a morpheme can close a
+// sentence is not always a property of that morpheme alone: a bound nominal
+// closes one when a modifier heads it and does not when a continuative does.
+// The BOS state has no preceding morpheme and passes ExtendedPOS::Unknown.
 
 // Per-transition tie-break: slightly prefer fewer, longer morphemes.
 inline constexpr float kTransitionCost = 0.001F;
@@ -197,9 +202,7 @@ class Viterbi {
         }
         const float word_cost = scorer.wordCost(edge);
 
-        // EOS penalty: an edge that terminates the sentence but cannot naturally
-        // end one (mirror of the BOS cost below). Added once per edge.
-        const float eos_cost = edge.end == text_len ? scorer.eosCost(edge) : 0.0F;
+        const bool closes_sentence = edge.end == text_len;
 
         // Find the cheapest predecessor for this edge across all retained
         // states at this position.
@@ -213,12 +216,19 @@ class Viterbi {
             const auto& entry = slots.entries[slot];
 
             float conn_cost = 0.0F;
+            ExtendedPOS prev_extended_pos = ExtendedPOS::Unknown;
             if (entry.edge_id != kBosEdgeId) {
-              conn_cost = scorer.connectionCost(lattice.getEdge(entry.edge_id), edge);
+              const auto& prev_edge = lattice.getEdge(entry.edge_id);
+              conn_cost = scorer.connectionCost(prev_edge, edge);
+              prev_extended_pos = prev_edge.extended_pos;
             } else {
               // BOS (beginning of sentence) connection cost
               conn_cost = scorer.bosCost(edge);
             }
+
+            // EOS penalty: an edge that terminates the sentence but cannot
+            // naturally end one (mirror of the BOS cost above).
+            const float eos_cost = closes_sentence ? scorer.eosCost(edge, prev_extended_pos) : 0.0F;
 
             const float total = entry.cost + word_cost + conn_cost + eos_cost + kTransitionCost;
 

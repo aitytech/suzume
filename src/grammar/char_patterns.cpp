@@ -196,6 +196,10 @@ bool isBenefactiveFormalNoun(std::string_view surface) {
          normalize::decodeUtf8(surface, byte_pos) == U'げ' && byte_pos == surface.size();
 }
 
+bool isSubstantiveFormalNoun(std::string_view surface) {
+  return utf8::equalsAny(surface, {"もの", "物", "こと", "事"});
+}
+
 bool isIndependentNegativeAdjective(std::string_view surface) {
   return surface == "ない";
 }

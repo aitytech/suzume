@@ -285,11 +285,12 @@ float computeVerbRenyokeiEarlyBonus(const core::LatticeEdge& prev, const core::L
   }
 
   // Classical past conjecture attaches to a continuative verb form
-  // (行き+けむ). It shares AuxVolitional with modern う/よう, whose left
-  // contexts are narrower, so keep this surface-scoped.
+  // (行き+けむ). It shares AuxVolitional with modern う/よう, which select the
+  // irrealis instead, so the bigram cell for that pair is a penalty; this
+  // surface-scoped rule cancels it and restores the continuative bonus.
   if (prev.extended_pos == core::ExtendedPOS::VerbRenyokei && next.extended_pos == core::ExtendedPOS::AuxVolitional &&
       utf8::equalsAny(next.surface, {"けむ"})) {
-    SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
+    SUZUME_CONNECTION_ADD(bonus, sc::kBonusClassicalPastConjecture);
   }
 
   // Classical completion たり follows the continuative form, and so does the

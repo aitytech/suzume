@@ -150,6 +150,11 @@ constexpr float kBonusFormalParticleBinding = scale::kStrongBonus;
 constexpr float kPenaltyAmbiguousSuffixBoundary = scale::kStrong;
 constexpr float kPenaltyConjunctionInternalNoun = scale::kMinor;
 constexpr float kBonusHonorificGeneratedRenyokei = scale::kMinorBonus;
+// The 連用形→意志 bigram cell is a penalty because the modern volitional
+// selects the irrealis. The classical past conjecture けむ is the one member of
+// that category which does take the continuative, so its rule both cancels the
+// cell and supplies the ordinary continuative bonus.
+constexpr float kBonusClassicalPastConjecture = scale::kStrongBonus - scale::kStrong;
 constexpr float kBonusVerifiedTerminalAfterObject = scale::kModerateBonus;
 
 // The Kuruwa polite auxiliary is a closed-class inflectional marker. Its
@@ -415,6 +420,12 @@ constexpr float kEosDeterminerPenalty = kEosPrefixPenalty;
 // A one-mora continuative cannot close a sentence: it always needs an auxiliary
 // or a subsidiary verb after it (確認したらしい, not 確認したら+し+い).
 constexpr float kEosShortRenyokeiPenalty = scale::kStrong;
+// A 連用形 followed by a 形式名詞 is a manner nominal (読みよう, 言いよう): a
+// bound nominal that heads a phrase only together with the case particle after
+// it, so it never closes a clause. Cancelling its connection bonus at the end
+// of a sentence leaves the competing volitional reading of the same run — the
+// only reading available there — to win (やめよう as やめよ+う, not やめ+よう).
+constexpr float kEosRenyokeiFormalNounPenalty = scale::kAlmostNever;
 
 enum class EosBoundaryGate {
   Always,

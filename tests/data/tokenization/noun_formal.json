@@ -3715,6 +3715,75 @@
       ],
       "id": "ni_meru_2",
       "input": "確認次第に進める"
+    },
+    {
+      "description": "formal noun closing a sentence after an attributive",
+      "expected": [
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "大事",
+          "pos": "Adjective",
+          "surface": "大事"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "もの"
+        }
+      ],
+      "id": "soreha_namono",
+      "input": "それは大事なもの"
+    },
+    {
+      "description": "manner nominal keeps its continuative host before a case particle",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "読む",
+          "pos": "Verb",
+          "surface": "読み"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Noun",
+          "surface": "よう"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "wo_miyouganai",
+      "input": "本を読みようがない"
     }
   ],
   "description": "Formal nouns (こと、もの、ところ)",

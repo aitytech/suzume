@@ -391,6 +391,89 @@
       ],
       "id": "beyou",
       "input": "食べよう"
+    },
+    {
+      "description": "hiragana ichidan volitional closing the sentence",
+      "expected": [
+        {
+          "lemma": "やめる",
+          "pos": "Verb",
+          "surface": "やめよ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "yameyou",
+      "input": "やめよう"
+    },
+    {
+      "description": "hiragana ichidan volitional closing the sentence",
+      "expected": [
+        {
+          "lemma": "たべる",
+          "pos": "Verb",
+          "surface": "たべよ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "tabeyou",
+      "input": "たべよう"
+    },
+    {
+      "description": "volitional closing the sentence after an adverb",
+      "expected": [
+        {
+          "lemma": "もう",
+          "pos": "Adverb",
+          "surface": "もう"
+        },
+        {
+          "lemma": "やめる",
+          "pos": "Verb",
+          "surface": "やめよ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "mouyameyou",
+      "input": "もうやめよう"
+    },
+    {
+      "description": "volitional after an object marker that licenses a continuative",
+      "expected": [
+        {
+          "lemma": "仕事",
+          "pos": "Noun",
+          "surface": "仕事"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "やめる",
+          "pos": "Verb",
+          "surface": "やめよ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "woyameyou",
+      "input": "仕事をやめよう。"
     }
   ],
   "description": "verb_volitional tests",

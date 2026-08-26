@@ -121,9 +121,12 @@ class Scorer {
    * dangling auxiliary/aspect.
    *
    * @param edge Edge ending at the last position
+   * @param prev_extended_pos Category of the morpheme before it, or
+   *                          ExtendedPOS::Unknown when the edge opens the
+   *                          sentence as well as closing it
    * @return EOS cost
    */
-  float eosCost(const core::LatticeEdge& edge) const;
+  float eosCost(const core::LatticeEdge& edge, core::ExtendedPOS prev_extended_pos = core::ExtendedPOS::Unknown) const;
 
   /**
    * @brief Get POS prior
