@@ -499,12 +499,14 @@ void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codep
         if (curr_char == U'の') {
           break;
         }
-        // Common particles は, に, へ + で, と, も, か (word boundaries)
+        // Common particles は, に, へ + で, と, も, か, が (word boundaries).
+        // The nominative が behaves like the rest: it is word-internal in a few
+        // native nouns (ひがし, かがみ) and a boundary everywhere else, so it is
+        // crossed at most once and penalized. Leaving it out let an opaque run
+        // swallow a subject marker whole (見|るが, 分かり|みが).
         // Note: Don't include「や」as it's also the stem of「やる」verb
-        const bool closes_genitive_negative_noun = curr_char == U'が' && end_pos + 3 < codepoints.size() &&
-                                                   codepoints[end_pos + 2] == U'の' && codepoints[end_pos + 3] == U'な';
         if (curr_char == U'は' || curr_char == U'に' || curr_char == U'へ' || curr_char == U'で' ||
-            curr_char == U'と' || curr_char == U'も' || curr_char == U'か' || closes_genitive_negative_noun) {
+            curr_char == U'と' || curr_char == U'も' || curr_char == U'か' || curr_char == U'が') {
           char32_t seq_first_char = codepoints[start_pos];
           if (crossed_particle_pos != SIZE_MAX || seq_first_char == U'を' || seq_first_char == U'が') {
             break;  // Stop before the particle character
@@ -704,6 +706,22 @@ void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codep
           continue;
         }
         cost += (candidate_end > crossed_particle_pos + 1) ? scorer::scale::kStrong : scorer::scale::kMinor;
+        // The mora allowed past the crossed particle exists for native nouns
+        // that spell a particle word-internally (こども, ひとつ). It must not be
+        // taken from the front of a bound word instead: an auxiliary or a
+        // particle attaches leftward, so its own left edge is a fixed boundary
+        // and the run has to stop there (見|る|が|ごとく, not 見|るがご|とく).
+        // An unbound word heading the same position proves nothing, since a
+        // native noun may simply spell it (おとな + になる, not お + と + なに).
+        constexpr size_t kStraddledWordProbe = 4;
+        if (candidate_end > crossed_particle_pos + 1 && dict_manager_ != nullptr &&
+            hasDictionaryEntryFrom(dict_manager_, codepoints, candidate_end - 1, 2, kStraddledWordProbe,
+                                   core::PartOfSpeech::Unknown, [](const dictionary::DictionaryEntry& entry) {
+                                     return entry.pos == core::PartOfSpeech::Auxiliary ||
+                                            entry.pos == core::PartOfSpeech::Particle;
+                                   })) {
+          continue;
+        }
       }
 
       // The conditional particle ば cannot close an open nominal run. A listed
@@ -826,6 +844,27 @@ void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codep
           }
         }
         if (opens_with_formal_noun) {
+          continue;
+        }
+      }
+      // A formal noun is a bound right-hand element carrying its own edge, so
+      // an opaque hiragana run must not close on one. Closing there hides the
+      // boundary in front of it and buries a closed-class morpheme inside a
+      // fabricated noun (見|た|こと|の|ない, not 見|たこと|の|ない). A run that
+      // *is* the formal noun keeps its candidate, since nothing precedes it
+      // inside the span.
+      if (start_type == normalize::CharType::Hiragana && !started_with_particle && len > 1 &&
+          dict_manager_ != nullptr) {
+        bool closes_on_formal_noun = false;
+        for (size_t split = start_pos + 1; split < candidate_end; ++split) {
+          const auto* tail =
+              dict_manager_->lookupExact(extractSubstring(codepoints, split, candidate_end), core::PartOfSpeech::Noun);
+          if (tail != nullptr && tail->extended_pos == core::ExtendedPOS::NounFormal) {
+            closes_on_formal_noun = true;
+            break;
+          }
+        }
+        if (closes_on_formal_noun) {
           continue;
         }
       }

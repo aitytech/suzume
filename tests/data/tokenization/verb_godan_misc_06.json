@@ -1987,6 +1987,156 @@
       ],
       "id": "no_niaru",
       "input": "机の上にある。"
+    },
+    {
+      "description": "Formal noun keeps its boundary inside a genitive-negative modifier",
+      "expected": [
+        {
+          "lemma": "誰",
+          "pos": "Pronoun",
+          "surface": "誰"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "景色",
+          "pos": "Noun",
+          "surface": "景色"
+        }
+      ],
+      "id": "mo_takotononai",
+      "input": "誰も見たことのない景色"
+    },
+    {
+      "description": "Past auxiliary and formal noun stay separate before の+ない",
+      "expected": [
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞い"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        },
+        {
+          "lemma": "話",
+          "pos": "Noun",
+          "surface": "話"
+        }
+      ],
+      "id": "itakotononai",
+      "input": "聞いたことのない話"
+    },
+    {
+      "description": "Nominative particle keeps its boundary before a classical similitude auxiliary",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ごとし",
+          "pos": "Auxiliary",
+          "surface": "ごとし"
+        }
+      ],
+      "id": "rugagotoshi",
+      "input": "見るがごとし"
+    },
+    {
+      "description": "Continuative cell of the similitude auxiliary keeps its own edge",
+      "expected": [
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ごとし",
+          "pos": "Auxiliary",
+          "surface": "ごとく"
+        }
+      ],
+      "id": "rugagotoku",
+      "input": "見るがごとく"
+    },
+    {
+      "description": "Nominative particle is not absorbed into an opaque hiragana run",
+      "expected": [
+        {
+          "lemma": "うまみ",
+          "pos": "Noun",
+          "surface": "うまみ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "umamigaaru",
+      "input": "うまみがある"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",
