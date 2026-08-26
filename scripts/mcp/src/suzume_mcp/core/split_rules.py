@@ -144,6 +144,13 @@ def _as_independent_token(token: dict) -> dict:
     }
 
 
+# A clause hidden inside one headword needs at least a two-kana dictionary-form
+# verb, a particle and a two-kana closing predicate.
+_MIN_CLAUSE_HEADWORD_LENGTH = 5
+# Every verb dictionary form ends on the u row.
+_DICTIONARY_FORM_ENDINGS: frozenset[str] = frozenset("うくぐすつぬぶむる")
+
+
 def _split_lexicalized_morpheme_boundaries(token: dict) -> list[dict] | None:
     """Restore productive particle and inflection boundaries hidden by a headword."""
     surface = token.get("surface", "")
@@ -187,11 +194,56 @@ def _split_lexicalized_morpheme_boundaries(token: dict) -> list[dict] | None:
         if (
             isolated is not None
             and len(isolated) >= 2
-            and isolated[0].get("pos") == "動詞"
+            # The negative ず takes the irrealis of an adjective as readily as a
+            # verb's (悪しから+ず, 少なから+ず), and a headword covering either is
+            # hiding the same boundary.
+            and isolated[0].get("pos") in ("動詞", "形容詞")
             and isolated[-1].get("surface") == "ず"
             and isolated[-1].get("pos") == "助動詞"
         ):
             return isolated
+        # A fixed phrase can also arrive as one adverb the analyzer never
+        # decomposes (悪しからず). The supplementary conjugation still shows
+        # through: its 未然形 cell resolves to a modern headword, and the ず
+        # behind it is the same negative auxiliary as above.
+        from .merge_postprocessors import classical_adjective_lemma
+
+        irrealis_lemma = classical_adjective_lemma(surface[:-1])
+        if irrealis_lemma is not None:
+            return [
+                {"surface": surface[:-1], "pos": "形容詞", "lemma": irrealis_lemma},
+                {"surface": "ず", "pos": "助動詞", "lemma": "ぬ"},
+            ]
+
+    # A headword may also cover a whole clause: a finite predicate, a particle
+    # chain, and a closing predicate (言う+まで+も+ない). Nothing about that
+    # sequence is lexicalized — each piece inflects and combines productively —
+    # so the boundaries stay, the same way they do for the productive
+    # particle-plus-predicate chains below.
+    if pos in ("動詞", "形容詞", "副詞", "名詞") and len(surface) >= _MIN_CLAUSE_HEADWORD_LENGTH:
+        for split in range(2, len(surface) - 1):
+            # A dictionary-form verb closes on the u row, so only those split
+            # points can end the clause's finite predicate. Checking the kana
+            # first keeps this off the analyzer for every other position.
+            if surface[split - 1] not in _DICTIONARY_FORM_ENDINGS:
+                continue
+            head_tokens = _reanalyze_exact(surface[:split])
+            if (
+                head_tokens is None
+                or len(head_tokens) != 1
+                or head_tokens[0].get("pos") != "動詞"
+                or head_tokens[0].get("conj_form") != "基本形"
+            ):
+                continue
+            tail_tokens = _reanalyze_exact(surface[split:])
+            if (
+                tail_tokens is None
+                or len(tail_tokens) < 2
+                or tail_tokens[0].get("pos") != "助詞"
+                or any(part.get("pos") not in ("助詞", "助動詞", "形容詞") for part in tail_tokens)
+            ):
+                continue
+            return [_as_independent_token(head_tokens[0]), *(_as_independent_token(part) for part in tail_tokens)]
 
     if pos not in ("動詞", "形容詞", "副詞"):
         return None
