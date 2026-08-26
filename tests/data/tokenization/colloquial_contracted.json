@@ -259,6 +259,28 @@
       ],
       "id": "c5_toku_terminal_control",
       "input": "資料を用意しとく。"
+    },
+    {
+      "description": "Nominalizer ん closes the attributive predicate of a hiragana verb",
+      "expected": [
+        {
+          "lemma": "できる",
+          "pos": "Verb",
+          "surface": "できる"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "ん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "dekirunda",
+      "input": "できるんだ"
     }
   ],
   "description": "colloquial_contracted tests",

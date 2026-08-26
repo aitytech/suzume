@@ -1077,6 +1077,17 @@ void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codep
     }
     auto emit_promoted_run = [&](size_t run_end) {
       size_t len = run_end - start_pos;
+      // The nominalizer ん closes an attributive predicate, so a run ending on
+      // it is that predicate plus the particle, never one unregistered noun
+      // (できる+ん+じゃ+ない). A registered predicate in front of it is the
+      // evidence; runs whose kana merely happen to spell a particle keep their
+      // whole-run candidate (りんご, たなばた).
+      if (dict_manager_ != nullptr && run_end > start_pos + 1 && codepoints[run_end - 1] == U'ん' &&
+          hasExactPartOfSpeech(
+              *dict_manager_, extractSubstring(codepoints, start_pos, run_end - 1),
+              partOfSpeechMask(core::PartOfSpeech::Verb) | partOfSpeechMask(core::PartOfSpeech::Adjective))) {
+        return;
+      }
       // Right bracket: a single boundary particle, a multi-char particle start, or a
       // clause boundary (sentence end / symbol).
       const size_t scan = run_end;
