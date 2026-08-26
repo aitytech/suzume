@@ -859,6 +859,13 @@ ContextualDictionaryCandidateState addContextualDictionaryCandidates(
       // The closed entry for と is POS-tagged as a case particle; its
       // quotative role is determined by this passive continuation.
       hasPrecedingExtendedPOS(lattice, start_pos, core::ExtendedPOS::ParticleCase) &&
+      // A Godan irrealis ending here outranks the particle reading of its own
+      // okurigana: 急が+さ+れ+た is the shortened causative-passive of 急ぐ, and
+      // reading the が as a case particle turns the auxiliary into する. Only an
+      // a-row kana can be that okurigana, which keeps a genuine quotative と in
+      // the same position (確認したと+さ+れ+て).
+      !(grammar::isARowCodepoint(codepoints[start_pos - 1]) &&
+        hasPrecedingExtendedPOS(lattice, start_pos, core::ExtendedPOS::VerbMizenkei)) &&
       verb_helpers::isPassiveAuxContinuation(codepoints, start_pos + 2, /*strict_masu=*/true);
   if (starts_quoted_passive) {
     lattice.addEdge(

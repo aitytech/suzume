@@ -8,14 +8,13 @@
 namespace suzume::analysis::compound_verb_detail {
 
 bool addPassiveContinuativeTailCandidates(core::Lattice& lattice, const std::vector<char32_t>& codepoints,
-                                          size_t start_pos, size_t kanji_end,
-                                          const dictionary::DictionaryManager& dict_manager) {
-  // A voice auxiliary followed by the continuative subsidiary remains a
-  // grammatical tail rather than a lexical V1+V2 compound. Keep the tail as
-  // one search unit so 使わ+れ続ける, 見+られ続ける, and 聞かさ+れ続ける do
-  // not collapse into a fabricated whole verb. The gate distinguishes this
-  // from lexical 〜れ続ける verbs such as 汚れ続ける: only a preceding
-  // mizenkei (a-row) or the ichidan passive られ licenses it.
+                                          size_t kanji_end) {
+  // A voice auxiliary followed by the continuative subsidiary keeps both of its
+  // boundaries: れ is an auxiliary and 続ける an independent verb, so no search
+  // unit spans them. What the position needs is evidence that the subsidiary
+  // starts here, or 使われ続ける collapses into one fabricated verb. The gate
+  // distinguishes this from lexical 〜れ続ける verbs such as 汚れ続ける: only a
+  // preceding mizenkei (a-row) or the ichidan passive られ licenses it.
   for (size_t passive_pos = kanji_end; passive_pos + 3 < codepoints.size(); ++passive_pos) {
     if (codepoints[passive_pos] != U'れ' || codepoints[passive_pos + 1] != U'続' ||
         codepoints[passive_pos + 2] != U'け') {
@@ -26,7 +25,6 @@ bool addPassiveContinuativeTailCandidates(core::Lattice& lattice, const std::vec
       continue;
     }
 
-    size_t tail_start = passive_pos;
     const bool follows_godan_mizenkei =
         passive_pos > kanji_end && grammar::isARowCodepoint(codepoints[passive_pos - 1]);
     const bool follows_ichidan_passive = passive_pos == kanji_end + 1 && codepoints[kanji_end] == U'ら';
@@ -39,43 +37,20 @@ bool addPassiveContinuativeTailCandidates(core::Lattice& lattice, const std::vec
     if (!follows_godan_mizenkei && !follows_ichidan_passive && !follows_causative_passive) {
       continue;
     }
-    if (follows_ichidan_passive || follows_causative_passive) {
-      tail_start = follows_causative_passive ? passive_pos - 1 : kanji_end;
-    }
 
-    // A Godan causative mizenkei (聞かさ from 聞く) can itself precede
-    // passive-continuative れ続ける. Derive that stem only when the underlying
-    // pre-causative verb is dictionary-confirmed, avoiding a free-form
-    // kanji+hira guess while preserving the productive voice chain.
-    if (follows_godan_mizenkei && codepoints[passive_pos - 1] == U'さ' && passive_pos >= start_pos + 2) {
-      const char32_t underlying_a_row = codepoints[passive_pos - 2];
-      const std::string_view underlying_suffix = grammar::godanBaseSuffixFromARow(underlying_a_row);
-      if (!underlying_suffix.empty()) {
-        const std::string underlying_base =
-            normalize::concat(extractSubstring(codepoints, start_pos, passive_pos - 2), underlying_suffix);
-        if (dict_manager.lookupExact(underlying_base, core::PartOfSpeech::Verb) != nullptr) {
-          const std::string causative_stem = extractSubstring(codepoints, start_pos, passive_pos);
-          const std::string causative_lemma = extractSubstring(codepoints, start_pos, passive_pos - 1) + "す";
-          lattice.addEdge(causative_stem, static_cast<uint32_t>(start_pos), static_cast<uint32_t>(passive_pos),
-                          core::PartOfSpeech::Verb, candidate::verb_cost::kStandardBonus, 0, causative_lemma,
-                          dictionary::ConjugationType::GodanSa, core::CandidateOrigin::VerbCompound,
-                          candidate::kNoOriginConfidence, "causative_mizenkei_before_passive_continuative",
-                          core::ExtendedPOS::VerbMizenkei, "causative_mizenkei_before_passive_continuative");
-        }
-      }
-    }
-
-    // The terminal form remains a single auxiliary-like search unit. In past
-    // and te forms, expose the renyokei and let the regular た/て auxiliary
-    // candidate supply the inflectional boundary.
-    const size_t tail_end = passive_pos + (tail_ending == U'る' ? 4 : 3);
-    const std::string tail_surface = extractSubstring(codepoints, tail_start, tail_end);
-    const std::string tail_lemma = tail_ending == U'る' ? tail_surface : tail_surface + "る";
-    lattice.addEdge(tail_surface, static_cast<uint32_t>(tail_start), static_cast<uint32_t>(tail_end),
-                    core::PartOfSpeech::Verb, candidate::kVerifiedTailCompoundVerbBonus, 0, tail_lemma,
+    // The subsidiary alone is the candidate; the voice auxiliary in front of it
+    // is already a dictionary edge. In past and te forms, expose the renyokei
+    // and let the regular た/て auxiliary candidate supply the inflectional
+    // boundary.
+    const size_t subsidiary_start = passive_pos + 1;
+    const size_t subsidiary_end = passive_pos + (tail_ending == U'る' ? 4 : 3);
+    const std::string subsidiary_surface = extractSubstring(codepoints, subsidiary_start, subsidiary_end);
+    lattice.addEdge(subsidiary_surface, static_cast<uint32_t>(subsidiary_start), static_cast<uint32_t>(subsidiary_end),
+                    core::PartOfSpeech::Verb, candidate::kVerifiedTailCompoundVerbBonus, 0, "続ける",
                     dictionary::ConjugationType::Ichidan, core::CandidateOrigin::VerbCompound,
-                    candidate::kNoOriginConfidence, "passive_continuative_tail", core::ExtendedPOS::AuxPassive,
-                    "passive_continuative_tail");
+                    candidate::kNoOriginConfidence, "passive_continuative_subsidiary",
+                    tail_ending == U'る' ? core::ExtendedPOS::VerbShuushikei : core::ExtendedPOS::VerbRenyokei,
+                    "passive_continuative_subsidiary");
     return true;
   }
 

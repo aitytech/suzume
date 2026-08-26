@@ -79,7 +79,6 @@ CompoundVerbMatch findCompoundVerbMatch(
   const size_t v2_start_byte = byteOffsetAt(byte_offsets, v2_start);
   const std::string_view v1_surface = text.substr(start_byte, v2_start_byte - start_byte);
   bool hiragana_v1_in_dictionary = false;
-  bool hiragana_v1_has_strong_inflection = false;
   if (hiragana_v1) {
     std::string v1_base;
     if (grammar::isSuruRenyokeiSurface(v1_surface)) {
@@ -91,6 +90,7 @@ CompoundVerbMatch findCompoundVerbMatch(
       v1_base += normalize::encodeUtf8(base_ending);
     }
     hiragana_v1_in_dictionary = dict_manager.lookupExact(v1_base, core::PartOfSpeech::Verb) != nullptr;
+    bool hiragana_v1_has_strong_inflection = false;
     if (!hiragana_v1_in_dictionary) {
       for (const auto& candidate : inflection.analyze(v1_surface)) {
         if (candidate.base_form == v1_base &&
@@ -100,8 +100,19 @@ CompoundVerbMatch findCompoundVerbMatch(
         }
       }
     }
-    if (!hiragana_v1_in_dictionary && !hiragana_v1_has_strong_inflection && !allow_closed_onbin_v1) {
+    if (!hiragana_v1_in_dictionary && !allow_closed_onbin_v1) {
       for (size_t pos = start_pos; pos < v2_start; ++pos) {
+        // A particle reading is unmistakable at V1's own start and behind the
+        // u-row ending of a finite predicate: no okurigana sits there. Anywhere
+        // else one kana may merely share a particle's spelling (the ど of
+        // たどり), and a V1 the conjugation table reconstructs keeps it. The
+        // table reconstructs a base for almost any kana run, though, so it is
+        // no defence at a real clause boundary (るにし -> るにす, which turns
+        // 食べる+に into 食べ + るにしたっ).
+        const bool particle_position_is_unambiguous = pos == start_pos || kana::isURowCodepoint(codepoints[pos - 1]);
+        if (hiragana_v1_has_strong_inflection && !particle_position_is_unambiguous) {
+          continue;
+        }
         const auto* particle =
             dict_manager.lookupExact(extractSubstring(codepoints, pos, pos + 1), core::PartOfSpeech::Particle);
         if (particle != nullptr && particle->extended_pos != core::ExtendedPOS::ParticleFinal) {

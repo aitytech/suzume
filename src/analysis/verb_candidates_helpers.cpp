@@ -131,6 +131,10 @@ bool naiNegativeFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
   return naiNegativeFormLengthAt(codepoints, pos) != 0;
 }
 
+bool lexicalWordFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
+  return pos < codepoints.size() && kana::isKanjiCodepoint(codepoints[pos]);
+}
+
 bool crossesKkoNominalizer(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
   if (start_pos >= end_pos || end_pos > codepoints.size()) {
     return false;
@@ -462,7 +466,10 @@ bool isPassiveAuxContinuation(const std::vector<char32_t>& codepoints, size_t po
   if (after_re == U'れ') {
     return pos_after_re + 1 < codepoints.size() && codepoints[pos_after_re + 1] == U'ば';
   }
-  return false;
+  // A lexical word starting here continues the clause instead of the paradigm
+  // (使わ+れ+続ける, 使わ+れ+方). The auxiliary is still the auxiliary, so the
+  // callers that use this to confirm the voice reading need it to hold.
+  return lexicalWordFollowsAt(codepoints, pos_after_re);
 }
 
 bool isPassiveAuxConditionalAt(const std::vector<char32_t>& codepoints, size_t passive_re_pos) {

@@ -1063,6 +1063,75 @@
       ],
       "id": "karemashita",
       "input": "書かれました。"
+    },
+    {
+      "description": "Shortened causative-passive keeps the causative auxiliary off する",
+      "expected": [
+        {
+          "lemma": "提出",
+          "pos": "Noun",
+          "surface": "提出"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "急ぐ",
+          "pos": "Verb",
+          "surface": "急が"
+        },
+        {
+          "lemma": "す",
+          "pos": "Auxiliary",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_gasareta",
+      "input": "提出を急がされた"
+    },
+    {
+      "description": "Causative-passive keeps every voice boundary before the subsidiary",
+      "expected": [
+        {
+          "lemma": "待つ",
+          "pos": "Verb",
+          "surface": "待た"
+        },
+        {
+          "lemma": "す",
+          "pos": "Auxiliary",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "続ける",
+          "pos": "Verb",
+          "surface": "続け"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "tasare_keta",
+      "input": "待たされ続けた"
     }
   ],
   "description": "Passive voice verbs (受身形) - MeCab-compatible split format",

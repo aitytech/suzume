@@ -166,6 +166,136 @@
       ],
       "id": "ha_shikarazu",
       "input": "資料は難しからず。"
+    },
+    {
+      "description": "Classical kari continuative hosts the past auxiliary き",
+      "expected": [
+        {
+          "lemma": "時既",
+          "pos": "Noun",
+          "surface": "時既"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "遅い",
+          "pos": "Adjective",
+          "surface": "遅かり"
+        },
+        {
+          "lemma": "き",
+          "pos": "Auxiliary",
+          "surface": "き"
+        }
+      ],
+      "id": "ni_kariki",
+      "input": "時既に遅かりき"
+    },
+    {
+      "description": "Kari continuative after a nominal modifier",
+      "expected": [
+        {
+          "lemma": "空",
+          "pos": "Noun",
+          "surface": "空"
+        },
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高かり"
+        },
+        {
+          "lemma": "き",
+          "pos": "Auxiliary",
+          "surface": "き"
+        }
+      ],
+      "id": "kariki",
+      "input": "空高かりき"
+    },
+    {
+      "description": "Classical izenkei cell before the concessive ど",
+      "expected": [
+        {
+          "lemma": "遅い",
+          "pos": "Adjective",
+          "surface": "遅けれ"
+        },
+        {
+          "lemma": "ど",
+          "pos": "Particle",
+          "surface": "ど"
+        }
+      ],
+      "id": "keredo",
+      "input": "遅けれど"
+    },
+    {
+      "description": "Quotative と plus the te-form of する after the classical volitional",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行か"
+        },
+        {
+          "lemma": "む",
+          "pos": "Auxiliary",
+          "surface": "む"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "止める",
+          "pos": "Verb",
+          "surface": "止め"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "kamutoshite_meta",
+      "input": "行かむとして止めた"
+    },
+    {
+      "description": "Perfective continuative に selects the classical past auxiliary けり",
+      "expected": [
+        {
+          "lemma": "雨降り",
+          "pos": "Noun",
+          "surface": "雨降り"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "けり",
+          "pos": "Auxiliary",
+          "surface": "けり"
+        }
+      ],
+      "id": "rinikeri",
+      "input": "雨降りにけり"
     }
   ],
   "description": "literary_classic tests (part 2/2)",

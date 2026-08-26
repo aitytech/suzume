@@ -663,6 +663,11 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // modern ichidan conditional such as 見けれ+ば.
       {EPOS::VerbRenyokei, EPOS::AuxClassicalKeri, cost::kVeryStrongBonus},
       {EPOS::AuxClassicalKeri, EPOS::ParticleConj, cost::kVeryStrongBonus},
+      // けり is the 終止形 alone, so it closes the clause instead of heading a
+      // noun phrase: the adnominal that a case particle would attach to is
+      // spelled ける. Without this the two kana win over the deverbal noun
+      // they share their spelling with (壁にけりを入れる).
+      {EPOS::AuxClassicalKeri, EPOS::ParticleCase, cost::kProhibitive},
 
       // An adjective reaches the same auxiliary through its supplementary (カリ)
       // conjugation, whose whole purpose is to carry these forms

@@ -57,8 +57,11 @@ void Lemmatizer::lemmatizeAll(std::vector<core::Morpheme>& morphemes, bool updat
       hajime.lemma = hajime.surface;
       hajime.conj_type = dictionary::ConjugationType::None;
       hajime.conj_form = grammar::ConjForm::Base;
+      // An auxiliary is already a member of the verbal chain, so there is no
+      // homograph left to recover: rebuilding a predicate out of the passive れ
+      // would undo the voice boundary (使わ+れ+始め).
     } else if (next_is_verbal_hajime && (!is_dictionary_noun || hajime_has_verbal_follower) &&
-               morpheme.pos != core::PartOfSpeech::Verb) {
+               morpheme.pos != core::PartOfSpeech::Verb && morpheme.pos != core::PartOfSpeech::Auxiliary) {
       const char32_t final_cp = utf8::decodeFirstChar(utf8::lastChar(morpheme.surface));
       std::string reconstructed;
       if (grammar::endsWithERow(morpheme.surface) || final_cp == U'じ') {

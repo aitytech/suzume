@@ -273,6 +273,109 @@
       ],
       "id": "d3_ba_kanji_control",
       "input": "水ば飲む。"
+    },
+    {
+      "description": "Emphatic ってば keeps the copula on the predicate",
+      "expected": [
+        {
+          "lemma": "大丈夫",
+          "pos": "Adjective",
+          "surface": "大丈夫"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "ってば",
+          "pos": "Particle",
+          "surface": "ってば"
+        }
+      ],
+      "id": "dattteba",
+      "input": "大丈夫だってば"
+    },
+    {
+      "description": "Emphatic ってば after a plain verb is one particle",
+      "expected": [
+        {
+          "lemma": "違う",
+          "pos": "Verb",
+          "surface": "違う"
+        },
+        {
+          "lemma": "ってば",
+          "pos": "Particle",
+          "surface": "ってば"
+        }
+      ],
+      "id": "uttteba",
+      "input": "違うってば"
+    },
+    {
+      "description": "Final-particle pair かな before the colloquial quotative って",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行こ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        },
+        {
+          "lemma": "な",
+          "pos": "Particle",
+          "surface": "な"
+        },
+        {
+          "lemma": "って",
+          "pos": "Particle",
+          "surface": "って"
+        }
+      ],
+      "id": "koukanattte",
+      "input": "行こうかなって"
+    },
+    {
+      "description": "かなって after an adjective is the final-particle pair, not 叶う",
+      "expected": [
+        {
+          "lemma": "いい",
+          "pos": "Adjective",
+          "surface": "いい"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        },
+        {
+          "lemma": "な",
+          "pos": "Particle",
+          "surface": "な"
+        },
+        {
+          "lemma": "って",
+          "pos": "Particle",
+          "surface": "って"
+        },
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思う"
+        }
+      ],
+      "id": "iikanattte_u",
+      "input": "いいかなって思う"
     }
   ],
   "description": "particle_final tests",

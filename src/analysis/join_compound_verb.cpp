@@ -196,7 +196,7 @@ void addCompoundVerbJoinCandidates(core::Lattice& lattice, std::string_view text
       godanRenyokeiBaseCp(renyokei_char) == 0 &&
       (verb_helpers::isSingleKanjiIchidan(codepoints[start_pos]) || has_bound_verb_prefix);
 
-  if (addPassiveContinuativeTailCandidates(lattice, codepoints, start_pos, kanji_end, dict_manager)) {
+  if (addPassiveContinuativeTailCandidates(lattice, codepoints, kanji_end)) {
     return;
   }
 

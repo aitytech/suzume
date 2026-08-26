@@ -280,6 +280,38 @@
       ],
       "id": "c1_passive_split_control_2",
       "input": "確認された。"
+    },
+    {
+      "description": "かなって after a subject phrase stays the te-form of 叶う",
+      "expected": [
+        {
+          "lemma": "夢",
+          "pos": "Noun",
+          "surface": "夢"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "かなう",
+          "pos": "Verb",
+          "surface": "かなっ"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "嬉しい",
+          "pos": "Adjective",
+          "surface": "嬉しい"
+        }
+      ],
+      "id": "gakanattte_shii",
+      "input": "夢がかなって嬉しい"
     }
   ],
   "description": "verb_te_form tests",

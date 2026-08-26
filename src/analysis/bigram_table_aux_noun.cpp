@@ -734,6 +734,13 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // preserving a single lexical onbin stem (よろこん + で).
       {EPOS::VerbMizenkei, EPOS::VerbOnbinkei, cost::kAlmostNever},
 
+      // The volitional closes its predicate, so what follows it is a particle
+      // or another auxiliary -- never a fresh verb stem. Without this the final
+      // particles behind it are swallowed by a euphonic stem that happens to
+      // spell them (行こう+か+な+って → 行こう + かなっ + て).
+      {EPOS::AuxVolitional, EPOS::VerbOnbinkei, cost::kAlmostNever},
+      {EPOS::AuxVolitional, EPOS::VerbRenyokei, cost::kAlmostNever},
+
       // Noun → AuxCausative (色褪+せる) - strong penalty
       // Causative auxiliary only follows verb mizenkei, never nouns
       {EPOS::Noun, EPOS::AuxCausative, cost::kStrong},

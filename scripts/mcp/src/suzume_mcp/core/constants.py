@@ -933,6 +933,12 @@ FIXED_FUNCTION_LEMMAS: dict[str, str] = {
     "なかれ": "なかれ",
 }
 
+# Modern headwords the reference dictionary spells with a classical stem the
+# word has since lost.  あしい is not a word -- the modern reflex of 悪し is 悪い
+# -- but the dictionary carries both entries, so the inflected cells of the
+# classical paradigm resolve to the wrong one.
+CLASSICAL_ADJECTIVE_LEMMA_OVERRIDES: dict[str, str] = {"悪しい": "悪い"}
+
 # Pronoun overrides (名詞 -> Pronoun)
 PRONOUN_OVERRIDES: set[str] = {
     "皆",

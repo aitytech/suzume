@@ -609,9 +609,14 @@
           "surface": "使わ"
         },
         {
-          "lemma": "れ続ける",
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "続ける",
           "pos": "Verb",
-          "surface": "れ続ける"
+          "surface": "続ける"
         }
       ],
       "id": "verb_passive_continuative_godan_boundary",
@@ -626,9 +631,14 @@
           "surface": "見"
         },
         {
-          "lemma": "られ続ける",
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "続ける",
           "pos": "Verb",
-          "surface": "られ続ける"
+          "surface": "続ける"
         }
       ],
       "id": "verb_passive_continuative_ichidan_boundary",
@@ -638,14 +648,24 @@
       "description": "使役受身継続連鎖で補助動詞境界を保持する",
       "expected": [
         {
-          "lemma": "聞かす",
+          "lemma": "聞く",
           "pos": "Verb",
-          "surface": "聞かさ"
+          "surface": "聞か"
         },
         {
-          "lemma": "れ続ける",
+          "lemma": "す",
+          "pos": "Auxiliary",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "続ける",
           "pos": "Verb",
-          "surface": "れ続ける"
+          "surface": "続ける"
         }
       ],
       "id": "verb_causative_passive_continuative_boundary",
@@ -687,9 +707,14 @@
           "surface": "使わ"
         },
         {
-          "lemma": "れ続ける",
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "続ける",
           "pos": "Verb",
-          "surface": "れ続け"
+          "surface": "続け"
         },
         {
           "lemma": "た",
@@ -1121,9 +1146,14 @@
           "surface": "せ"
         },
         {
-          "lemma": "られ続ける",
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "続ける",
           "pos": "Verb",
-          "surface": "られ続ける"
+          "surface": "続ける"
         }
       ],
       "id": "saserare_keru",
@@ -1148,9 +1178,14 @@
           "surface": "せ"
         },
         {
-          "lemma": "られ続ける",
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "続ける",
           "pos": "Verb",
-          "surface": "られ続け"
+          "surface": "続け"
         },
         {
           "lemma": "た",
@@ -1175,9 +1210,14 @@
           "surface": "させ"
         },
         {
-          "lemma": "られ続ける",
+          "lemma": "られる",
+          "pos": "Auxiliary",
+          "surface": "られ"
+        },
+        {
+          "lemma": "続ける",
           "pos": "Verb",
-          "surface": "られ続ける"
+          "surface": "続ける"
         }
       ],
       "id": "besaserare_keru",

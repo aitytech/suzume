@@ -892,6 +892,38 @@
       ],
       "id": "bita",
       "input": "田舎びた家"
+    },
+    {
+      "description": "Nominal けり before a case particle stays a noun",
+      "expected": [
+        {
+          "lemma": "壁",
+          "pos": "Noun",
+          "surface": "壁"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "けり",
+          "pos": "Noun",
+          "surface": "けり"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "入れる",
+          "pos": "Verb",
+          "surface": "入れる"
+        }
+      ],
+      "id": "nikeriwo_reru",
+      "input": "壁にけりを入れる"
     }
   ],
   "description": "noun_deverbal tests",

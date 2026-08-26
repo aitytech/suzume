@@ -145,11 +145,11 @@ inline bool isMizenkeiAuxiliaryStarter(char32_t codepoint, char32_t following) {
          codepoint == U'ね' || codepoint == U'む' || codepoint == U'じ';
 }
 
-// Emits the verified passive-continuative tail (れ続ける and its inflections)
-// and returns true when that grammar-owned path consumes the candidate span.
+// Emits the continuative subsidiary behind a voice auxiliary (the 続ける of
+// れ続ける and its inflections) and returns true when that grammar-owned path
+// consumes the candidate span.
 bool addPassiveContinuativeTailCandidates(core::Lattice& lattice, const std::vector<char32_t>& codepoints,
-                                          size_t start_pos, size_t kanji_end,
-                                          const dictionary::DictionaryManager& dict_manager);
+                                          size_t kanji_end);
 
 // Resolves V2 forms, verifies the corresponding V1, and returns the highest-priority
 // match. The caller retains V2 boundary discovery and emits the selected edge separately.

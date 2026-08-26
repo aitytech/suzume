@@ -591,8 +591,13 @@ void appendGodanPassiveRenyokeiCandidates(const std::vector<char32_t>& codepoint
             const bool is_passive_polite_chain = vh::masuAuxFollowsAt(codepoints, renyokei_end);
             const bool is_classical_predicate_chain =
                 classicalPredicateTailFollowsAt(codepoints, renyokei_end, dict_manager);
+            // A subsidiary verb behind the passive keeps the boundary for the
+            // same reason (使わ+れ+続ける, 使わ+れ+始める): the passive is an
+            // auxiliary, so it never heads a lexical compound. Every cell it
+            // does host is kana, which is what separates the two cases.
+            const bool is_passive_subsidiary_chain = vh::lexicalWordFollowsAt(codepoints, renyokei_end);
             if (!is_beki_pattern && !is_passive_causative_chain && !is_passive_negative_chain &&
-                !is_passive_polite_chain && !is_classical_predicate_chain) {
+                !is_passive_polite_chain && !is_classical_predicate_chain && !is_passive_subsidiary_chain) {
               candidates.push_back(makeVerbCandidate(
                   surface, start_pos, renyokei_end, base_cost, base_lemma, dictionary::ConjugationType::Ichidan, false,
                   CandidateOrigin::VerbKanji, ichidan_confidence, "godan_passive_renyokei"));

@@ -768,6 +768,90 @@
       ],
       "id": "daga_ganai",
       "input": "だが、時間がない。"
+    },
+    {
+      "description": "Concessive たって keeps the Sahen continuative separate",
+      "expected": [
+        {
+          "lemma": "食べる",
+          "pos": "Verb",
+          "surface": "食べる"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "って",
+          "pos": "Particle",
+          "surface": "って"
+        },
+        {
+          "lemma": "限度",
+          "pos": "Noun",
+          "surface": "限度"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "berunishitattte_gaaru",
+      "input": "食べるにしたって限度がある"
+    },
+    {
+      "description": "Concessive たって after the bare Sahen continuative",
+      "expected": [
+        {
+          "lemma": "そう",
+          "pos": "Adverb",
+          "surface": "そう"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "って",
+          "pos": "Particle",
+          "surface": "って"
+        },
+        {
+          "lemma": "同じ",
+          "pos": "Adjective",
+          "surface": "同じ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "soushitattte_jida",
+      "input": "そうしたって同じだ"
     }
   ],
   "description": "particle_conj tests",

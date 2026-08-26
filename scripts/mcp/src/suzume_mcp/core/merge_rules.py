@@ -26,6 +26,7 @@ from .constants import (
 from .core_lexicon import core_headwords_by_length
 from .mecab import mecab_analyze
 from .merge_postprocessors import (
+    KARI_MIZENKEI_CELL,
     _postprocess_adj_bungo,
     _postprocess_adj_kari,
     _postprocess_ascii_joiner_merge,
@@ -58,8 +59,42 @@ from .merge_postprocessors import (
     _postprocess_small_kana_head_merge,
     _postprocess_tomo_particle,
     _postprocess_totomoni,
+    classical_adjective_lemma,
 )
 from .split_rules import base_from_renyokei, bases_from_renyokei
+
+# Cells of the classical i-adjective paradigm that a kanji stem forms, paired
+# with the closed set of function words each one hosts.  The reference
+# dictionary carries none of them, so their surfaces fall back to unrelated
+# verbs (かりき as かりきる) or to a lexicalized adverb (悪しからず).
+_CLASSICAL_ADJECTIVE_CELLS: tuple[tuple[str, str, str], ...] = (
+    (r"(?:し)?から", r"ず|む", "助動詞"),
+    (r"(?:し)?かり", r"けり|き|し", "助動詞"),
+    (r"(?:し)?けれ|(?:し)?かれ", r"ど", "助詞"),
+)
+_CLASSICAL_AUXILIARY_LEMMAS: dict[str, str] = {"ず": "ぬ", "し": "き"}
+
+
+def _classical_adjective_cells(remaining: str) -> tuple[dict, dict] | None:
+    """Split a classical kanji i-adjective cell from the function word it hosts."""
+    for inflection, tails, tail_pos in _CLASSICAL_ADJECTIVE_CELLS:
+        match = regex.match(
+            rf"^(\p{{Han}}+)({inflection})({tails})(?=$|[^\p{{Hiragana}}])",
+            remaining,
+        )
+        if match is None:
+            continue
+        stem, cell, tail = match.groups()
+        # Every cell of the paradigm shares the adjective's stem, so swapping the
+        # matched ending for the 未然形 one gives the probe the dictionary knows.
+        lemma = classical_adjective_lemma(stem + cell[: -len(KARI_MIZENKEI_CELL)] + KARI_MIZENKEI_CELL)
+        if lemma is None:
+            return None
+        return (
+            {"surface": stem + cell, "pos": "形容詞", "lemma": lemma},
+            {"surface": tail, "pos": tail_pos, "lemma": _CLASSICAL_AUXILIARY_LEMMAS.get(tail, tail)},
+        )
+    return None
 
 
 def _reads_as_one_verb(lemma: str) -> bool:
@@ -301,28 +336,21 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                 applied_rule = "na-adjective-monono"
 
         # Preserve a classical kari adjective before generic noun recovery can
-        # absorb its kanji stem. The terminal modern form validates the open
-        # adjective class; the suffix/auxiliary cells are grammatical.
+        # absorb its kanji stem. The classical terminal cell validates the open
+        # adjective class and supplies its headword; the suffix/auxiliary cells
+        # are grammatical.
         if not merged:
-            kari_match = regex.match(r"^(\p{Han}+)(しから|から)(ず|む)(?=$|[^\p{Hiragana}])", remaining)
-            kere_match = regex.match(r"^(\p{Han}+)(しけれ|かれ)(ど)(?=$|[^\p{Hiragana}])", remaining)
-            match = kari_match or kere_match
-            if match is not None:
-                stem, kari, tail = match.groups()
-                terminal = stem + ("しい" if kari.startswith("し") else "い")
-                analysis = mecab_analyze(terminal)
-                source_span = stem + kari + tail
+            cells = _classical_adjective_cells(remaining)
+            if cells is not None:
+                adjective, function_word = cells
+                source_span = adjective["surface"] + function_word["surface"]
                 consumed = ""
                 j = i
                 while j < len(tokens) and len(consumed) < len(source_span):
                     consumed += tokens[j].get("surface", "")
                     j += 1
-                if len(analysis) == 1 and analysis[0].get("pos") == "形容詞" and consumed == source_span:
-                    result.append({"surface": stem + kari, "pos": "形容詞", "lemma": terminal})
-                    if kari_match is not None:
-                        result.append({"surface": tail, "pos": "助動詞", "lemma": "ぬ" if tail == "ず" else "む"})
-                    else:
-                        result.append({"surface": tail, "pos": "助詞", "lemma": tail})
+                if consumed == source_span:
+                    result.extend((adjective, function_word))
                     i = j
                     merged = True
                     if applied_rule is None:
@@ -623,56 +651,6 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                 if applied_rule is None:
                     applied_rule = "classical-he-auxiliary"
 
-        # Reconstruct the productive classical kari paradigm of kanji i-adjectives.
-        # The adjective's lemma is validated through its modern terminal form,
-        # so this remains a conjugation rule rather than a list of headwords.
-        if not merged:
-            kari_match = regex.match(r"^(\p{Han}+)(しから|から)(ず|む)$", remaining)
-            kere_match = regex.match(r"^(\p{Han}+)(しけれ|かれ)(ど)$", remaining)
-            if kari_match is not None:
-                stem, kari, auxiliary = kari_match.groups()
-                terminal = stem + ("しい" if kari == "しから" else "い")
-                analysis = mecab_analyze(terminal)
-                if len(analysis) == 1 and analysis[0].get("pos") == "形容詞":
-                    source_span = stem + kari + auxiliary
-                    consumed = ""
-                    j = i
-                    while j < len(tokens) and len(consumed) < len(source_span):
-                        consumed += tokens[j].get("surface", "")
-                        j += 1
-                    if consumed == source_span:
-                        result.extend(
-                            (
-                                {"surface": stem + kari, "pos": "形容詞", "lemma": terminal},
-                                {"surface": auxiliary, "pos": "助動詞", "lemma": "ぬ" if auxiliary == "ず" else "む"},
-                            )
-                        )
-                        i = j
-                        merged = True
-                        if applied_rule is None:
-                            applied_rule = "classical-adjective-kari"
-            elif kere_match is not None:
-                stem, kari, particle = kere_match.groups()
-                terminal = stem + ("しい" if kari == "しけれ" else "い")
-                analysis = mecab_analyze(terminal)
-                if len(analysis) == 1 and analysis[0].get("pos") == "形容詞":
-                    source_span = stem + kari + particle
-                    consumed = ""
-                    j = i
-                    while j < len(tokens) and len(consumed) < len(source_span):
-                        consumed += tokens[j].get("surface", "")
-                        j += 1
-                    if consumed == source_span:
-                        result.extend(
-                            (
-                                {"surface": stem + kari, "pos": "形容詞", "lemma": terminal},
-                                {"surface": particle, "pos": "助詞", "lemma": particle},
-                            )
-                        )
-                        i = j
-                        merged = True
-                        if applied_rule is None:
-                            applied_rule = "classical-adjective-kari"
         # Dialectal どえ- intensifiers remain one modifier.  Require the
         # emphatic prefix and a following content word, rather than changing a
         # bare えりゃー verb by surface alone.
@@ -1491,7 +1469,13 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
         following_source = remaining[len(t.get("surface", "")) :]
         begins_fixed_subsidiary = any(following_source.startswith(form) for form in _FIXED_INFLECTED_FUNCTION_UNITS)
         v1_surface = t.get("surface", "")
-        v1_verb_renyokei = t.get("pos") == "動詞" and "連用" in (t.get("conj_form") or "")
+        # A compound verb's first member is an independent verb. The voice
+        # auxiliaries share the 動詞 tag but carry 接尾, and letting them through
+        # builds a headword out of an auxiliary and the subsidiary that follows
+        # it (れ続ける), which drops the passive from the analysis entirely.
+        v1_verb_renyokei = (
+            t.get("pos") == "動詞" and t.get("pos_sub1") != "接尾" and "連用" in (t.get("conj_form") or "")
+        )
         # MeCab frequently lexicalizes a bare renyokei as a noun (座り, 入り).
         # Reconstructing its base is a productive morphology check; the closed
         # V2 class below prevents this from becoming an unrestricted noun+verb

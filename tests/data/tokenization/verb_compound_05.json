@@ -766,6 +766,33 @@
       ],
       "id": "wo_mi_giru",
       "input": "本を読み過ぎる。"
+    },
+    {
+      "description": "Passive auxiliary keeps its boundary before the inceptive subsidiary",
+      "expected": [
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使わ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "始める",
+          "pos": "Verb",
+          "surface": "始め"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "ware_meta",
+      "input": "使われ始めた"
     }
   ],
   "description": "Compound verbs (part 5/5)",

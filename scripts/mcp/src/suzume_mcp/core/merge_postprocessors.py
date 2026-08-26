@@ -4,6 +4,7 @@ import regex
 
 from .constants import (
     BOUND_SUFFIX_VERB_NOUN_CELLS,
+    CLASSICAL_ADJECTIVE_LEMMA_OVERRIDES,
     HONORIFIC_EXCEPTIONS,
     HONORIFIC_FRAME_TAILS,
     HONORIFIC_SUFFIXES,
@@ -428,8 +429,28 @@ def _postprocess_adj_bungo(result: list[dict], applied_rule: str | None) -> tupl
 
 
 _KARI_TAILS = ("かり", "かる", "かれ")
-_KARI_MIZENKEI_TAIL = "から"
+KARI_MIZENKEI_CELL = "から"
 _KARI_MAX_TOKEN_RUN = 4
+
+
+def classical_adjective_lemma(mizenkei: str) -> str | None:
+    """Read the modern headword of a classical adjective off its 未然形 cell.
+
+    The reference dictionary conjugates the から cell itself (難しから -> 難しい,
+    遅から -> 遅い), so asking it resolves the ク/シク split without having to
+    guess whether a し belongs to the stem or to the ending.  Only its own stale
+    headwords need correcting on the way out.
+    """
+    from .mecab import mecab_analyze
+
+    tokens = mecab_analyze(mizenkei)
+    if len(tokens) != 1:
+        return None
+    token = tokens[0]
+    if token.get("pos") != "形容詞" or token.get("surface") != mizenkei:
+        return None
+    lemma = token.get("lemma")
+    return CLASSICAL_ADJECTIVE_LEMMA_OVERRIDES.get(lemma, lemma) or None
 
 
 def _kari_adjective_lemma(surface: str) -> str | None:
@@ -440,16 +461,7 @@ def _kari_adjective_lemma(surface: str) -> str | None:
     whose カリ ending can be swapped for から and still analyze as one 形容詞 is
     itself a cell of the same adjective's paradigm.
     """
-    from .mecab import mecab_analyze
-
-    probe = surface[: -len(_KARI_MIZENKEI_TAIL)] + _KARI_MIZENKEI_TAIL
-    tokens = mecab_analyze(probe)
-    if len(tokens) != 1:
-        return None
-    token = tokens[0]
-    if token.get("pos") != "形容詞" or token.get("surface") != probe:
-        return None
-    return token.get("lemma")
+    return classical_adjective_lemma(surface[: -len(KARI_MIZENKEI_CELL)] + KARI_MIZENKEI_CELL)
 
 
 def _postprocess_adj_kari(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
@@ -474,7 +486,7 @@ def _postprocess_adj_kari(result: list[dict], applied_rule: str | None) -> tuple
             # already analyzes as one word needs no repair (明かり stays a noun).
             if end == idx:
                 continue
-            if len(run) <= len(_KARI_MIZENKEI_TAIL) or not run.endswith(_KARI_TAILS):
+            if len(run) <= len(KARI_MIZENKEI_CELL) or not run.endswith(_KARI_TAILS):
                 continue
             lemma = _kari_adjective_lemma(run)
             if lemma is not None:

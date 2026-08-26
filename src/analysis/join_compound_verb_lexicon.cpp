@@ -19,53 +19,55 @@ namespace suzume::analysis::compound_verb_detail {
 // V1+続ける compounds form the search unit represented by this table.
 extern const SubsidiaryVerb kSubsidiaryVerbs[kSubsidiaryVerbCount] = {
     // Godan verbs (五段)
-    {"込む", "こむ", "む", V2VerbType::Godan},                      // 読み込む, 飛びこむ
-    {"出す", "だす", "す", V2VerbType::Godan},                      // 呼び出す, 走りだす
-    {"続く", "つづく", "く", V2VerbType::Godan},                    // 引き続く
-    {"返す", "かえす", "す", V2VerbType::Godan},                    // 繰り返す, 繰りかえす
-    {"戻す", "もどす", "す", V2VerbType::Godan},                    // 取り戻す, 取りもどす
-    {"返る", "かえる", "る", V2VerbType::Godan},                    // 振り返る, 振りかえる
-    {"帰る", "かえる", "る", V2VerbType::Godan},                    // 持ち帰る
-    {"変わる", "かわる", "る", V2VerbType::Godan},                  // 移り変わる, 生まれ変わる
-    {"替わる", "かわる", "る", V2VerbType::Godan},                  // 入れ替わる, 切り替わる
-    {"つかる", nullptr, "る", V2VerbType::Godan},                   // 見つかる
-    {"合う", "あう", "う", V2VerbType::Godan},                      // 話し合う, 話しあう
-    {"扱う", "あつかう", "う", V2VerbType::Godan},                  // 取り扱う
-    {"運ぶ", "はこぶ", "ぶ", V2VerbType::Godan},                    // 持ち運ぶ
-    {"過ごす", "すごす", "す", V2VerbType::Godan},                  // 見過ごす
-    {"消す", "けす", "す", V2VerbType::Godan},                      // 取り消す
-    {"直す", "なおす", "す", V2VerbType::Godan},                    // やり直す, やりなおす
-    {"切る", "きる", "る", V2VerbType::Godan},                      // 締め切る, 締めきる
-    {"上がる", "あがる", "る", V2VerbType::Godan},                  // 立ち上がる, 盛り上がる
-    {"下がる", "さがる", "る", V2VerbType::Godan},                  // 立ち下がる
-    {"回す", "まわす", "す", V2VerbType::Godan},                    // 振り回す, 持ち回す
-    {"回る", "まわる", "る", V2VerbType::Godan},                    // 持ち回る, 振り回る
-    {"抜く", "ぬく", "く", V2VerbType::Godan},                      // 追い抜く, 突き抜く
-    {"掛かる", "かかる", "る", V2VerbType::Godan},                  // 取り掛かる
-    {"付く", "つく", "く", V2VerbType::Godan},                      // 思い付く, 気付く
-    {"当たる", "あたる", "る", V2VerbType::Godan},                  // 見当たる, 行き当たる
-    {"巡る", "めぐる", "る", V2VerbType::Godan},                    // 駆け巡る, 飛び巡る
-    {"飛ばす", "とばす", "す", V2VerbType::Godan},                  // 吹き飛ばす, 弾き飛ばす
-    {"交う", "かう", "う", V2VerbType::Godan},                      // 飛び交う, 行き交う
-    {"潰す", "つぶす", "す", V2VerbType::Godan},                    // 押し潰す, 叩き潰す
-    {"崩す", "くずす", "す", V2VerbType::Godan},                    // 切り崩す, 打ち崩す
-    {"倒す", "たおす", "す", V2VerbType::Godan},                    // 打ち倒す, 蹴り倒す
-    {"起こす", "おこす", "す", V2VerbType::Godan},                  // 引き起こす, 呼び起こす
-    {"去る", "さる", "る", V2VerbType::Godan},                      // 立ち去る, 走り去る
-    {"開く", "ひらく", "く", V2VerbType::Godan},                    // 切り開く, 押し開く
-    {"組む", "くむ", "む", V2VerbType::Godan},                      // 取り組む, 組み組む
-    {"上る", "のぼる", "る", V2VerbType::Godan},                    // 立ち上る, 這い上る
-    {"こもる", "こもる", "る", V2VerbType::Godan},                  // 閉じこもる, 立てこもる, 引きこもる
-    {"籠る", nullptr, "る", V2VerbType::Godan},                     // 閉じ籠る, 立て籠る
-    {"籠もる", nullptr, "る", V2VerbType::Godan},                   // 閉じ籠もる, 立て籠もる
-    {"鳴らす", "ならす", "す", V2VerbType::Godan},                  // 打ち鳴らす
-    {"惜しむ", "おしむ", "む", V2VerbType::Godan},                  // 出し惜しむ
-    {"違う", "ちがう", "う", V2VerbType::Godan},                    // 行き違う
-    {"外す", "はずす", "す", V2VerbType::Godan},                    // 踏み外す, 取り外す
-    {"計らう", "はからう", "う", V2VerbType::Godan},                // 見計らう, 取り計らう
-    {"悩む", "なやむ", "む", V2VerbType::Godan},                    // 思い悩む
-    {"知る", "しる", "る", V2VerbType::Godan},                      // 思い知る
-    {"立つ", "たつ", "つ", V2VerbType::Godan},                      // 思い立つ
+    {"込む", "こむ", "む", V2VerbType::Godan},        // 読み込む, 飛びこむ
+    {"出す", "だす", "す", V2VerbType::Godan},        // 呼び出す, 走りだす
+    {"続く", "つづく", "く", V2VerbType::Godan},      // 引き続く
+    {"返す", "かえす", "す", V2VerbType::Godan},      // 繰り返す, 繰りかえす
+    {"戻す", "もどす", "す", V2VerbType::Godan},      // 取り戻す, 取りもどす
+    {"返る", "かえる", "る", V2VerbType::Godan},      // 振り返る, 振りかえる
+    {"帰る", "かえる", "る", V2VerbType::Godan},      // 持ち帰る
+    {"変わる", "かわる", "る", V2VerbType::Godan},    // 移り変わる, 生まれ変わる
+    {"替わる", "かわる", "る", V2VerbType::Godan},    // 入れ替わる, 切り替わる
+    {"つかる", nullptr, "る", V2VerbType::Godan},     // 見つかる
+    {"合う", "あう", "う", V2VerbType::Godan},        // 話し合う, 話しあう
+    {"扱う", "あつかう", "う", V2VerbType::Godan},    // 取り扱う
+    {"運ぶ", "はこぶ", "ぶ", V2VerbType::Godan},      // 持ち運ぶ
+    {"過ごす", "すごす", "す", V2VerbType::Godan},    // 見過ごす
+    {"消す", "けす", "す", V2VerbType::Godan},        // 取り消す
+    {"直す", "なおす", "す", V2VerbType::Godan},      // やり直す, やりなおす
+    {"切る", "きる", "る", V2VerbType::Godan},        // 締め切る, 締めきる
+    {"上がる", "あがる", "る", V2VerbType::Godan},    // 立ち上がる, 盛り上がる
+    {"下がる", "さがる", "る", V2VerbType::Godan},    // 立ち下がる
+    {"回す", "まわす", "す", V2VerbType::Godan},      // 振り回す, 持ち回す
+    {"回る", "まわる", "る", V2VerbType::Godan},      // 持ち回る, 振り回る
+    {"抜く", "ぬく", "く", V2VerbType::Godan},        // 追い抜く, 突き抜く
+    {"掛かる", "かかる", "る", V2VerbType::Godan},    // 取り掛かる
+    {"付く", "つく", "く", V2VerbType::Godan},        // 思い付く, 気付く
+    {"当たる", "あたる", "る", V2VerbType::Godan},    // 見当たる, 行き当たる
+    {"巡る", "めぐる", "る", V2VerbType::Godan},      // 駆け巡る, 飛び巡る
+    {"飛ばす", "とばす", "す", V2VerbType::Godan},    // 吹き飛ばす, 弾き飛ばす
+    {"交う", "かう", "う", V2VerbType::Godan},        // 飛び交う, 行き交う
+    {"潰す", "つぶす", "す", V2VerbType::Godan},      // 押し潰す, 叩き潰す
+    {"崩す", "くずす", "す", V2VerbType::Godan},      // 切り崩す, 打ち崩す
+    {"倒す", "たおす", "す", V2VerbType::Godan},      // 打ち倒す, 蹴り倒す
+    {"起こす", "おこす", "す", V2VerbType::Godan},    // 引き起こす, 呼び起こす
+    {"去る", "さる", "る", V2VerbType::Godan},        // 立ち去る, 走り去る
+    {"開く", "ひらく", "く", V2VerbType::Godan},      // 切り開く, 押し開く
+    {"組む", "くむ", "む", V2VerbType::Godan},        // 取り組む, 組み組む
+    {"上る", "のぼる", "る", V2VerbType::Godan},      // 立ち上る, 這い上る
+    {"こもる", "こもる", "る", V2VerbType::Godan},    // 閉じこもる, 立てこもる, 引きこもる
+    {"籠る", nullptr, "る", V2VerbType::Godan},       // 閉じ籠る, 立て籠る
+    {"籠もる", nullptr, "る", V2VerbType::Godan},     // 閉じ籠もる, 立て籠もる
+    {"鳴らす", "ならす", "す", V2VerbType::Godan},    // 打ち鳴らす
+    {"惜しむ", "おしむ", "む", V2VerbType::Godan},    // 出し惜しむ
+    {"違う", "ちがう", "う", V2VerbType::Godan},      // 行き違う
+    {"外す", "はずす", "す", V2VerbType::Godan},      // 踏み外す, 取り外す
+    {"計らう", "はからう", "う", V2VerbType::Godan},  // 見計らう, 取り計らう
+    {"悩む", "なやむ", "む", V2VerbType::Godan},      // 思い悩む
+    {"知る", "しる", "る", V2VerbType::Godan},        // 思い知る
+    // し立つ is not a compound; the kana reading otherwise swallows the
+    // concessive particle たって behind a Sahen continuative (そうし+たって).
+    {"立つ", "たつ", "つ", V2VerbType::Godan, false},               // 思い立つ
     {"通す", "とおす", "す", V2VerbType::Godan},                    // 押し通す
     {"持つ", "もつ", "つ", V2VerbType::Godan},                      // 受け持つ
     {"流す", "ながす", "す", V2VerbType::Godan},                    // 受け流す, 聞き流す

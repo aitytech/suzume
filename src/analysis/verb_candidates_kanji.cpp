@@ -572,11 +572,20 @@ void generateVerbCandidates(const std::vector<char32_t>& codepoints, size_t star
                                                "extended_okurigana_renyokei", core::ExtendedPOS::VerbRenyokei));
       }
     } else if (grammar::isERowCodepoint(ending)) {
-      candidates.push_back(makeVerbCandidate(surface, start_pos, hiragana_end, candidate::verb_cost::kStrongBonus,
-                                             surface + "る", dictionary::ConjugationType::Ichidan, true,
-                                             CandidateOrigin::VerbKanji,
-                                             candidate::verb_cost::kConstructedVerbMinConfidence,
-                                             "extended_okurigana_ichidan_renyokei", core::ExtendedPOS::VerbRenyokei));
+      // A span whose okurigana closes on the voice auxiliary (a-row + れ) is a
+      // verb plus its passive, not a longer lexical V1: 使わ+れ+始める, never
+      // 使われ+始める. A dictionary headword spelled the same way (生まれる)
+      // keeps the whole span, which is what tells the two apart.
+      const bool ends_on_passive = ending == U'れ' && hiragana_end >= kanji_end + 2 &&
+                                   grammar::isARowCodepoint(codepoints[hiragana_end - 2]) &&
+                                   !vh::isVerbInDictionary(dict_manager, surface + "る");
+      if (!ends_on_passive) {
+        candidates.push_back(makeVerbCandidate(surface, start_pos, hiragana_end, candidate::verb_cost::kStrongBonus,
+                                               surface + "る", dictionary::ConjugationType::Ichidan, true,
+                                               CandidateOrigin::VerbKanji,
+                                               candidate::verb_cost::kConstructedVerbMinConfidence,
+                                               "extended_okurigana_ichidan_renyokei", core::ExtendedPOS::VerbRenyokei));
+      }
     }
   }
 

@@ -754,6 +754,19 @@ size_t naiNegativeFormLengthAt(const std::vector<char32_t>& codepoints, size_t p
 bool naiNegativeFollowsAt(const std::vector<char32_t>& codepoints, size_t pos);
 
 /**
+ * @brief Check whether a lexical word begins at @p pos rather than an auxiliary.
+ *
+ * Every cell that a voice auxiliary hosts is written in kana (た, て, ない,
+ * ます, 続ける's own ける is preceded by its kanji). A kanji at the boundary
+ * therefore starts a new lexical word, so the auxiliary before it has to keep
+ * its own token instead of being absorbed into a fabricated stem.
+ *
+ * @param codepoints Full input codepoints
+ * @param pos Index just past the auxiliary
+ */
+bool lexicalWordFollowsAt(const std::vector<char32_t>& codepoints, size_t pos);
+
+/**
  * @brief Check whether a span runs across the nominalizer っこ
  *
  * A ない-family predicate behind っこ proves the suffix, and with it a morpheme

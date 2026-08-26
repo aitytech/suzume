@@ -2797,6 +2797,28 @@
       ],
       "id": "shikososure",
       "input": "確認しこそすれ。"
+    },
+    {
+      "description": "Adverbial だって stays whole when it is not the emphatic final particle",
+      "expected": [
+        {
+          "lemma": "子供",
+          "pos": "Noun",
+          "surface": "子供"
+        },
+        {
+          "lemma": "だって",
+          "pos": "Particle",
+          "surface": "だって"
+        },
+        {
+          "lemma": "分かる",
+          "pos": "Verb",
+          "surface": "分かる"
+        }
+      ],
+      "id": "dattte_karu",
+      "input": "子供だって分かる"
     }
   ],
   "description": "Binding and adverbial particles (は、も、だけ)",

@@ -1361,6 +1361,65 @@ def postprocess_dai_final_particle(tokens: list[dict]) -> bool:
         token["lemma"] = token["surface"]
 
 
+@reports_mutation
+def postprocess_final_particle_quotative_tte(tokens: list[dict]) -> None:
+    """Restore the final particle な before a quotative って.
+
+    かな closes a clause with two final particles, and the quotative って that
+    trails it belongs to the reported speech.  The reference analyzer instead
+    reads な+っ as the euphonic stem of なる (行こうか+なっ+て) or swallows the か
+    as well into 叶う (いい+かなっ+て) -- both of which need a nominal argument
+    the position cannot supply.
+    """
+    # The verb readings need a subject phrase, so only a finite predicate in
+    # front of the run identifies the final-particle chain.
+    predicate_hosts = ("Adjective", "Auxiliary", "Verb")
+    for idx in range(len(tokens) - 1, 0, -1):
+        token = tokens[idx]
+        if token.get("surface") != "て" or token.get("pos") != "Particle":
+            continue
+        stem = tokens[idx - 1]
+        quotative = {"surface": "って", "pos": "Particle", "lemma": "って"}
+        final_na = {"surface": "な", "pos": "Particle", "lemma": "な"}
+        final_ka = {"surface": "か", "pos": "Particle", "lemma": "か"}
+        if (
+            stem.get("surface") == "なっ"
+            and idx >= 2
+            and tokens[idx - 2].get("surface") == "か"
+            and tokens[idx - 2].get("pos") == "Particle"
+        ):
+            tokens[idx - 1 : idx + 1] = [final_na, quotative]
+            continue
+        if stem.get("surface") == "かなっ" and idx >= 2 and tokens[idx - 2].get("pos") in predicate_hosts:
+            tokens[idx - 1 : idx + 1] = [final_ka, final_na, quotative]
+
+
+@reports_mutation
+def postprocess_tteba_emphatic_particle(tokens: list[dict]) -> None:
+    """Keep the emphatic final particle ってば whole and off the predicate.
+
+    って and ば are both closed function words and the pair carries no internal
+    inflection boundary, so it is one search unit.  MeCab splits it, and after
+    a na-adjective stem it goes further and reads だ+って as the adverbial
+    particle だって -- which strands the host as a bare noun and loses the
+    copula.  Restore the copula and merge the particle in both readings.
+    """
+    for idx in range(len(tokens) - 1, 0, -1):
+        token = tokens[idx]
+        if token.get("surface") != "ば" or token.get("pos") != "Particle":
+            continue
+        following = tokens[idx + 1] if idx + 1 < len(tokens) else None
+        if following is not None and following.get("pos") != "Symbol":
+            continue
+        previous = tokens[idx - 1]
+        head = previous.get("surface", "")
+        if previous.get("pos") != "Particle" or head not in ("って", "だって"):
+            continue
+        emphatic = {"surface": "ってば", "pos": "Particle", "lemma": "ってば"}
+        copula = {"surface": "だ", "pos": "Auxiliary", "lemma": "だ"}
+        tokens[idx - 1 : idx + 1] = [copula, emphatic] if head == "だって" else [emphatic]
+
+
 def postprocess_nanka_particle(tokens: list[dict]) -> bool:
     """Normalize the colloquial adverbial particle なんか from MeCab's filler tag."""
     changed = False
@@ -1951,6 +2010,32 @@ def postprocess_classical_perfect_aux(tokens: list[dict]) -> bool:
                 token["lemma"] = "り"
                 changed = True
     return changed
+
+
+@reports_mutation
+def postprocess_classical_past_keri(tokens: list[dict]) -> None:
+    """Restore the classical past けり after the perfective continuative に.
+
+    に+けり closes a predicate with the perfective ぬ and the past けり.  The
+    reference dictionary has no けり cell for that position, so an unpunctuated
+    clause falls back to the homographic 蹴る -- which turns the preceding
+    continuative into its object and leaves the clause without a tense.  The
+    nominal reading of けり keeps its own 名詞 tag, so the verb tag alone
+    identifies the fallback.
+    """
+    for idx in range(2, len(tokens)):
+        token = tokens[idx]
+        previous = tokens[idx - 1]
+        if (
+            token.get("surface") != "けり"
+            or token.get("pos") != "Verb"
+            or previous.get("surface") != "に"
+            or previous.get("pos") != "Particle"
+            or tokens[idx - 2].get("pos") not in ("Noun", "Verb", "Adjective")
+        ):
+            continue
+        token["pos"] = "Auxiliary"
+        token["lemma"] = "けり"
 
 
 @reports_mutation
@@ -2800,6 +2885,8 @@ POSTPROCESSORS: tuple[tuple[str, Callable[[list[dict]], bool]], ...] = (
     ("de-particle", postprocess_de_particle),
     ("te-form-contraction-particle", postprocess_te_form_contraction),
     ("dai-final-particle", postprocess_dai_final_particle),
+    ("tteba-emphatic-particle", postprocess_tteba_emphatic_particle),
+    ("final-particle-quotative-tte", postprocess_final_particle_quotative_tte),
     ("chigai-negative-adjective", postprocess_chigai_negative_adjective),
     ("nanka-colloquial-particle", postprocess_nanka_particle),
     ("kiri-limiting-particle", postprocess_kiri_limited_particle),
@@ -2827,6 +2914,7 @@ POSTPROCESSORS: tuple[tuple[str, Callable[[list[dict]], bool]], ...] = (
     ("classical-ha-row-past", postprocess_classical_ha_row_past),
     ("classical-b-row-moteiku", postprocess_classical_b_row_moteiku),
     ("classical-perfect-aux", postprocess_classical_perfect_aux),
+    ("classical-past-keri", postprocess_classical_past_keri),
     ("classical-past-shi", postprocess_classical_past_shi),
     ("adverbial-temporal-prefix", postprocess_adverbial_temporal_prefix),
     ("prolonged-sound-noun", postprocess_prolonged_sound_noun),

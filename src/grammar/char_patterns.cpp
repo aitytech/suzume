@@ -362,8 +362,24 @@ bool isCausalParticleBeforeTopic(std::string_view particle_surface, std::string_
   return particle_surface == "ので" && utf8::startsWith(following_surface, "は");
 }
 
+namespace {
+
+// The quotative particle has two spellings, と and the colloquial って. Both
+// introduce reported speech, so a final particle standing in front of either is
+// the same construction.
+bool startsQuotativeParticle(std::string_view surface) {
+  return utf8::startsWithAny(surface, {"って", "と"});
+}
+
+// Whether a closed final particle is followed by the quotative.
+bool startsFinalParticleBeforeQuote(std::string_view surface, std::string_view particle) {
+  return utf8::startsWith(surface, particle) && startsQuotativeParticle(surface.substr(particle.size()));
+}
+
+}  // namespace
+
 bool startsSentenceParticleKanaQuote(std::string_view surface) {
-  return utf8::startsWith(surface, "かなと");
+  return startsFinalParticleBeforeQuote(surface, "かな");
 }
 
 bool startsInterrogativeQuoteIntroduction(std::string_view surface) {
@@ -381,7 +397,7 @@ bool startsClosedTemporalNominal(std::string_view surface) {
 std::string_view longFinalParticleBeforeQuote(std::string_view surface) {
   constexpr std::string_view kParticles[] = {"なあ", "ねえ"};
   for (const auto particle : kParticles) {
-    if (utf8::startsWith(surface, normalize::concat(particle, "と"))) {
+    if (startsFinalParticleBeforeQuote(surface, particle)) {
       return particle;
     }
   }

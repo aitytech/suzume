@@ -629,6 +629,28 @@
       ],
       "id": "nitsuiteiru",
       "input": "内容についている。"
+    },
+    {
+      "description": "Compound case particle として keeps its nominal host",
+      "expected": [
+        {
+          "lemma": "参考",
+          "pos": "Noun",
+          "surface": "参考"
+        },
+        {
+          "lemma": "として",
+          "pos": "Particle",
+          "surface": "として"
+        },
+        {
+          "lemma": "使う",
+          "pos": "Verb",
+          "surface": "使う"
+        }
+      ],
+      "id": "toshite_u",
+      "input": "参考として使う"
     }
   ],
   "description": "particle_compound tests",

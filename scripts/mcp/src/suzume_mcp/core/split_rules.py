@@ -15,6 +15,7 @@ from .constants import (
     TTEBA_STEMS,
     USER_DICT_COMPOUNDS,
 )
+from .core_lexicon import core_headwords
 from .mecab import is_single_token_of_pos, mecab_analyze
 
 # A plain 名詞-一般 host for re-reading a copula span. It carries no reading
@@ -65,6 +66,11 @@ _LEXICALIZED_PREDICATE_COMPOUNDS: dict[str, tuple[dict, ...]] = {
 }
 
 _COMPLETIVE_TSUKUSU_FORMS = frozenset({"尽くさ", "尽くし", "尽くす", "尽くせ", "尽くそ"})
+
+# A predicate closed by a volitional auxiliary cannot host a case particle, so
+# a として that follows one is the quotative と plus the te-form of する -- in the
+# modern spelling and in the classical む alike.
+_VOLITIONAL_AUXILIARIES = frozenset({"う", "よう", "まい", "む", "ん"})
 
 
 def _emit_split(
@@ -413,7 +419,22 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
         # (待たさ/行かさ) even though its a-row host plus す auxiliary is the
         # same boundary that the reference analyzer exposes for 書かさ.  The
         # host is recoverable from the a-row stem, so this is not a word list.
-        if t.get("pos") == "動詞" and t.get("lemma") in LEXICALIZED_CAUSATIVE_SU_LEMMAS:
+        # Before the passive the same boundary is productive for any host the
+        # a-row stem reconstructs, so the frame decides -- except where the す
+        # form is a lexical transitive in its own right (動かす). The core
+        # lexicon carries those, and the analysis they license (動かす + passive)
+        # is the one a search unit wants.
+        following_passive = tokens[token_index + 1] if token_index + 1 < len(tokens) else None
+        precedes_passive = following_passive is not None and following_passive.get("lemma") in ("れる", "られる")
+        causative_su_lemma = t.get("lemma") or ""
+        productive_causative_passive = (
+            precedes_passive
+            and causative_su_lemma.endswith("す")
+            and causative_su_lemma not in core_headwords("verbs.tsv")
+        )
+        if t.get("pos") == "動詞" and (
+            causative_su_lemma in LEXICALIZED_CAUSATIVE_SU_LEMMAS or productive_causative_passive
+        ):
             causative_tail = next((form for form in ("さ", "し", "す", "せ") if surface.endswith(form)), "")
             causative_stem = surface[: -len(causative_tail)] if causative_tail else ""
             causative_base = base_from_mizenkei(causative_stem)
@@ -709,7 +730,12 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
         # The productive quotative + する te-form keeps all grammatical
         # boundaries even when the reference dictionary emits として as one
         # particle token (考えよう+と+し+て+も).
-        if surface == "として" and token_index > 0 and tokens[token_index - 1].get("surface") in ("う", "よう", "まい"):
+        if (
+            surface == "として"
+            and token_index > 0
+            and tokens[token_index - 1].get("surface") in _VOLITIONAL_AUXILIARIES
+            and tokens[token_index - 1].get("pos") == "助動詞"
+        ):
             result.append({"surface": "と", "pos": "助詞", "lemma": "と"})
             result.append({"surface": "し", "pos": "動詞", "lemma": "する"})
             result.append({"surface": "て", "pos": "助詞", "lemma": "て"})
