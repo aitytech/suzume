@@ -1028,15 +1028,22 @@ void appendIAdjKaraZuCandidates(const std::vector<char32_t>& codepoints, size_t 
     // the same two-step probe the classical terminal uses.
     if (!isAdjectiveInDictionary(dict_manager, lemma) && codepoints[kara_pos - 1] == U'し' &&
         kara_pos - 1 > start_pos) {
-      lemma = extractSubstring(codepoints, start_pos, kara_pos - 1) + "い";
+      const std::string shiku_lemma = extractSubstring(codepoints, start_pos, kara_pos - 1) + "い";
+      if (isAdjectiveInDictionary(dict_manager, shiku_lemma)) {
+        lemma = shiku_lemma;
+      }
     }
     // The かれ cell is also the passive auxiliary after a Godan-ka irrealis
     // (書か+れ+ども).  The inflection engine intentionally recognizes broad
     // i-adjective-shaped runs, which is not enough to distinguish that path.
-    // A classical カリ reading therefore needs lexical adjective evidence;
-    // genuine bases such as 美しい、高い、多い are L2-backed while the passive
-    // remains a regular productive verb chain.
-    if (!isAdjectiveInDictionary(dict_manager, lemma)) {
+    // A classical カリ reading therefore needs adjective evidence; genuine
+    // bases such as 美しい、高い、多い are L2-backed while the passive remains a
+    // regular productive verb chain. The open シク class cannot be listed
+    // exhaustively, so a productively formed -しい terminal counts as the same
+    // evidence: its し is the stem mora the supplementary conjugation attaches
+    // to, which the passive's a-row irrealis can never supply.
+    if (!isAdjectiveInDictionary(dict_manager, lemma) &&
+        !verb_helpers::isProductiveShiiAdjectiveTerminal(lemma, inflection)) {
       continue;
     }
     // A カリ form is also an ordinary godan-ra inflection plus a classical

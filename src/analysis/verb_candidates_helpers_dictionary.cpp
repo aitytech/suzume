@@ -3,8 +3,12 @@
  * @brief Dictionary-backed verb candidate helpers
  */
 
+#include <algorithm>
+
+#include "analysis/candidate_constants.h"
 #include "analysis/dictionary_probe.h"
 #include "core/debug.h"
+#include "core/utf8_constants.h"
 #include "normalize/char_type.h"
 #include "normalize/utf8.h"
 #include "verb_candidates_helpers.h"
@@ -21,6 +25,20 @@ bool isVerbInDictionary(const dictionary::DictionaryManager* dict_manager, std::
 
 bool isAdjectiveInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view base_form) {
   return hasDictionaryEntry(dict_manager, base_form, core::PartOfSpeech::Adjective);
+}
+
+bool isProductiveShiiAdjectiveTerminal(std::string_view surface, const grammar::Inflection& inflection) {
+  // A productive formation needs a stem in front of the suffix: bare しい is
+  // the classical しかり paradigm's own shape (しかるべく, しかれども), not an
+  // adjective derived from anything.
+  if (!utf8::endsWith(surface, "しい") || normalize::utf8Length(surface) < 3) {
+    return false;
+  }
+  const auto& analyses = inflection.analyze(std::string(surface));
+  return std::any_of(analyses.begin(), analyses.end(), [&](const auto& analysis) {
+    return analysis.verb_type == grammar::VerbType::IAdjective && analysis.base_form == surface &&
+           analysis.confidence >= candidate::kCompoundAdjConfMin;
+  });
 }
 
 bool isNounInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view surface) {

@@ -81,6 +81,17 @@ bool isVerbInDictionary(const dictionary::DictionaryManager* dict_manager, std::
 bool isAdjectiveInDictionary(const dictionary::DictionaryManager* dict_manager, std::string_view base_form);
 
 /**
+ * @brief Check if a terminal is a productively formed -しい i-adjective
+ *
+ * The inflection analyzer can reinterpret the same bytes as the continuative of
+ * a hypothetical ワ行 verb (恐しい -> 恐しう), so both the grammatical suffix and
+ * an independently generated i-adjective analysis are required. This is the
+ * rule-side counterpart of @ref isAdjectiveInDictionary for the open シク class,
+ * whose members cannot all be listed.
+ */
+bool isProductiveShiiAdjectiveTerminal(std::string_view surface, const grammar::Inflection& inflection);
+
+/**
  * @brief Check if a surface exists in dictionary as a noun (exact match)
  *
  * Reports a hit only for an entry whose surface equals @p surface, so a shorter

@@ -70,24 +70,7 @@ bool isCopulaVolitionalSequence(const dictionary::DictionaryManager& dict_manage
          volitional->extended_pos == core::ExtendedPOS::AuxVolitional;
 }
 
-// Productive -しい terminals are complete i-adjectives.  The inflection
-// analyzer can also reinterpret the same bytes as the continuative of a
-// hypothetical ワ行 verb (恐しい -> 恐しう), but that analysis must not create
-// a deverbal-noun alternative before a particle.  Requiring both the
-// grammatical suffix and an independently generated i-adjective analysis
-// keeps genuine ワ行 continuatives such as 味わい available as nouns.
-bool isProductiveShiiAdjectiveTerminal(std::string_view surface, const grammar::Inflection& inflection) {
-  if (!utf8::endsWith(surface, "しい")) {
-    return false;
-  }
-  for (const auto& analysis : inflection.analyze(std::string(surface))) {
-    if (analysis.verb_type == grammar::VerbType::IAdjective && analysis.base_form == surface &&
-        analysis.confidence >= candidate::kCompoundAdjConfMin) {
-      return true;
-    }
-  }
-  return false;
-}
+using suzume::analysis::verb_helpers::isProductiveShiiAdjectiveTerminal;
 
 bool crossesPeriodEndNominalBoundary(const std::vector<char32_t>& codepoints,
                                      const std::vector<normalize::CharType>& char_types,
