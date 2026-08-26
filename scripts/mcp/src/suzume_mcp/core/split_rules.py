@@ -15,7 +15,12 @@ from .constants import (
     TTEBA_STEMS,
     USER_DICT_COMPOUNDS,
 )
-from .mecab import mecab_analyze
+from .mecab import is_single_token_of_pos, mecab_analyze
+
+# A plain 名詞-一般 host for re-reading a copula span. It carries no reading
+# that could fuse with what follows, so whatever the probe returns after it is
+# the copula frame alone.
+_COPULA_HOST_PROBE = "学生"
 
 _GODAN_RENYOKEI_TO_BASE: dict[str, str] = {
     "い": "う",
@@ -315,10 +320,28 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
         # に際しまして) hides the auxiliary boundary that the plain form
         # (に関し, に際し) keeps, which makes the same closed unit tokenize two
         # different ways depending only on politeness.
+        #
+        # Stripping the politeness does not by itself make the head a particle.
+        # A case particle followed by an autonomous continuative (をもち, にたいし,
+        # をつうじ) is a productive chain, and the morpheme boundaries inside it
+        # stay — only a head the reference dictionary reads as one particle is a
+        # closed unit. The plain polite form is the transparent spelling of the
+        # same chain, so re-reading the head with ます restored recovers the
+        # continuative that the lexicalized entry hid.
         if t.get("pos") == "助詞" and surface.endswith("まして") and len(surface) > 3:
+            head = surface[:-3]
+            head_tokens = [{"surface": head, "pos": "助詞", "lemma": head}]
+            if not is_single_token_of_pos(head, "助詞"):
+                polite = mecab_analyze(head + "ます")
+                if (
+                    len(polite) > 1
+                    and polite[-1].get("surface") == "ます"
+                    and "".join(part.get("surface", "") for part in polite) == head + "ます"
+                ):
+                    head_tokens = [dict(part) for part in polite[:-1]]
             result.extend(
                 [
-                    {"surface": surface[:-3], "pos": "助詞", "lemma": surface[:-3]},
+                    *head_tokens,
                     {"surface": "まし", "pos": "助動詞", "lemma": "ます"},
                     {"surface": "て", "pos": "助詞", "lemma": "て"},
                 ]
@@ -326,6 +349,58 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
             if applied_rule is None:
                 applied_rule = "polite-compound-particle-boundary"
             continue
+
+        # たり is a productive classical auxiliary, so its attributive cell is a
+        # morpheme boundary no matter which stem carries it. The reference
+        # dictionary lexicalizes some of these stems as whole adnominals
+        # (堂々たる, 確固たる) while reading the identically built 純然たる as
+        # stem plus auxiliary, which makes one paradigm tokenize two ways.
+        # A stem the dictionary reads as one content word is the evidence that
+        # the たる is the auxiliary and not part of a lexical adnominal
+        # (名だたる keeps its たる because 名だ is not one word).
+        if t.get("pos") == "連体詞" and surface.endswith("たる") and len(surface) > 3:
+            stem_analysis = mecab_analyze(surface[:-2])
+            if (
+                len(stem_analysis) == 1
+                and stem_analysis[0].get("surface") == surface[:-2]
+                and stem_analysis[0].get("pos") in ("名詞", "副詞")
+            ):
+                result.extend(
+                    [
+                        dict(stem_analysis[0]),
+                        {"surface": "たる", "pos": "助動詞", "lemma": "たり"},
+                    ]
+                )
+                if applied_rule is None:
+                    applied_rule = "tari-attributive-boundary"
+                continue
+
+        # An auxiliary closes a predicate, so nothing nominal can attach to it
+        # directly. A noun-labelled token sitting right after one and opening
+        # with だ is the copula plus its conjunctive particle, which the
+        # reference dictionary only reads that way when the host is a plain
+        # noun (べき+だし comes back as the seasoning, 学生+だし does not).
+        # Re-reading the same span on a nominal host restores the boundary
+        # without naming the particles it can carry.
+        if (
+            t.get("pos") == "名詞"
+            and surface.startswith("だ")
+            and len(surface) > 1
+            and token_index > 0
+            and tokens[token_index - 1].get("pos") == "助動詞"
+        ):
+            probe = mecab_analyze(_COPULA_HOST_PROBE + surface)
+            if (
+                len(probe) > 2
+                and probe[0].get("surface") == _COPULA_HOST_PROBE
+                and probe[1].get("surface") == "だ"
+                and probe[1].get("pos") == "助動詞"
+                and "".join(part.get("surface", "") for part in probe[1:]) == surface
+            ):
+                result.extend(dict(part) for part in probe[1:])
+                if applied_rule is None:
+                    applied_rule = "copula-after-auxiliary-boundary"
+                continue
 
         lexicalized_compound = _LEXICALIZED_PREDICATE_COMPOUNDS.get(surface)
         if lexicalized_compound is not None and t.get("pos") in ("助詞", "接続詞"):
@@ -745,6 +820,36 @@ def apply_suzume_split(tokens: list[dict]) -> tuple[list[dict], str | None]:
             if applied_rule is None:
                 applied_rule = "literary-volitional-n-split"
             continue
+
+        # 11a. The same ん cell hides behind an onbin reading when the copula
+        # follows. Before a nominal the dictionary reads すん as the contracted
+        # サ変 stem plus ん (そうすんのか), but before だ it prefers the ま-row
+        # onbin continuative of an unrelated verb, so one surface gets two
+        # analyses from its follower alone. Probing the same surface with a
+        # nominal after it asks the dictionary whether the ん cell exists at
+        # all: a genuine onbin past (読ん, 頼ん, のん, たのん) has no such cell
+        # and keeps its reading.
+        if (
+            t.get("pos") == "動詞"
+            and surface.endswith("ん")
+            and len(surface) >= 2
+            and t.get("conj_form") == "連用タ接続"
+            and token_index + 1 < len(tokens)
+            and tokens[token_index + 1].get("pos") == "助動詞"
+            and tokens[token_index + 1].get("surface") in ("だ", "です")
+        ):
+            probe = mecab_analyze(surface + "の")
+            if (
+                len(probe) >= 2
+                and probe[0].get("surface") == surface
+                and probe[0].get("pos") == "動詞"
+                and probe[0].get("conj_form") == "体言接続特殊"
+            ):
+                result.append({"surface": surface[:-1], "pos": "動詞", "lemma": probe[0].get("lemma", surface[:-1])})
+                result.append({"surface": "ん", "pos": "助詞", "pos_sub1": "準体助詞", "lemma": "の"})
+                if applied_rule is None:
+                    applied_rule = "contracted-explanatory-n-split"
+                continue
 
         # 12. Literary volitional auxiliary + quotative particle.  Keep the
         # two closed-class grammatical units searchable even when MeCab emits
