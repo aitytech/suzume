@@ -26,6 +26,97 @@
       ],
       "id": "no",
       "input": "ガ行の音"
+    },
+    {
+      "description": "Katakana denominal ru-verb in the past cell needs no dictionary entry",
+      "expected": [
+        {
+          "lemma": "バグる",
+          "pos": "Verb",
+          "surface": "バグっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "画面",
+          "pos": "Noun",
+          "surface": "画面"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "直す",
+          "pos": "Verb",
+          "surface": "直す"
+        }
+      ],
+      "id": "ttta_wo_su",
+      "input": "バグった画面を直す"
+    },
+    {
+      "description": "Same productive class with a different loanword stem",
+      "expected": [
+        {
+          "lemma": "メモる",
+          "pos": "Verb",
+          "surface": "メモっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "内容",
+          "pos": "Noun",
+          "surface": "内容"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ttta_wo_suru",
+      "input": "メモった内容を確認する"
+    },
+    {
+      "description": "Loanword noun before the quotative って keeps its boundary",
+      "expected": [
+        {
+          "lemma": "テスト",
+          "pos": "Noun",
+          "surface": "テスト"
+        },
+        {
+          "lemma": "って",
+          "pos": "Particle",
+          "surface": "って"
+        },
+        {
+          "lemma": "難しい",
+          "pos": "Adjective",
+          "surface": "難しい"
+        }
+      ],
+      "id": "ttte_shii",
+      "input": "テストって難しい"
     }
   ],
   "description": "katakana tests",

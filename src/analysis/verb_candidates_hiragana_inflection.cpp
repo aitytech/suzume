@@ -251,6 +251,11 @@ bool appendInflectedHiraganaVerbCandidates(const std::vector<char32_t>& codepoin
     if (surface.empty()) {
       continue;
     }
+    // A predicate behind an interior case particle proves the boundary the
+    // conjugation table would otherwise hide inside a fabricated stem.
+    if (vh::crossesCaseParticleBeforePredicate(dict_manager, codepoints, start_pos, end_pos)) {
+      continue;
+    }
 
     // Check if this looks like a conjugated verb
     // First try the best match, but also check all candidates for dictionary verbs

@@ -21,6 +21,28 @@
       ],
       "id": "niramettkowosuru",
       "input": "にらめっこをする"
+    },
+    {
+      "description": "Productive み nominalization keeps the case particle boundary",
+      "expected": [
+        {
+          "lemma": "うれしみ",
+          "pos": "Noun",
+          "surface": "うれしみ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "ureshimigaaru",
+      "input": "うれしみがある"
     }
   ],
   "description": "noun_derived tests",

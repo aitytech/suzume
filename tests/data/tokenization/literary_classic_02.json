@@ -296,6 +296,28 @@
       ],
       "id": "rinikeri",
       "input": "雨降りにけり"
+    },
+    {
+      "description": "Attributive plus が before the similitude auxiliary",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行く"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ごとし",
+          "pos": "Auxiliary",
+          "surface": "ごとし"
+        }
+      ],
+      "id": "kugagotoshi",
+      "input": "行くがごとし"
     }
   ],
   "description": "literary_classic tests (part 2/2)",

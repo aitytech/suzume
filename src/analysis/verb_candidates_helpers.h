@@ -766,6 +766,22 @@ bool naiNegativeFollowsAt(const std::vector<char32_t>& codepoints, size_t pos);
 bool startsInsideKanjiRun(const std::vector<char32_t>& codepoints, size_t pos);
 
 /**
+ * @brief Check whether a span crosses a case particle that a predicate follows.
+ *
+ * A one-mora case particle inside a hiragana candidate is only incidental while
+ * nothing on its far side is a word of its own. Once a dictionary predicate
+ * stands there the particle reading is real, and the span is a phrase rather
+ * than one open-class verb (み+が+ある, not みがある).
+ *
+ * @param dict_manager Dictionary, may be null
+ * @param codepoints Full input codepoints
+ * @param start_pos Span start
+ * @param end_pos Span end, exclusive
+ */
+bool crossesCaseParticleBeforePredicate(const dictionary::DictionaryManager* dict_manager,
+                                        const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos);
+
+/**
  * @brief Check whether a candidate starting at @p pos would split a known word.
  *
  * Stricter than startsInsideKanjiRun(): the run this candidate starts inside

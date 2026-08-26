@@ -829,6 +829,33 @@ void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codep
           continue;
         }
       }
+      // A hiragana fallback run has no analysis of its own, so it must not
+      // cross a case particle that closes a registered word: that boundary is
+      // proven (見る|が|ごとし, not 見|るが|ごとし). A run whose kana merely
+      // spell a particle keeps its candidate, because nothing ends in front of
+      // it (ひがし, たまご).
+      if (start_type == normalize::CharType::Hiragana && len > 1 && dict_manager_ != nullptr) {
+        bool crosses_proven_particle = false;
+        for (size_t particle_pos = start_pos; particle_pos < candidate_end; ++particle_pos) {
+          const auto* particle = dict_manager_->lookupExact(
+              extractSubstring(codepoints, particle_pos, particle_pos + 1), core::PartOfSpeech::Particle);
+          if (particle == nullptr || particle->extended_pos != core::ExtendedPOS::ParticleCase) {
+            continue;
+          }
+          const size_t scan_start =
+              particle_pos > kDictionaryLookbehindChars ? particle_pos - kDictionaryLookbehindChars : 0;
+          if (hasDictionaryEntryEndingAt(*dict_manager_, codepoints, scan_start, particle_pos,
+                                         partOfSpeechMask(core::PartOfSpeech::Verb) |
+                                             partOfSpeechMask(core::PartOfSpeech::Adjective) |
+                                             partOfSpeechMask(core::PartOfSpeech::Noun))) {
+            crosses_proven_particle = true;
+            break;
+          }
+        }
+        if (crosses_proven_particle) {
+          continue;
+        }
+      }
       auto cand = makeCandidate(surface, start_pos, candidate_end, pos, cost, has_suffix, CandidateOrigin::SameType);
 #ifdef SUZUME_DEBUG_INFO
       cand.confidence = started_with_particle ? 0.7F : 1.0F;

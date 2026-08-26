@@ -902,6 +902,9 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
       godan_ra_continuation_stem_end = 0;
     }
   }
+  if (vh::crossesCaseParticleBeforePredicate(dict_manager, codepoints, start_pos, godan_ra_continuation_stem_end)) {
+    godan_ra_continuation_stem_end = 0;
+  }
   if (godan_ra_continuation_stem_end != 0) {
     const auto* row = grammar::Conjugation::getGodanRow(grammar::VerbType::GodanRa);
     const std::string surface = extractSubstring(codepoints, start_pos, godan_ra_continuation_stem_end);

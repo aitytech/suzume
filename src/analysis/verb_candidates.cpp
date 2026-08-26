@@ -308,11 +308,14 @@ void generateKatakanaVerbCandidates(const std::vector<char32_t>& codepoints, siz
         std::string kata_part = extractSubstring(codepoints, start_pos, kata_end);
         std::string base_form = kata_part + "る";  // Assume godan-ra (most common for slang)
 
-        // The shape alone cannot distinguish a katakana noun followed by the
-        // quotative particle from a godan-ra te-form.  Require lexical
-        // evidence for the reconstructed verb lemma; otherwise preserve the
-        // noun + って boundary.
-        bool skip_sokuonbin = !verb_helpers::isVerbInDictionary(dict_manager, base_form);
+        // A loanword noun plus the quotative って has the same shape as a
+        // godan-ra te-form, so that cell still needs lexical evidence for the
+        // reconstructed lemma. The past cell has no such homograph -- った is
+        // no particle -- and katakana denominal verbs are a productive open
+        // class that is all godan-ra (バグる, メモる, トラブる), so the
+        // conjugation row is derivable and the candidate stands on its own.
+        const bool quotative_homograph = second_char == "て" || second_char == "で";
+        bool skip_sokuonbin = quotative_homograph && !verb_helpers::isVerbInDictionary(dict_manager, base_form);
         if (skip_sokuonbin) {
           SUZUME_DEBUG_VERBOSE_BLOCK {
             SUZUME_DEBUG_STREAM << "[VERB_SKIP] \"" << base_form

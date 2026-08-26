@@ -136,6 +136,28 @@ bool startsInsideKanjiRun(const std::vector<char32_t>& codepoints, size_t pos) {
          kana::isKanjiCodepoint(codepoints[pos - 1]);
 }
 
+bool crossesCaseParticleBeforePredicate(const dictionary::DictionaryManager* dict_manager,
+                                        const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  if (dict_manager == nullptr || end_pos > codepoints.size()) {
+    return false;
+  }
+  // A one-mora predicate behind the particle is no evidence: every godan-sa
+  // stem ends in one (ながす, さがす), and the classical す is a dictionary verb.
+  for (size_t pos = start_pos + 1; pos + 3 <= end_pos; ++pos) {
+    const auto* particle =
+        dict_manager->lookupExact(extractSubstring(codepoints, pos, pos + 1), core::PartOfSpeech::Particle);
+    if (particle == nullptr || particle->extended_pos != core::ExtendedPOS::ParticleCase) {
+      continue;
+    }
+    if (hasExactPartOfSpeech(
+            *dict_manager, extractSubstring(codepoints, pos + 1, end_pos),
+            partOfSpeechMask(core::PartOfSpeech::Verb) | partOfSpeechMask(core::PartOfSpeech::Adjective))) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool splitsDictionaryKanjiWord(const dictionary::DictionaryManager* dict_manager,
                                const std::vector<char32_t>& codepoints, size_t pos, size_t end_pos) {
   if (dict_manager == nullptr || end_pos > codepoints.size() || !startsInsideKanjiRun(codepoints, pos)) {
