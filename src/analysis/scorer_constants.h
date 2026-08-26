@@ -407,8 +407,11 @@ constexpr float kBosClassicalPerfectPenalty = kBosTensePenalty;
 constexpr float kBosClassicalNegativePenalty = kBosTensePenalty;
 // The copula predicates over a nominal, so it needs one before it. At sentence
 // start there is none, and without a penalty its one-mora attributive form opens
-// a nominalized clause out of nothing (なんだ read as な + ん + だ).
-constexpr float kBosCopulaPenalty = scale::kMinor;
+// a nominalized clause out of nothing (なんだ read as な + ん + だ, なんしよう as
+// な + ん + しよう). The penalty stops short of the grammatical tiers because a
+// fragment may genuinely open on the copula's own continuative, its nominal
+// supplied by the preceding context (ではあるまいか).
+constexpr float kBosCopulaPenalty = scale::kRare;
 
 // EOS (end-of-sentence) adjustments share the table below with BOS. The two
 // columns are intentionally asymmetric: a final particle can naturally close a

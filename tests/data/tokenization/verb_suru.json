@@ -2588,6 +2588,50 @@
       ],
       "id": "sousurunomomotttomoda",
       "input": "そうするのももっともだ"
+    },
+    {
+      "description": "A contracted volitional keeps its cell before the colloquial quotative",
+      "expected": [
+        {
+          "lemma": "なん",
+          "pos": "Pronoun",
+          "surface": "なん"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "しよ"
+        },
+        {
+          "lemma": "っと",
+          "pos": "Particle",
+          "surface": "っと"
+        }
+      ],
+      "id": "nanshiyottto",
+      "input": "なんしよっと"
+    },
+    {
+      "description": "A copula cannot open an utterance and so cannot head an interrogative pronoun",
+      "expected": [
+        {
+          "lemma": "なん",
+          "pos": "Pronoun",
+          "surface": "なん"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "しよ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "nanshiyou",
+      "input": "なんしよう"
     }
   ],
   "description": "Suru-verb patterns with subsidiary verbs - MeCab互換分割",
