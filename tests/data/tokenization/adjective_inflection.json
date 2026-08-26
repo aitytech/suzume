@@ -355,6 +355,50 @@
       ],
       "id": "sonoyouna",
       "input": "そのような話。"
+    },
+    {
+      "description": "nominalizer sa bounded by a copula",
+      "expected": [
+        {
+          "lemma": "うれしい",
+          "pos": "Adjective",
+          "surface": "うれし"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "ureshisada",
+      "input": "うれしさだ"
+    },
+    {
+      "description": "nominalizer sa bounded by the polite copula",
+      "expected": [
+        {
+          "lemma": "やさしい",
+          "pos": "Adjective",
+          "surface": "やさし"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "です",
+          "pos": "Auxiliary",
+          "surface": "です"
+        }
+      ],
+      "id": "yasashisadesu",
+      "input": "やさしさです"
     }
   ],
   "description": "adjective_inflection tests",

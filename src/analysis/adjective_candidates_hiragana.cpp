@@ -713,9 +713,15 @@ void generateHiraganaAdjectiveCandidates(const std::vector<char32_t>& codepoints
     // The past connective is not the question particle, so a さ before かっ is
     // still inside the adjective's own paradigm rather than the nominalizer
     // closing it (うそくさかった, not うそく + さ + かっ + た).
+    // The nominalizer closes a noun, so a copula bounds it exactly as a
+    // particle does: だ/です predicate over the nominal to their left
+    // (うれしさだ). Without this the run has no adjective stem at all and
+    // fragments into single morae.
+    const bool copula_boundary = after_sa < codepoints.size() && grammar::startsPredicativeCopula(extractSubstring(
+                                                                     codepoints, after_sa, codepoints.size()));
     const bool bounded_nominalizer =
         !adj_detail::opensAdjectivePastConnective(codepoints, after_sa) &&
-        (after_sa >= codepoints.size() || normalize::isExtendedParticle(codepoints[after_sa]) ||
+        (after_sa >= codepoints.size() || normalize::isExtendedParticle(codepoints[after_sa]) || copula_boundary ||
          (after_sa < char_types.size() && char_types[after_sa] == normalize::CharType::Symbol));
     if (!bounded_nominalizer) {
       continue;

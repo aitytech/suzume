@@ -806,6 +806,43 @@
       ],
       "id": "wo_su_3",
       "input": "車輪を回す。"
+    },
+    {
+      "description": "lexicalized sa-derived noun before a copula",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "よう",
+          "pos": "Noun",
+          "surface": "よう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "な"
+        },
+        {
+          "lemma": "静けさ",
+          "pos": "Noun",
+          "surface": "静けさ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "noyouna_kesada",
+      "input": "水のような静けさだ。"
     }
   ],
   "description": "noun_deverbal tests",

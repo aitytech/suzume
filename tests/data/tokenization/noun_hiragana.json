@@ -274,6 +274,23 @@
       ],
       "id": "konoshigotohataihenda",
       "input": "このしごとはたいへんだ。"
+    },
+    {
+      "description": "non-nominalizer sa inside a hiragana noun before a copula",
+      "expected": [
+        {
+          "lemma": "うわさ",
+          "pos": "Noun",
+          "surface": "うわさ"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "uwasada",
+      "input": "うわさだ"
     }
   ],
   "description": "noun_hiragana tests",
