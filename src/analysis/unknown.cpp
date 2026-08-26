@@ -162,6 +162,31 @@ bool startsWithParticleBeforeRegisteredPredicate(const suzume::analysis::Unknown
        candidate.pos != suzume::core::PartOfSpeech::Noun)) {
     return false;
   }
+  // A complete dictionary-form predicate whose slot was fixed from outside it
+  // is not a particle plus a shorter predicate. The evidence is the case
+  // particle in front of the candidate together with that particle's own host,
+  // so it cannot be manufactured by the same kana the candidate is made of
+  // (道 + を + とおる, 街 + に + でかける). Only the whole-span dictionary form
+  // qualifies: a bound cell does not close the clause it would have to close.
+  if (candidate.pos == suzume::core::PartOfSpeech::Verb && !candidate.lemma.empty() &&
+      candidate.lemma == candidate.surface && candidate.start >= 2) {
+    const size_t host_boundary = candidate.start - 1;
+    const auto* slot_particle =
+        dict_manager->lookupExact(suzume::analysis::extractSubstring(codepoints, host_boundary, candidate.start),
+                                  suzume::core::PartOfSpeech::Particle);
+    constexpr size_t kHostLookback = 12;
+    constexpr suzume::analysis::PartOfSpeechMask kNominalHostMask =
+        suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Noun) |
+        suzume::analysis::partOfSpeechMask(suzume::core::PartOfSpeech::Pronoun);
+    const size_t min_host_start = host_boundary > kHostLookback ? host_boundary - kHostLookback : 0;
+    if (slot_particle != nullptr && slot_particle->extended_pos == suzume::core::ExtendedPOS::ParticleCase &&
+        (suzume::normalize::isKanjiCodepoint(codepoints[host_boundary - 1]) ||
+         suzume::analysis::hasDictionaryEntryEndingAt(*dict_manager, codepoints, min_host_start, host_boundary,
+                                                      kNominalHostMask))) {
+      return false;
+    }
+  }
+
   const std::string particle = suzume::analysis::extractSubstring(codepoints, candidate.start, candidate.start + 1);
   const auto* particle_entry = dict_manager->lookupExact(particle, suzume::core::PartOfSpeech::Particle);
   if (particle_entry == nullptr || (particle_entry->extended_pos != suzume::core::ExtendedPOS::ParticleTopic &&

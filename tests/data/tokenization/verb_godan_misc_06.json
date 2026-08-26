@@ -1769,6 +1769,224 @@
       ],
       "id": "kunokana",
       "input": "行くのかな"
+    },
+    {
+      "description": "この道をとおるなかれ。 - regression test",
+      "expected": [
+        {
+          "lemma": "この",
+          "pos": "Determiner",
+          "surface": "この"
+        },
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "とおる",
+          "pos": "Verb",
+          "surface": "とおる"
+        },
+        {
+          "lemma": "なかれ",
+          "pos": "Auxiliary",
+          "surface": "なかれ"
+        }
+      ],
+      "id": "kono_wotoorunakare",
+      "input": "この道をとおるなかれ。"
+    },
+    {
+      "description": "道をとおる。 - regression test",
+      "expected": [
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "とおる",
+          "pos": "Verb",
+          "surface": "とおる"
+        }
+      ],
+      "id": "wotooru",
+      "input": "道をとおる。"
+    },
+    {
+      "description": "そこをとおる。 - regression test",
+      "expected": [
+        {
+          "lemma": "そこ",
+          "pos": "Pronoun",
+          "surface": "そこ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "とおる",
+          "pos": "Verb",
+          "surface": "とおる"
+        }
+      ],
+      "id": "sokowotooru",
+      "input": "そこをとおる。"
+    },
+    {
+      "description": "水がとまる。 - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "とまる",
+          "pos": "Verb",
+          "surface": "とまる"
+        }
+      ],
+      "id": "gatomaru",
+      "input": "水がとまる。"
+    },
+    {
+      "description": "紙がのこる。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "のこる",
+          "pos": "Verb",
+          "surface": "のこる"
+        }
+      ],
+      "id": "ganokoru",
+      "input": "紙がのこる。"
+    },
+    {
+      "description": "犬がはしる。 - regression test",
+      "expected": [
+        {
+          "lemma": "犬",
+          "pos": "Noun",
+          "surface": "犬"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "はしる",
+          "pos": "Verb",
+          "surface": "はしる"
+        }
+      ],
+      "id": "gahashiru",
+      "input": "犬がはしる。"
+    },
+    {
+      "description": "本をよむ。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "よむ",
+          "pos": "Verb",
+          "surface": "よむ"
+        }
+      ],
+      "id": "woyomu",
+      "input": "本をよむ。"
+    },
+    {
+      "description": "水をのむ。 - regression test",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "のむ",
+          "pos": "Verb",
+          "surface": "のむ"
+        }
+      ],
+      "id": "wonomu",
+      "input": "水をのむ。"
+    },
+    {
+      "description": "机の上にある。 - regression test",
+      "expected": [
+        {
+          "lemma": "机",
+          "pos": "Noun",
+          "surface": "机"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "上",
+          "pos": "Noun",
+          "surface": "上"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "no_niaru",
+      "input": "机の上にある。"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",

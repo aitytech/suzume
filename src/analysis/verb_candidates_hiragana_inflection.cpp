@@ -81,12 +81,33 @@ bool startsWithParticleThenVerifiedVerb(const std::vector<char32_t>& codepoints,
   const auto& full_surface_candidates = inflection.analyze(full_surface);
   const auto* preceding_particle =
       dict_manager->lookupExact(extractSubstring(codepoints, start_pos - 1, start_pos), core::PartOfSpeech::Particle);
-  const bool complete_terminal_after_case_particle =
-      followsKanjiOrNominalHostBeforeCaseParticle(codepoints, start_pos, dict_manager, preceding_particle) &&
-      std::any_of(full_surface_candidates.begin(), full_surface_candidates.end(), [&](const auto& candidate) {
-        return grammar::isGodanVerbType(candidate.verb_type) && candidate.base_form == full_surface &&
-               candidate.morphemes.empty() && candidate.confidence >= candidate::kParticleVerbBoundaryMinConfidence;
-      });
+  // The predicate slot is fixed by the case particle and its own host, so the
+  // span that has to be a complete dictionary form is the one filling the slot.
+  // The kana run can continue past it into a closed auxiliary the predicate
+  // selects (道+を+とおる+なかれ), so that auxiliary is stripped before the
+  // terminal is tested. Only a registered auxiliary is stripped: an arbitrary
+  // tail would let any prefix certify the slot for the whole run.
+  const bool follows_fixed_predicate_slot =
+      followsKanjiOrNominalHostBeforeCaseParticle(codepoints, start_pos, dict_manager, preceding_particle);
+  const auto is_complete_godan_terminal = [&](size_t terminal_end) {
+    const std::string terminal = extractSubstring(codepoints, start_pos, terminal_end);
+    const auto& terminal_candidates =
+        terminal_end == probe_end ? full_surface_candidates : inflection.analyze(terminal);
+    return std::any_of(terminal_candidates.begin(), terminal_candidates.end(), [&](const auto& candidate) {
+      return grammar::isGodanVerbType(candidate.verb_type) && candidate.base_form == terminal &&
+             candidate.morphemes.empty() && candidate.confidence >= candidate::kParticleVerbBoundaryMinConfidence;
+    });
+  };
+  bool complete_terminal_after_case_particle = follows_fixed_predicate_slot && is_complete_godan_terminal(probe_end);
+  for (size_t terminal_end = start_pos + 3;
+       follows_fixed_predicate_slot && !complete_terminal_after_case_particle && terminal_end < probe_end;
+       ++terminal_end) {
+    if (dict_manager->lookupExact(extractSubstring(codepoints, terminal_end, probe_end),
+                                  core::PartOfSpeech::Auxiliary) == nullptr) {
+      continue;
+    }
+    complete_terminal_after_case_particle = is_complete_godan_terminal(terminal_end);
+  }
   // A complete Godan terminal immediately after a case particle occupies the
   // predicate slot. Its internal particle homograph (もどる, はしる) cannot
   // establish a competing particle boundary just because the suffix happens
