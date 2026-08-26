@@ -1073,6 +1073,23 @@ def _postprocess_small_kana_head_merge(result: list[dict], applied_rule: str | N
     return merged, applied_rule
 
 
+# The colloquial volitional reduces its う to a geminate before the quotative
+# と (行こう+と → 行こっと, し+よう+と → しよっと), so a run closing on っと is not
+# automatically a mimetic. The reference dictionary marks the difference: a
+# predicate leaves an o-row verb stem or the volitional auxiliary directly in
+# front of the っと token, while a mimetic has no predicate there at all.
+_O_ROW_KANA: frozenset[str] = frozenset("おこそとのほもよろごぞどぼぽょ")
+
+
+def _opens_volitional_tto(previous: dict | None) -> bool:
+    """Whether a token can carry the volitional that っと contracts."""
+    if previous is None:
+        return False
+    if previous.get("pos") == "助動詞" and previous.get("lemma") in ("う", "よう"):
+        return True
+    return previous.get("pos") == "動詞" and previous.get("surface", "")[-1:] in _O_ROW_KANA
+
+
 def _postprocess_onomatopoeia_tto_merge(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
     """Merge onomatopoeia stem + っと → Xっと (adverb).
 
@@ -1089,6 +1106,7 @@ def _postprocess_onomatopoeia_tto_merge(result: list[dict], applied_rule: str | 
         if (
             j < len(result) - 1
             and result[j + 1].get("surface") == "っと"
+            and not _opens_volitional_tto(curr)
             and regex.match(r"^[\p{Hiragana}\p{Katakana}ー]{1,4}$", curr.get("surface", ""))
         ):
             combined = curr.get("surface", "") + "っと"
@@ -1172,8 +1190,12 @@ def _postprocess_productive_mimetics(result: list[dict], applied_rule: str | Non
             starts_at_real_boundary = (
                 result[idx].get("pos") != "助詞" or idx == 0 or result[idx - 1].get("pos") == "記号"
             )
+            closes_volitional_tto = result[end - 1].get("surface") == "っと" and _opens_volitional_tto(
+                result[end - 2] if end - 2 >= idx else None
+            )
             if (
                 starts_at_real_boundary
+                and not closes_volitional_tto
                 and combined.endswith("っと")
                 and regex.fullmatch(r"[\p{Hiragana}ー]{3,12}", combined)
             ):
