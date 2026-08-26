@@ -754,6 +754,33 @@ size_t naiNegativeFormLengthAt(const std::vector<char32_t>& codepoints, size_t p
 bool naiNegativeFollowsAt(const std::vector<char32_t>& codepoints, size_t pos);
 
 /**
+ * @brief Check whether a candidate at @p pos would start inside a kanji run.
+ *
+ * A kanji run with no boundary in front of it is one word. Carving its last
+ * character out as a verb splits that word (提出 into 提 + 出), so a generator
+ * that proposes a single-kanji predicate has to know it is mid-run.
+ *
+ * @param codepoints Full input codepoints
+ * @param pos Index the candidate would start at
+ */
+bool startsInsideKanjiRun(const std::vector<char32_t>& codepoints, size_t pos);
+
+/**
+ * @brief Check whether a candidate starting at @p pos would split a known word.
+ *
+ * Stricter than startsInsideKanjiRun(): the run this candidate starts inside
+ * has to be a dictionary word for the split to be a real loss (事故った, not
+ * 複数+残った). Use it where the run is otherwise free to be several words.
+ *
+ * @param dict_manager Dictionary, may be null
+ * @param codepoints Full input codepoints
+ * @param pos Index the candidate would start at
+ * @param end_pos Index the containing kanji run ends at
+ */
+bool splitsDictionaryKanjiWord(const dictionary::DictionaryManager* dict_manager,
+                               const std::vector<char32_t>& codepoints, size_t pos, size_t end_pos);
+
+/**
  * @brief Check whether a lexical word begins at @p pos rather than an auxiliary.
  *
  * Every cell that a voice auxiliary hosts is written in kana (た, て, ない,

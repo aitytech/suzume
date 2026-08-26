@@ -168,8 +168,12 @@ bool isHonorificPrefix(std::string_view surface) {
 }
 
 bool isBoundVerbPrefix(std::string_view surface) {
+  // Kanji that only ever open a compound verb. They have no standalone nominal
+  // use that could stand as the verb's argument, so the split a free noun would
+  // license (血+浴びる) is not available to them (仕上げる, 片付ける).
   size_t byte_pos = 0;
-  return normalize::decodeUtf8(surface, byte_pos) == U'仕' && byte_pos == surface.size();
+  const char32_t prefix = normalize::decodeUtf8(surface, byte_pos);
+  return byte_pos == surface.size() && (prefix == U'仕' || prefix == U'片');
 }
 
 bool isKanjiHonorificTitle(std::string_view surface) {

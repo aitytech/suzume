@@ -793,6 +793,55 @@
       ],
       "id": "ware_meta",
       "input": "使われ始めた"
+    },
+    {
+      "description": "Bound verb prefix keeps its compound stem whole",
+      "expected": [
+        {
+          "lemma": "部屋",
+          "pos": "Noun",
+          "surface": "部屋"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "片付ける",
+          "pos": "Verb",
+          "surface": "片付ける"
+        }
+      ],
+      "id": "wo_keru",
+      "input": "部屋を片付ける"
+    },
+    {
+      "description": "Bound verb prefix compound before the past auxiliary",
+      "expected": [
+        {
+          "lemma": "荷物",
+          "pos": "Noun",
+          "surface": "荷物"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "片付ける",
+          "pos": "Verb",
+          "surface": "片付け"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "wo_keta",
+      "input": "荷物を片付けた"
     }
   ],
   "description": "Compound verbs (part 5/5)",

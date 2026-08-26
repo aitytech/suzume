@@ -175,9 +175,14 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         }
         // Skip if splitting at a kanji boundary yields a known dictionary verb
         // E.g., 血浴び → 血 + 浴び(る) — 浴びる is a dict verb, so 血浴びる is not a real verb
+        // The split only exists when what it drops can stand on its own: a
+        // bound verb prefix cannot (片付ける, 仕上げる keep their whole stem).
         bool suffix_is_dict_verb = false;
         if (dict_manager != nullptr && kanji_end > start_pos + 1) {
           for (size_t split = start_pos + 1; split < kanji_end; ++split) {
+            if (grammar::isBoundVerbPrefix(extractSubstring(codepoints, start_pos, split))) {
+              continue;
+            }
             std::string remainder = extractSubstring(codepoints, split, renyokei_end);
             std::string remainder_base = remainder + "る";
             if (vh::isVerbInDictionary(dict_manager, remainder_base)) {
@@ -284,7 +289,12 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
             !unverified_multi_kanji_suru_mizen && !unverified_before_temporal_nominal) {
           // Negative cost to strongly favor split over combined analysis
           // Combined forms get optimal_length bonus (-0.5), so we need to be lower
-          float base_cost = (causative_follows || passive_follows)
+          // A bound verb prefix is the one multi-kanji stem that cannot be read
+          // as a noun plus a separate predicate: it has no nominal use, so the
+          // whole stem is the verb (片付け, 仕上げ).
+          const bool opens_with_bound_verb_prefix =
+              grammar::isBoundVerbPrefix(extractSubstring(codepoints, start_pos, start_pos + 1));
+          float base_cost = (causative_follows || passive_follows || opens_with_bound_verb_prefix)
                                 ? candidate::verb_cost::kStrongBonus
                                 : candidate::confidenceScaledCost(verb_opts.bonus_ichidan, ichidan_cand.confidence,
                                                                   verb_opts.confidence_cost_scale_small);
@@ -293,7 +303,7 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
           // ご飯食べ is ご飯 + 食べ). The terminal path already charges such a
           // hypothesis; charge the continuative path identically so a negative
           // cost only ever reaches a dictionary-backed stem.
-          if (!ichidan_base_is_dict && kanji_end - start_pos >= 2) {
+          if (!ichidan_base_is_dict && kanji_end - start_pos >= 2 && !opens_with_bound_verb_prefix) {
             base_cost += bigram_cost::kRare;
             SUZUME_DEBUG_LOG_VERBOSE("[COST_ADJ] \"" << surface << "\" +" << bigram_cost::kRare
                                                      << " (ichidan_renyokei_multi_kanji_non_dict)\n");
@@ -324,7 +334,7 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
           if (renyokei_end < codepoints.size() && codepoints[renyokei_end] == U'る') {
             bool is_single_kanji = (kanji_end - start_pos == 1);
             bool is_in_dict = (dict_manager != nullptr && vh::isVerbInDictionary(dict_manager, ichidan_cand.base_form));
-            if (is_single_kanji || is_in_dict) {
+            if (is_single_kanji || is_in_dict || opens_with_bound_verb_prefix) {
               size_t shuushi_end = renyokei_end + 1;
               std::string shuushi_surface = extractSubstring(codepoints, start_pos, shuushi_end);
               float shuushi_cost = base_cost + 0.1F;  // Slightly higher than renyokei

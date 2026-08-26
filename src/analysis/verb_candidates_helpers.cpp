@@ -131,6 +131,31 @@ bool naiNegativeFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
   return naiNegativeFormLengthAt(codepoints, pos) != 0;
 }
 
+bool startsInsideKanjiRun(const std::vector<char32_t>& codepoints, size_t pos) {
+  return pos > 0 && pos < codepoints.size() && kana::isKanjiCodepoint(codepoints[pos]) &&
+         kana::isKanjiCodepoint(codepoints[pos - 1]);
+}
+
+bool splitsDictionaryKanjiWord(const dictionary::DictionaryManager* dict_manager,
+                               const std::vector<char32_t>& codepoints, size_t pos, size_t end_pos) {
+  if (dict_manager == nullptr || end_pos > codepoints.size() || !startsInsideKanjiRun(codepoints, pos)) {
+    return false;
+  }
+  size_t run_start = pos;
+  while (run_start > 0 && kana::isKanjiCodepoint(codepoints[run_start - 1])) {
+    --run_start;
+  }
+  const std::string run = extractSubstring(codepoints, run_start, end_pos);
+  if (isNounInDictionary(dict_manager, run)) {
+    return true;
+  }
+  // A two-kanji run with no boundary of its own reads as one Sino-Japanese
+  // noun by default, which is what a denominal 〜る verb is built on (皮肉る,
+  // 牛耳る). A longer run has room for a noun plus a separate predicate
+  // (複数+残った), so it keeps the split available.
+  return end_pos - run_start == 2;
+}
+
 bool lexicalWordFollowsAt(const std::vector<char32_t>& codepoints, size_t pos) {
   return pos < codepoints.size() && kana::isKanjiCodepoint(codepoints[pos]);
 }

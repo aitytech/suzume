@@ -423,7 +423,11 @@ void appendSingleKanjiIchidanCandidates(const std::vector<char32_t>& codepoints,
       // E.g., 見させる → 見(VERB mizenkei) + させる(AUX causative)
       //       見させられた → 見(VERB mizenkei) + させ + られ + た
       // MeCab splits these as: 見+させる (not 見さ+せる like godan-sa)
-      bool is_saseru_aux = (h1 == kSa && h2 == kSe);
+      // A Sino-Japanese verbal noun takes the same させ through する's own
+      // irrealis (提出+さ+せる), and a kanji run with no boundary in front of it
+      // is that noun. Carving its last character out as an Ichidan verb splits
+      // the word and leaves 提 with no reading.
+      bool is_saseru_aux = (h1 == kSa && h2 == kSe) && !vh::startsInsideKanjiRun(codepoints, start_pos);
       if (is_saseru_aux) {
         std::string surface = extractSubstring(codepoints, start_pos, kanji_end);
         std::string base_form = surface + "る";

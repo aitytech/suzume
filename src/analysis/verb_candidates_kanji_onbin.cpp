@@ -303,7 +303,12 @@ void appendKanjiOnbinCandidates(const std::vector<char32_t>& codepoints, size_t 
           }
         }
         if (matched_verb_type == grammar::VerbType::Unknown && !starts_with_dict_noun && !remainder_is_dict_verb) {
-          if (kanji_stem.size() == core::kJapaneseCharBytes) {
+          // A one-kanji stem picked out of the middle of a dictionary word
+          // splits that word and invents a verb from its tail (事故った as
+          // 事 + 故る). Only the analyzer's guess licenses this branch, so it is
+          // no evidence against a registered headword.
+          if (kanji_stem.size() == core::kJapaneseCharBytes &&
+              !vh::splitsDictionaryKanjiWord(dict_manager, codepoints, start_pos, kanji_end)) {
             // Single-kanji stem: use inflection analysis of the longer surface
             // (kanji + っ + following chars) to find verb type.
             // Common verbs like 残る, 立つ, 打つ may not be in L2 dictionary.

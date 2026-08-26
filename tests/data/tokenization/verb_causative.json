@@ -921,6 +921,97 @@
       ],
       "id": "woshimeru",
       "input": "戸をしめる。"
+    },
+    {
+      "description": "Sino-Japanese verbal noun keeps its kanji run before the causative",
+      "expected": [
+        {
+          "lemma": "資料",
+          "pos": "Noun",
+          "surface": "資料"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "提出",
+          "pos": "Noun",
+          "surface": "提出"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ],
+      "id": "wo_saseru",
+      "input": "資料を提出させる"
+    },
+    {
+      "description": "Same kanji run boundary with a different verbal noun",
+      "expected": [
+        {
+          "lemma": "内容",
+          "pos": "Noun",
+          "surface": "内容"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "検出",
+          "pos": "Noun",
+          "surface": "検出"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "せる",
+          "pos": "Auxiliary",
+          "surface": "せる"
+        }
+      ],
+      "id": "wo_saseru_2",
+      "input": "内容を検出させる"
+    },
+    {
+      "description": "Single-kanji Ichidan verb keeps its causative split at a word boundary",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "させる",
+          "pos": "Auxiliary",
+          "surface": "させる"
+        }
+      ],
+      "id": "wo_saseru_3",
+      "input": "本を見させる"
     }
   ],
   "description": "verb_causative tests",
