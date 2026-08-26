@@ -34,6 +34,10 @@ EntrySpecRange getDeterminerEntries() {
       // 飛ぶ/跳ぶ, which is written with its kanji when that verb is meant.
       det("とんだ", ""),
       det("何らかの", ""),  // indefinite determiner (何らかの方法)
+      // Fixed attributive whose stem is not a word of its own: 名だ is the
+      // copula on 名, which is why the productive たり paradigm does not reach
+      // this form. Without the entry the run splits at that false boundary.
+      det("名だたる", ""),
 
       // Demonstrative manner determiners (指示様態連体詞)
       // Lower cost to compete with X + いう (VERB cost 0.3) splits

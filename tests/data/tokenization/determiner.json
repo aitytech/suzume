@@ -215,6 +215,87 @@
       ],
       "id": "toka_tokaiu",
       "input": "本とか水とかいう"
+    },
+    {
+      "description": "名だたる企業に入る。 - regression test",
+      "expected": [
+        {
+          "lemma": "名だたる",
+          "pos": "Determiner",
+          "surface": "名だたる"
+        },
+        {
+          "lemma": "企業",
+          "pos": "Noun",
+          "surface": "企業"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "入る",
+          "pos": "Verb",
+          "surface": "入る"
+        }
+      ],
+      "id": "dataru_ni_ru",
+      "input": "名だたる企業に入る。"
+    },
+    {
+      "description": "堂々たる建物だ。 - regression test",
+      "expected": [
+        {
+          "lemma": "堂々",
+          "pos": "Noun",
+          "surface": "堂々"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たる"
+        },
+        {
+          "lemma": "建物",
+          "pos": "Noun",
+          "surface": "建物"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "taru_da",
+      "input": "堂々たる建物だ。"
+    },
+    {
+      "description": "純然たる事実だ。 - regression test",
+      "expected": [
+        {
+          "lemma": "純然",
+          "pos": "Noun",
+          "surface": "純然"
+        },
+        {
+          "lemma": "たり",
+          "pos": "Auxiliary",
+          "surface": "たる"
+        },
+        {
+          "lemma": "事実",
+          "pos": "Noun",
+          "surface": "事実"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "taru_da_2",
+      "input": "純然たる事実だ。"
     }
   ],
   "description": "determiner tests",

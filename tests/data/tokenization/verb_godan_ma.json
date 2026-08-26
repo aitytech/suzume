@@ -434,6 +434,72 @@
       ],
       "id": "wotsumimasu",
       "input": "花をつみます"
+    },
+    {
+      "description": "紙が黄ばむ。 - regression test",
+      "expected": [
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "黄ばむ",
+          "pos": "Verb",
+          "surface": "黄ばむ"
+        }
+      ],
+      "id": "ga_bamu",
+      "input": "紙が黄ばむ。"
+    },
+    {
+      "description": "汗ばむ季節だ。 - regression test",
+      "expected": [
+        {
+          "lemma": "汗ばむ",
+          "pos": "Verb",
+          "surface": "汗ばむ"
+        },
+        {
+          "lemma": "季節",
+          "pos": "Noun",
+          "surface": "季節"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "bamu_da",
+      "input": "汗ばむ季節だ。"
+    },
+    {
+      "description": "夢が成る。 - regression test",
+      "expected": [
+        {
+          "lemma": "夢",
+          "pos": "Noun",
+          "surface": "夢"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "成る",
+          "pos": "Verb",
+          "surface": "成る"
+        }
+      ],
+      "id": "ga_ru_2",
+      "input": "夢が成る。"
     }
   ],
   "description": "Godan Ma-row verbs (五段マ行動詞) - verbs ending in む",

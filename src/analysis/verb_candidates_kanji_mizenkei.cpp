@@ -628,6 +628,26 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
                   }
                 }
 
+                // The classical conjectural attaches to an irrealis, so the
+                // a-row mora in front of it has to belong to a verb of its own.
+                // A productive ma-row derived verb ends in exactly that shape
+                // (黄ばむ, 汗ばむ) while its apparent stem is not a verb, so an
+                // unattested base plus a complete terminal reading of the whole
+                // span is the derived verb and not an irrealis. An attested base
+                // keeps the classical reading (咲か+む).
+                if (is_valid_verb && is_classical_conjecture_pattern && !is_base_dict_verb &&
+                    mizenkei_end < codepoints.size()) {
+                  const std::string whole = extractSubstring(codepoints, start_pos, mizenkei_end + 1);
+                  for (const auto& analysis : inflection.analyze(whole)) {
+                    if (grammar::isGodanVerbType(analysis.verb_type) && analysis.base_form == whole &&
+                        analysis.morphemes.empty() &&
+                        analysis.confidence >= candidate::verb_cost::kConstructedVerbMinConfidence) {
+                      is_valid_verb = false;
+                      break;
+                    }
+                  }
+                }
+
                 if (is_valid_verb) {
                   std::string surface = extractSubstring(codepoints, start_pos, mizenkei_end);
                   // Cost varies by pattern:
