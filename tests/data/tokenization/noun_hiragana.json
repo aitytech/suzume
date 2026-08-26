@@ -21,6 +21,141 @@
       ],
       "id": "akebonono",
       "input": "あけぼのの空。"
+    },
+    {
+      "description": "それはてつづきみたいだ。 - regression test",
+      "expected": [
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "てつづき",
+          "pos": "Noun",
+          "surface": "てつづき"
+        },
+        {
+          "lemma": "みたい",
+          "pos": "Auxiliary",
+          "surface": "みたい"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "sorehatetsudukimitaida",
+      "input": "それはてつづきみたいだ。"
+    },
+    {
+      "description": "ことばは重い。 - regression test",
+      "expected": [
+        {
+          "lemma": "ことば",
+          "pos": "Noun",
+          "surface": "ことば"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "重い",
+          "pos": "Adjective",
+          "surface": "重い"
+        }
+      ],
+      "id": "kotobaha_i",
+      "input": "ことばは重い。"
+    },
+    {
+      "description": "ことばが通じる。 - regression test",
+      "expected": [
+        {
+          "lemma": "ことば",
+          "pos": "Noun",
+          "surface": "ことば"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "通じる",
+          "pos": "Verb",
+          "surface": "通じる"
+        }
+      ],
+      "id": "kotobaga_jiru",
+      "input": "ことばが通じる。"
+    },
+    {
+      "description": "そのことばはやさしい。 - regression test",
+      "expected": [
+        {
+          "lemma": "その",
+          "pos": "Determiner",
+          "surface": "その"
+        },
+        {
+          "lemma": "ことば",
+          "pos": "Noun",
+          "surface": "ことば"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "やさしい",
+          "pos": "Adjective",
+          "surface": "やさしい"
+        }
+      ],
+      "id": "sonokotobahayasashii",
+      "input": "そのことばはやさしい。"
+    },
+    {
+      "description": "私のことばはやさしい。 - regression test",
+      "expected": [
+        {
+          "lemma": "私",
+          "pos": "Pronoun",
+          "surface": "私"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "ことば",
+          "pos": "Noun",
+          "surface": "ことば"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "やさしい",
+          "pos": "Adjective",
+          "surface": "やさしい"
+        }
+      ],
+      "id": "nokotobahayasashii",
+      "input": "私のことばはやさしい。"
     }
   ],
   "description": "noun_hiragana tests",
