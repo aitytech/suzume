@@ -551,6 +551,23 @@
       ],
       "id": "souji_naiyo",
       "input": "そうじゃないよ"
+    },
+    {
+      "description": "Classical adjective irrealis keeps its boundary before the negative",
+      "expected": [
+        {
+          "lemma": "悪い",
+          "pos": "Adjective",
+          "surface": "悪しから"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        }
+      ],
+      "id": "shikarazu",
+      "input": "悪しからず"
     }
   ],
   "description": "I-adjectives basic forms (終止形・連体形) - base forms, attributive, polite forms, conditional (part 3/3)",

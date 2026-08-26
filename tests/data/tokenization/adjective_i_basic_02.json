@@ -1173,9 +1173,24 @@
       "description": "慣用形容詞「言うまでもない」の連体用法",
       "expected": [
         {
-          "lemma": "言うまでもない",
+          "lemma": "言う",
+          "pos": "Verb",
+          "surface": "言う"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
           "pos": "Adjective",
-          "surface": "言うまでもない"
+          "surface": "ない"
         },
         {
           "lemma": "話",
@@ -1190,9 +1205,24 @@
       "description": "慣用形容詞「言うまでもない」の終止用法",
       "expected": [
         {
-          "lemma": "言うまでもない",
+          "lemma": "言う",
+          "pos": "Verb",
+          "surface": "言う"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
           "pos": "Adjective",
-          "surface": "言うまでもない"
+          "surface": "ない"
         }
       ],
       "id": "umademonai_2",
@@ -1202,9 +1232,24 @@
       "description": "慣用形容詞「言うまでもない」の連用形",
       "expected": [
         {
-          "lemma": "言うまでもない",
+          "lemma": "言う",
+          "pos": "Verb",
+          "surface": "言う"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
           "pos": "Adjective",
-          "surface": "言うまでもなく"
+          "surface": "なく"
         },
         {
           "lemma": "進む",
@@ -1219,9 +1264,24 @@
       "description": "慣用形容詞「言うまでもない」の過去形",
       "expected": [
         {
-          "lemma": "言うまでもない",
+          "lemma": "言う",
+          "pos": "Verb",
+          "surface": "言う"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
           "pos": "Adjective",
-          "surface": "言うまでもなかっ"
+          "surface": "なかっ"
         },
         {
           "lemma": "た",

@@ -138,13 +138,15 @@ EntrySpecRange getPronounEntries() {
       adv("なぜ", ""),
 
       // Classical/literary adverbs (古語・文語副詞)
-      adv("かく", ""),        // 斯く - classical demonstrative adverb (=こう/such)
-      adv("なんと", ""),      // exclamatory adverb (感嘆副詞)
-      adv("なんとか", ""),    // indefinite adverb (somehow/one way or another)
-      adv("悪しからず", ""),  // fixed formal acknowledgment phrase
-      adv("何とか", ""),      // kanji-mixed spelling of なんとか
-      adv("何とも", ""),      // degree/evaluative adverb (何とも言えない)
-      adv("なんとも", ""),    // hiragana orthography
+      adv("かく", ""),      // 斯く - classical demonstrative adverb (=こう/such)
+      adv("なんと", ""),    // exclamatory adverb (感嘆副詞)
+      adv("なんとか", ""),  // indefinite adverb (somehow/one way or another)
+      // Note: 悪しからず is not registered. It is an adjective irrealis plus the
+      // negative auxiliary, so the whole-phrase entry crossed a lexical
+      // inflection boundary the segmentation rules keep (see AGENTS.md §2).
+      adv("何とか", ""),    // kanji-mixed spelling of なんとか
+      adv("何とも", ""),    // degree/evaluative adverb (何とも言えない)
+      adv("なんとも", ""),  // hiragana orthography
 
       // Degree adverbs (程度副詞) - very common, prevent misparse
       // とても could be split as と+て+も without this entry

@@ -2380,9 +2380,24 @@
       "description": "言うまでもなく、記録を残した。 - regression test",
       "expected": [
         {
-          "lemma": "言うまでもない",
+          "lemma": "言う",
+          "pos": "Verb",
+          "surface": "言う"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
           "pos": "Adjective",
-          "surface": "言うまでもなく"
+          "surface": "なく"
         },
         {
           "lemma": "記録",

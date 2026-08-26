@@ -2324,6 +2324,33 @@
       ],
       "id": "wannaikotogaaru",
       "input": "終わんないことがある"
+    },
+    {
+      "description": "Clause-shaped fixed phrase keeps its internal particle boundaries",
+      "expected": [
+        {
+          "lemma": "言う",
+          "pos": "Verb",
+          "surface": "言う"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "なし"
+        }
+      ],
+      "id": "umademonashi",
+      "input": "言うまでもなし"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",

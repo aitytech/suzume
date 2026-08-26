@@ -210,9 +210,14 @@
       "description": "悪しからずご了承ください - auto-generated",
       "expected": [
         {
-          "lemma": "悪しからず",
-          "pos": "Adverb",
-          "surface": "悪しからず"
+          "lemma": "悪い",
+          "pos": "Adjective",
+          "surface": "悪しから"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
         },
         {
           "lemma": "ご",

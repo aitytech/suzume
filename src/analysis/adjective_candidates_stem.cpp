@@ -1022,6 +1022,14 @@ void appendIAdjKaraZuCandidates(const std::vector<char32_t>& codepoints, size_t 
       continue;
     }
     std::string lemma = extractSubstring(codepoints, start_pos, kara_pos) + "い";
+    // A シク adjective carries its し in the stem the supplementary conjugation
+    // attaches to, and the modern base keeps that mora only sometimes
+    // (美し+から -> 美しい, 悪し+から -> 悪い). Fall back to the stem without it,
+    // the same two-step probe the classical terminal uses.
+    if (!isAdjectiveInDictionary(dict_manager, lemma) && codepoints[kara_pos - 1] == U'し' &&
+        kara_pos - 1 > start_pos) {
+      lemma = extractSubstring(codepoints, start_pos, kara_pos - 1) + "い";
+    }
     // The かれ cell is also the passive auxiliary after a Godan-ka irrealis
     // (書か+れ+ども).  The inflection engine intentionally recognizes broad
     // i-adjective-shaped runs, which is not enough to distinguish that path.
