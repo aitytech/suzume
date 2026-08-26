@@ -122,9 +122,15 @@ float computeLateLexicalBoundaryBonus(const core::LatticeEdge& prev, const core:
   // (もしか+する+と), so it is no more a clause boundary than a bare noun is.
   const bool conjunction_host_slot =
       prev.pos == core::PartOfSpeech::Noun || (prev.pos == core::PartOfSpeech::Adverb && conditional_to_conjunction);
+  // An auxiliary closes the predicate it sits on exactly as a noun heads the
+  // phrase it sits in, so a だ-initial conjunction directly after one is the
+  // copula predicating it and its own conjunctive particle (確認+す+べき+だ+が,
+  // not 確認+す+べき+だが). The listed conjunction reading needs the clause
+  // boundary that a punctuation mark or a particle supplies.
   const bool barred_conjunction_host =
-      next.pos == core::PartOfSpeech::Conjunction && conjunction_host_slot &&
-      (te_form_conjunction || copula_initial_conjunction || conditional_to_conjunction);
+      next.pos == core::PartOfSpeech::Conjunction &&
+      ((conjunction_host_slot && (te_form_conjunction || copula_initial_conjunction || conditional_to_conjunction)) ||
+       (prev.pos == core::PartOfSpeech::Auxiliary && copula_initial_conjunction));
   // A focus particle marks a phrase the analyzer has already identified. An
   // unknown hiragana noun is the fallback for material it could not, so the
   // pairing means the boundary landed inside a word rather than after one

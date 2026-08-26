@@ -514,6 +514,260 @@
       ],
       "id": "closed_conjunctive_particle_exact_span_ownership",
       "input": "寒いので帰る"
+    },
+    {
+      "description": "今こそ確認すべきだが、時間がない。 - regression test",
+      "expected": [
+        {
+          "lemma": "今",
+          "pos": "Noun",
+          "surface": "今"
+        },
+        {
+          "lemma": "こそ",
+          "pos": "Particle",
+          "surface": "こそ"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "す"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べき"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "時間",
+          "pos": "Noun",
+          "surface": "時間"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "koso_subekidaga_ganai",
+      "input": "今こそ確認すべきだが、時間がない。"
+    },
+    {
+      "description": "確認すべきだから、急ごう。 - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "す"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べき"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "急ぐ",
+          "pos": "Verb",
+          "surface": "急ご"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "subekidakara_gou",
+      "input": "確認すべきだから、急ごう。"
+    },
+    {
+      "description": "確認すべきだけど、急ごう。 - regression test",
+      "expected": [
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "す"
+        },
+        {
+          "lemma": "べし",
+          "pos": "Auxiliary",
+          "surface": "べき"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "けど",
+          "pos": "Particle",
+          "surface": "けど"
+        },
+        {
+          "lemma": "急ぐ",
+          "pos": "Verb",
+          "surface": "急ご"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "subekidakedo_gou",
+      "input": "確認すべきだけど、急ごう。"
+    },
+    {
+      "description": "学生だが、忙しい。 - regression test",
+      "expected": [
+        {
+          "lemma": "学生",
+          "pos": "Noun",
+          "surface": "学生"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "忙しい",
+          "pos": "Adjective",
+          "surface": "忙しい"
+        }
+      ],
+      "id": "daga_shii",
+      "input": "学生だが、忙しい。"
+    },
+    {
+      "description": "静かだが、暑い。 - regression test",
+      "expected": [
+        {
+          "lemma": "静か",
+          "pos": "Adjective",
+          "surface": "静か"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "暑い",
+          "pos": "Adjective",
+          "surface": "暑い"
+        }
+      ],
+      "id": "kadaga_i",
+      "input": "静かだが、暑い。"
+    },
+    {
+      "description": "行きますが、遅れます。 - regression test",
+      "expected": [
+        {
+          "lemma": "行く",
+          "pos": "Verb",
+          "surface": "行き"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "遅れる",
+          "pos": "Verb",
+          "surface": "遅れ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "kimasuga_remasu",
+      "input": "行きますが、遅れます。"
+    },
+    {
+      "description": "だが、時間がない。 - regression test",
+      "expected": [
+        {
+          "lemma": "だが",
+          "pos": "Conjunction",
+          "surface": "だが"
+        },
+        {
+          "lemma": "時間",
+          "pos": "Noun",
+          "surface": "時間"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Adjective",
+          "surface": "ない"
+        }
+      ],
+      "id": "daga_ganai",
+      "input": "だが、時間がない。"
     }
   ],
   "description": "particle_conj tests",
