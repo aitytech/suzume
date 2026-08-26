@@ -2351,6 +2351,114 @@
       ],
       "id": "umademonashi",
       "input": "言うまでもなし"
+    },
+    {
+      "description": "A hiragana noun spelling a case particle word-internally keeps its own boundary before the following particle",
+      "expected": [
+        {
+          "lemma": "おとな",
+          "pos": "Noun",
+          "surface": "おとな"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "なる",
+          "pos": "Verb",
+          "surface": "なる"
+        }
+      ],
+      "id": "otonaninaru",
+      "input": "おとなになる"
+    },
+    {
+      "description": "A hiragana noun ending on a particle character keeps its boundary before the nominative",
+      "expected": [
+        {
+          "lemma": "こども",
+          "pos": "Noun",
+          "surface": "こども"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Verb",
+          "surface": "いる"
+        }
+      ],
+      "id": "kodomogairu",
+      "input": "こどもがいる"
+    },
+    {
+      "description": "A hiragana noun spelling the nominative word-internally is bracketed by the following accusative",
+      "expected": [
+        {
+          "lemma": "かがみ",
+          "pos": "Noun",
+          "surface": "かがみ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "みる",
+          "pos": "Verb",
+          "surface": "みる"
+        }
+      ],
+      "id": "kagamiwomiru",
+      "input": "かがみをみる"
+    },
+    {
+      "description": "Honorific prefixes take a nominal or continuative host, never a particle",
+      "expected": [
+        {
+          "lemma": "ご",
+          "pos": "Prefix",
+          "surface": "ご"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "願う",
+          "pos": "Verb",
+          "surface": "願い"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "go_woo_ishimasu",
+      "input": "ご確認をお願いします"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",

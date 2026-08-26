@@ -557,10 +557,17 @@ void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codep
           continue;
         }
       }
-      const bool closes_particle_bracketed_hiragana_noun =
+      const bool crossed_particle_is_bracketed =
           start_type == normalize::CharType::Hiragana && crossed_particle_pos != SIZE_MAX &&
-          candidate_end == crossed_particle_pos + 1 && candidate_end < codepoints.size() &&
-          isRightBoundaryParticle(codepoints[candidate_end]);
+          candidate_end < codepoints.size() && isRightBoundaryParticle(codepoints[candidate_end]);
+      const bool closes_particle_bracketed_hiragana_noun =
+          crossed_particle_is_bracketed && candidate_end == crossed_particle_pos + 1;
+      // The same bracket one mora further in. A run that spells a particle
+      // character word-internally and is closed by a real particle sits in a
+      // nominal slot either way, so it takes the nominal category rather than
+      // the opaque one and its length penalty (おとな + に, ひとつ + を).
+      const bool brackets_medial_particle_crossing =
+          crossed_particle_is_bracketed && !started_with_particle && candidate_end > crossed_particle_pos + 1;
       // After a past auxiliary, a following hiragana noun beginning with り
       // must remain available as a nominal host. Otherwise the preceding た
       // absorbs its first mora as the listing particle たり (買っ+た+りんご).
@@ -593,12 +600,13 @@ void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codep
           codepoints[candidate_end + 1] == U'な';
       // Particle-start hiragana sequences are potential nouns (はし, はな, にく)
       // Use NOUN POS instead of OTHER to avoid exceeds_dict_length penalty
-      core::PartOfSpeech pos = (started_with_particle || closes_particle_bracketed_hiragana_noun ||
-                                (closes_past_tari_collision_noun && !has_verb_tail_after_ri &&
-                                 !has_inflected_verb_reading && !has_contracted_progressive_tail) ||
-                                precedes_closed_native_number || closes_genitive_negative_noun)
-                                   ? core::PartOfSpeech::Noun
-                                   : getPosForType(start_type);
+      core::PartOfSpeech pos =
+          (started_with_particle || closes_particle_bracketed_hiragana_noun || brackets_medial_particle_crossing ||
+           (closes_past_tari_collision_noun && !has_verb_tail_after_ri && !has_inflected_verb_reading &&
+            !has_contracted_progressive_tail) ||
+           precedes_closed_native_number || closes_genitive_negative_noun)
+              ? core::PartOfSpeech::Noun
+              : getPosForType(start_type);
       float cost = getCostForType(start_type, len);
       if (closes_past_tari_collision_noun && !has_verb_tail_after_ri && !has_inflected_verb_reading &&
           !has_contracted_progressive_tail) {
@@ -705,7 +713,13 @@ void UnknownWordGenerator::generateBySameType(const std::vector<char32_t>& codep
         if (len < 3 && !closes_particle_bracketed_hiragana_noun) {
           continue;
         }
-        cost += (candidate_end > crossed_particle_pos + 1) ? scorer::scale::kStrong : scorer::scale::kMinor;
+        // The bracket above is also what separates a native noun from a real
+        // particle boundary here: without it the strong penalty made the noun
+        // lose to a chain of one-character fragments whose own reading strands
+        // the run's head (おとな|に|なる, not お|と|なに|なる).
+        cost += (candidate_end > crossed_particle_pos + 1 && !brackets_medial_particle_crossing)
+                    ? scorer::scale::kStrong
+                    : scorer::scale::kMinor;
         // The mora allowed past the crossed particle exists for native nouns
         // that spell a particle word-internally (こども, ひとつ). It must not be
         // taken from the front of a bound word instead: an auxiliary or a

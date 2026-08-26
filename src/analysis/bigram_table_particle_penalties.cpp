@@ -113,6 +113,20 @@ void setParticleAndLexicalPenaltyCosts(BigramMatrix& table) {
       {EPOS::Prefix, EPOS::Noun, cost::kStrongBonus},
       {EPOS::Prefix, EPOS::VerbRenyokei, cost::kStrongBonus},
 
+      // The honorific prefixes are bound morphemes: they need a nominal or a
+      // continuative host on their right, so no particle can follow one. Left
+      // unstated, a stray prefix edge was cheap enough to head a phrase and
+      // hand the rest of a native noun to the particle it spells word-
+      // internally (お|と|なに|なる instead of おとな|に|なる).
+      {EPOS::Prefix, EPOS::ParticleCase, cost::kAlmostNever},
+      {EPOS::Prefix, EPOS::ParticleTopic, cost::kAlmostNever},
+      {EPOS::Prefix, EPOS::ParticleFinal, cost::kAlmostNever},
+      {EPOS::Prefix, EPOS::ParticleConj, cost::kAlmostNever},
+      {EPOS::Prefix, EPOS::ParticleQuote, cost::kAlmostNever},
+      {EPOS::Prefix, EPOS::ParticleAdverbial, cost::kAlmostNever},
+      {EPOS::Prefix, EPOS::ParticleNo, cost::kAlmostNever},
+      {EPOS::Prefix, EPOS::ParticleBinding, cost::kAlmostNever},
+
       // Particles do not introduce interjections within a running phrase.
       {EPOS::ParticleCase, EPOS::Interjection, cost::kAlmostNever},
       {EPOS::ParticleTopic, EPOS::Interjection, cost::kAlmostNever},
