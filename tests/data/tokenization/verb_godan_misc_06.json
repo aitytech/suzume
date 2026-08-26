@@ -2520,8 +2520,52 @@
       ],
       "id": "korottto_waru",
       "input": "ころっと変わる"
+    },
+    {
+      "description": "A multi-mora particle marks the nominal position of a productive deverbal noun",
+      "expected": [
+        {
+          "lemma": "暮らし",
+          "pos": "Noun",
+          "surface": "暮らし"
+        },
+        {
+          "lemma": "まで",
+          "pos": "Particle",
+          "surface": "まで"
+        },
+        {
+          "lemma": "奪う",
+          "pos": "Verb",
+          "surface": "奪う"
+        }
+      ],
+      "id": "rashimade_u",
+      "input": "暮らしまで奪う"
+    },
+    {
+      "description": "A deverbal noun before a particle whose first mora opens a suru auxiliary",
+      "expected": [
+        {
+          "lemma": "暮らし",
+          "pos": "Noun",
+          "surface": "暮らし"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "始める",
+          "pos": "Verb",
+          "surface": "始める"
+        }
+      ],
+      "id": "rashikara_meru",
+      "input": "暮らしから始める"
     }
   ],
-  "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",
+  "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/7)",
   "version": "1.0"
 }

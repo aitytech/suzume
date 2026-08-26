@@ -1,0 +1,38 @@
+{
+  "cases": [
+    {
+      "description": "A trailing continuative shi before a suru auxiliary is not a nominalization",
+      "expected": [
+        {
+          "lemma": "お",
+          "pos": "Prefix",
+          "surface": "お"
+        },
+        {
+          "lemma": "伝える",
+          "pos": "Verb",
+          "surface": "伝え"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "まし"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "o_eshimashita",
+      "input": "お伝えしました"
+    }
+  ],
+  "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 7/7)",
+  "version": "1.0"
+}

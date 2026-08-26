@@ -35,6 +35,19 @@ bool hasNominalizedNounParticleContinuation(const std::vector<char32_t>& codepoi
          !startsLongerNonParticleEntry(codepoints, end_pos, dict_manager);
 }
 
+// The test above sees a particle only when its first mora is itself a particle
+// character, which leaves the multi-mora members of the same closed class
+// invisible (まで, ほど). Reading them from the dictionary matters where the
+// nominalization is productive rather than lexicalized — a two-mora okurigana,
+// whose continuative noun has nothing but the following particle to mark its
+// position as nominal (暮らし+まで).
+bool selectsNominalHostByListedParticle(const std::vector<char32_t>& codepoints, size_t end_pos,
+                                        const dictionary::DictionaryManager* dict_manager) {
+  return end_pos < codepoints.size() && codepoints[end_pos] != U'て' && codepoints[end_pos] != U'で' &&
+         hasNominalForcingParticleContinuation(codepoints, end_pos, dict_manager) &&
+         !startsLongerNonParticleEntry(codepoints, end_pos, dict_manager);
+}
+
 bool hasInferredVerbContinuative(const grammar::Inflection& inflection, std::string_view surface) {
   const auto& analyses = inflection.analyze(surface);
   return std::any_of(analyses.begin(), analyses.end(), [](const auto& analysis) {
@@ -369,8 +382,16 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
       // + する (お伝えします, お届けして), not a nominalization — skip the noun
       // so the verb split can win. し at end of text or before a particle keeps
       // the noun candidate (genuine nominalizations survive).
+      const std::string surface = extractSubstring(codepoints, start_pos, hiragana_end + 1);
+      const bool has_particle_continuation =
+          hasNominalizedNounParticleContinuation(codepoints, hiragana_end + 1, dict_manager) ||
+          selectsNominalHostByListedParticle(codepoints, hiragana_end + 1, dict_manager);
       bool trailing_shi_is_suru = false;
-      if (second_hiragana == U'し') {
+      // The auxiliary is recognized by its opening mora, which several
+      // multi-mora particles share (まで opens like ます, から like かける). A
+      // nominal-forcing particle actually listed at that position is the
+      // stronger evidence and settles the position as nominal (暮らし+まで).
+      if (second_hiragana == U'し' && !has_particle_continuation) {
         size_t after_shi_pos = hiragana_end + 1;
         if (after_shi_pos < codepoints.size()) {
           char32_t after_shi = codepoints[after_shi_pos];
@@ -380,9 +401,6 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
           }
         }
       }
-      const std::string surface = extractSubstring(codepoints, start_pos, hiragana_end + 1);
-      const bool has_particle_continuation =
-          hasNominalizedNounParticleContinuation(codepoints, hiragana_end + 1, dict_manager);
       const bool selects_nominal_host = selectsNominalHost(dict_manager, codepoints, char_types, hiragana_end + 1);
       const bool has_explicit_nominal_selector =
           has_particle_continuation ||
