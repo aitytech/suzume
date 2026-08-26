@@ -111,6 +111,10 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       {EPOS::VerbMizenkei, EPOS::ParticleAdverbial, cost::kAlmostNever},
       {EPOS::VerbMizenkei, EPOS::ParticleBinding, cost::kAlmostNever},
       {EPOS::VerbMizenkei, EPOS::ParticleTopic, cost::kAlmostNever},
+      // The nominalizer belongs to the same group: の and its contraction ん
+      // take an attributive form, so an irrealis in front of one means the
+      // stem was cut short of its own onbin cell (分かん+ない, not 分か+ん+ない).
+      {EPOS::VerbMizenkei, EPOS::ParticleNo, cost::kAlmostNever},
 
       // A derivational suffix completes a nominal unit and cannot directly
       // take a predicate connective. Case-marked nominalizations such as

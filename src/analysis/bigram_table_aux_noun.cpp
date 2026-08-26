@@ -173,8 +173,12 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
 
       // Negative predicates commonly take a formal noun (ない+つもり/わけ/はず).
       // Prefer that productive boundary over an unrelated hiragana adverb that
-      // happens to begin at the final い of ない.
-      {EPOS::AuxNegativeNai, EPOS::NounFormal, cost::kStrongBonus},
+      // happens to begin at the final い of ない. The auxiliary modifies a
+      // formal noun exactly as its classical sibling and the passive do, so it
+      // carries their margin; the weaker one let the homographic adjective win
+      // the position and pulled an irrealis split in behind it
+      // (分か+ん+ない+こと, not 分かん+ない+こと).
+      {EPOS::AuxNegativeNai, EPOS::NounFormal, cost::kVeryStrongBonus},
       {EPOS::AuxNegativeNai, EPOS::Noun, cost::kStrongBonus},
 
       // Classical negation also retains its attributive boundary before a

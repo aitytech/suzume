@@ -2238,6 +2238,92 @@
       ],
       "id": "dekirunji_naikana",
       "input": "できるんじゃないかな"
+    },
+    {
+      "description": "Colloquial irrealis hatsuonbin stays whole before the negative",
+      "expected": [
+        {
+          "lemma": "分かる",
+          "pos": "Verb",
+          "surface": "分かん"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "多い",
+          "pos": "Adjective",
+          "surface": "多い"
+        }
+      ],
+      "id": "kannaikotoga_i",
+      "input": "分かんないことが多い"
+    },
+    {
+      "description": "Formal noun keeps its edge against a longer kana homograph",
+      "expected": [
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "ばかり",
+          "pos": "Particle",
+          "surface": "ばかり"
+        },
+        {
+          "lemma": "言う",
+          "pos": "Verb",
+          "surface": "言う"
+        }
+      ],
+      "id": "kotobakari_u",
+      "input": "ことばかり言う"
+    },
+    {
+      "description": "Godan-ra irrealis hatsuonbin before the negative and a formal noun",
+      "expected": [
+        {
+          "lemma": "終わる",
+          "pos": "Verb",
+          "surface": "終わん"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "こと",
+          "pos": "Noun",
+          "surface": "こと"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "ある"
+        }
+      ],
+      "id": "wannaikotogaaru",
+      "input": "終わんないことがある"
     }
   ],
   "description": "Godan verb miscellaneous tests (五段動詞その他) - general tests or mixed verb rows (part 6/6)",

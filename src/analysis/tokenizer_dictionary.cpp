@@ -1094,7 +1094,16 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // negative lexical costs of two shorter noun edges defeat it.  Competing
     // grammatical categories remain available, so this changes only the
     // ownership relation among exact Noun homographs.
-    if (result.entry->pos == core::PartOfSpeech::Noun && result.length < longest_noun) {
+    // An all-kana formal noun is exempt. It is a closed-class grammatical
+    // element, and a kana homograph starting at the same place carries no
+    // orthographic boundary of its own, so length alone cannot say which
+    // morpheme is present — the connection has to (ことば vs こと+ばかり).
+    // A formal noun spelled with kanji is not exempt: the script change marks
+    // the boundary, and the longer registered entry is a real search unit
+    // (当たり障り, not 当たり+障り).
+    const bool kana_formal_noun =
+        result.entry->extended_pos == core::ExtendedPOS::NounFormal && grammar::isPureHiragana(result.entry->surface);
+    if (result.entry->pos == core::PartOfSpeech::Noun && result.length < longest_noun && !kana_formal_noun) {
       continue;
     }
     if (result.entry->pos == core::PartOfSpeech::Noun &&
