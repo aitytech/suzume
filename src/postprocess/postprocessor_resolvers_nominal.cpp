@@ -396,6 +396,24 @@ void resolveAdjectiveNominalizerSa(std::vector<core::Morpheme>& result) {
   }
 }
 
+// The observation suffix がる selects an adjective stem, so an unattested
+// nominal in front of it is a 形容動詞語幹 (面倒がる) and keeps the unknown-noun
+// category it was generated with otherwise. A registered host is left alone:
+// its entry states the category the dictionary means it to have, and several
+// 形容動詞語幹 are registered as nouns for their equally common nominal use
+// (不安がある).
+void resolveAdjectivalStemBeforeGaru(std::vector<core::Morpheme>& result) {
+  for (size_t idx = 1; idx < result.size(); ++idx) {
+    auto& host = result[idx - 1];
+    if (result[idx].extended_pos != core::ExtendedPOS::AuxGaru || host.pos != core::PartOfSpeech::Noun ||
+        host.fromDictionary()) {
+      continue;
+    }
+    retag(host, core::PartOfSpeech::Adjective, core::ExtendedPOS::AdjNaAdj, host.surface,
+          dictionary::ConjugationType::NaAdjective, grammar::ConjForm::Base);
+  }
+}
+
 // In an indefinite phrase followed by a content predicate, homographic で is
 // the case particle (どこ+か+で+確認する), not the copular continuative.
 // Keep the copular reading before auxiliaries and lexical ある (何かである).

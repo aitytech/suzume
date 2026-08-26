@@ -843,6 +843,55 @@
       ],
       "id": "noyouna_kesada",
       "input": "水のような静けさだ。"
+    },
+    {
+      "description": "productive biru suffix verb on a two-kanji base",
+      "expected": [
+        {
+          "lemma": "大人びる",
+          "pos": "Verb",
+          "surface": "大人び"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "態度",
+          "pos": "Noun",
+          "surface": "態度"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "bita_da",
+      "input": "大人びた態度だ。"
+    },
+    {
+      "description": "productive biru suffix verb in attributive position",
+      "expected": [
+        {
+          "lemma": "田舎びる",
+          "pos": "Verb",
+          "surface": "田舎び"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "家",
+          "pos": "Noun",
+          "surface": "家"
+        }
+      ],
+      "id": "bita",
+      "input": "田舎びた家"
     }
   ],
   "description": "noun_deverbal tests",

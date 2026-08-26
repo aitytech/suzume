@@ -456,7 +456,13 @@ void appendKanjiMizenkeiStemCandidates(const std::vector<char32_t>& codepoints, 
         if (next_char == U'ん') {
           // Skip if single kanji + さ (potential さん honorific)
           bool is_honorific_san = (kanji_end == start_pos + 1 && first_hira == U'さ');
-          if (!is_honorific_san) {
+          // The contracted negative closes the predicate, so the past
+          // auxiliary cannot follow it: 〜んだ attaches to an attributive, not
+          // to an irrealis. In that environment the ん belongs to the verb as
+          // its ma/ba/na-row 音便 (黄ばん+だ, not 黄ば+ん+だ).
+          const bool past_auxiliary_follows =
+              mizenkei_end + 1 < codepoints.size() && codepoints[mizenkei_end + 1] == U'だ';
+          if (!is_honorific_san && !past_auxiliary_follows) {
             is_n_pattern = true;
           }
         }

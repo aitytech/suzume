@@ -39,7 +39,14 @@ float computeAdjectiveDerivationHostPenalty(const core::LatticeEdge& prev, const
   // The productive observation suffix がる selects an adjective stem. A
   // lexical ordinary noun may also carry a nominalized adjectival stem
   // (不安+がる), while a formal noun or another closed class cannot host it.
-  const bool dictionary_nominal_host = prev.extended_pos == core::ExtendedPOS::Noun && prev.fromDictionary();
+  // A multi-kanji nominal has the shape of a 形容動詞語幹 (面倒, 不安, 迷惑)
+  // whether or not the compact dictionary lists it, and the closed classes this
+  // rule excludes are never spelled that way. Without it the run is split so
+  // that がる's kana can be read as a fabricated verb's okurigana (面+倒がる).
+  const bool kanji_compound_host = prev.extended_pos == core::ExtendedPOS::Noun &&
+                                   normalize::utf8Length(prev.surface) >= 2 && grammar::isAllKanji(prev.surface);
+  const bool dictionary_nominal_host =
+      prev.extended_pos == core::ExtendedPOS::Noun && (prev.fromDictionary() || kanji_compound_host);
   if (next.extended_pos == core::ExtendedPOS::AuxGaru && prev.extended_pos != core::ExtendedPOS::AdjStem &&
       prev.extended_pos != core::ExtendedPOS::AdjNaAdj && !dictionary_nominal_host) {
     return cost::kAlmostNever;

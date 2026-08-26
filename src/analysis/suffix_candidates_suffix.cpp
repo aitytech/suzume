@@ -330,6 +330,104 @@ void generateProductiveSuffixVerbCandidates(const std::vector<char32_t>& codepoi
     return;
   }
 
+  // ～びる derives an Ichidan verb meaning "to take on the character of" from a
+  // nominal base (大人びる, 田舎びる, 都会びる). Its stem is the whole kanji run,
+  // which the general kanji+okurigana path cannot reach: that path scores a
+  // longer stem as less likely and settles on a shorter one inside the run
+  // (大人びた read as 大 + 人び + た). Two or more kanji are required so the
+  // lexical single-kanji verbs spelled the same way (帯びる, 浴びる) keep their
+  // ordinary candidate path.
+  struct IchidanBiruForm {
+    std::string_view inflection;
+    core::ExtendedPOS extended_pos;
+  };
+  static constexpr std::array<IchidanBiruForm, 5> kIchidanBiruForms = {{
+      {"びる", core::ExtendedPOS::VerbShuushikei},
+      {"び", core::ExtendedPOS::VerbRenyokei},
+      {"びれ", core::ExtendedPOS::VerbKateikei},
+      {"びよ", core::ExtendedPOS::VerbMeireikei},
+      {"びろ", core::ExtendedPOS::VerbMeireikei},
+  }};
+  if (!numeral_led_base && base_end - start_pos >= 2) {
+    for (const auto& form : kIchidanBiruForms) {
+      const size_t form_length = normalize::utf8Length(form.inflection);
+      const size_t candidate_end = base_end + form_length;
+      if (candidate_end > codepoints.size() ||
+          extractSubstring(codepoints, base_end, candidate_end) != form.inflection) {
+        continue;
+      }
+      // The bare stem is also the nominalization of the same base, so the
+      // continuative cell needs an auxiliary that only a verb can host.
+      const bool voice_follows = candidate_end + 1 < codepoints.size() && codepoints[candidate_end] == U'ら' &&
+                                 codepoints[candidate_end + 1] == U'れ';
+      const bool te_or_past_follows = candidate_end < codepoints.size() &&
+                                      (codepoints[candidate_end] == U'て' || codepoints[candidate_end] == U'た');
+      const bool negative_follows = candidate_end + 1 < codepoints.size() && codepoints[candidate_end] == U'な' &&
+                                    codepoints[candidate_end + 1] == U'い';
+      const bool polite_follows = candidate_end < codepoints.size() && codepoints[candidate_end] == U'ま';
+      if (form.extended_pos == core::ExtendedPOS::VerbRenyokei &&
+          !(voice_follows || te_or_past_follows || negative_follows || polite_follows)) {
+        continue;
+      }
+
+      const std::string surface = extractSubstring(codepoints, start_pos, candidate_end);
+      const std::string lemma = extractSubstring(codepoints, start_pos, base_end) + "びる";
+      auto candidate =
+          makeVerbCandidate(surface, start_pos, candidate_end, candidate::kProductiveSuffixVerbCost, lemma,
+                            dictionary::ConjugationType::Ichidan, true, CandidateOrigin::SuffixPattern,
+                            candidate::kDictionaryOriginConfidence, "nominal_ichidan_biru_suffix", form.extended_pos);
+      candidate.lemma_verified = true;
+      candidates.push_back(std::move(candidate));
+      return;
+    }
+  }
+
+  // ～ばむ derives a Godan-ma verb of incipient appearance from a nominal base
+  // (気色ばむ, 黄ばむ, 汗ばむ). Its 終止形 is spelled like the irrealis of a
+  // ma-row verb plus the classical conjectural む, so the ordinary cells stay
+  // behind a two-kanji base. The ん-onbin cell has no such reading: that form
+  // exists only before the past だ / connective で, and requiring them lets a
+  // single-kanji base through (黄ばんだ, not 黄ば + ん + だ).
+  struct GodanMaForm {
+    std::string_view inflection;
+    core::ExtendedPOS extended_pos;
+  };
+  static constexpr std::array<GodanMaForm, 6> kGodanMaBamuForms = {{
+      {"ばむ", core::ExtendedPOS::VerbShuushikei},
+      {"ばま", core::ExtendedPOS::VerbMizenkei},
+      {"ばも", core::ExtendedPOS::VerbMizenkei},
+      {"ばみ", core::ExtendedPOS::VerbRenyokei},
+      {"ばん", core::ExtendedPOS::VerbOnbinkei},
+      {"ばめ", core::ExtendedPOS::VerbKateikei},
+  }};
+  if (!numeral_led_base) {
+    for (const auto& form : kGodanMaBamuForms) {
+      const size_t form_length = normalize::utf8Length(form.inflection);
+      const size_t candidate_end = base_end + form_length;
+      if (candidate_end > codepoints.size() ||
+          extractSubstring(codepoints, base_end, candidate_end) != form.inflection) {
+        continue;
+      }
+      const bool past_or_te_follows = candidate_end < codepoints.size() &&
+                                      (codepoints[candidate_end] == U'だ' || codepoints[candidate_end] == U'で');
+      const bool licensed =
+          form.extended_pos == core::ExtendedPOS::VerbOnbinkei ? past_or_te_follows : base_end - start_pos >= 2;
+      if (!licensed) {
+        continue;
+      }
+
+      const std::string surface = extractSubstring(codepoints, start_pos, candidate_end);
+      const std::string lemma = extractSubstring(codepoints, start_pos, base_end) + "ばむ";
+      auto candidate =
+          makeVerbCandidate(surface, start_pos, candidate_end, candidate::kProductiveSuffixVerbCost, lemma,
+                            dictionary::ConjugationType::GodanMa, true, CandidateOrigin::SuffixPattern,
+                            candidate::kDictionaryOriginConfidence, "nominal_godan_ma_bamu_suffix", form.extended_pos);
+      candidate.lemma_verified = true;
+      candidates.push_back(std::move(candidate));
+      return;
+    }
+  }
+
   // めかす derives a transitive verb from the same nominal bases as めく
   // (冗談めかす, 秘密めかした) but inflects as Godan-sa, so its cells are not
   // reachable from the Godan-ka table above. Without them the surface is read

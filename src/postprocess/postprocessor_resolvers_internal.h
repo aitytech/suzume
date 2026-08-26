@@ -21,6 +21,7 @@ bool isPredicativeCopula(const core::Morpheme& morpheme);
 void mergeInto(core::Morpheme& head, const core::Morpheme& tail);
 void mergeSplitCopularNegative(std::vector<core::Morpheme>& result);
 void mergeSplitFormalNounNegativeRenyokei(std::vector<core::Morpheme>& result);
+void resolveAdjectivalStemBeforeGaru(std::vector<core::Morpheme>& result);
 void resolveAdjectiveNominalizerSa(std::vector<core::Morpheme>& result);
 void resolveAttributiveDeverbalNoun(std::vector<core::Morpheme>& result,
                                     const dictionary::DictionaryManager* dict_manager);

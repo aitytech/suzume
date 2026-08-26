@@ -500,6 +500,50 @@
       ],
       "id": "ga_ru_2",
       "input": "夢が成る。"
+    },
+    {
+      "description": "bamu suffix verb onbin before the past auxiliary",
+      "expected": [
+        {
+          "lemma": "黄ばむ",
+          "pos": "Verb",
+          "surface": "黄ばん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        }
+      ],
+      "id": "banda",
+      "input": "黄ばんだ紙"
+    },
+    {
+      "description": "bamu suffix verb on a two-kanji base",
+      "expected": [
+        {
+          "lemma": "気色ばむ",
+          "pos": "Verb",
+          "surface": "気色ばん"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "声",
+          "pos": "Noun",
+          "surface": "声"
+        }
+      ],
+      "id": "banda_2",
+      "input": "気色ばんだ声"
     }
   ],
   "description": "Godan Ma-row verbs (五段マ行動詞) - verbs ending in む",
