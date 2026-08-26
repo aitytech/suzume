@@ -2841,7 +2841,10 @@ def postprocess_adverbial_na_adjective(tokens: list[dict]) -> bool:
     attributive な, but keeps the adverb tag before the terminal だ, so one
     paradigm is split across two parts of speech by cell rather than by
     grammar. Only the copula licenses the change; a directly modified predicate
-    keeps the adverb (大変おいしい).
+    keeps the adverb (大変おいしい). The conjunction tag is admitted for the
+    same reason as the adverb one: neither class can be the subject of a
+    copula, so a word from the set carrying it in that cell is the adjectival
+    reading (もっとも+です).
     """
     from .constants import ADVERBIAL_NA_ADJECTIVES
 
@@ -2850,7 +2853,7 @@ def postprocess_adverbial_na_adjective(tokens: list[dict]) -> bool:
         follower = tokens[idx + 1]
         if (
             token.get("surface") not in ADVERBIAL_NA_ADJECTIVES
-            or token.get("pos") != "Adverb"
+            or token.get("pos") not in ("Adverb", "Conjunction")
             or follower.get("pos") != "Auxiliary"
             or follower.get("surface") not in ("だ", "です", "な", "でし", "だっ", "なら")
         ):
