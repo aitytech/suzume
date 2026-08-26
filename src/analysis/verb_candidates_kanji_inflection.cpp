@@ -168,17 +168,20 @@ void appendAnalyzedKanjiVerbCandidates(const std::vector<char32_t>& codepoints, 
         }
       }
 
-      // Skip patterns ending with く when followed by ださ/ださい (part of ください)
-      // e.g., 待ちく when followed by ださい → should be 待ち + ください
+      // Skip patterns ending with く when followed by ださ (part of ください /
+      // くださる / くださいます): 待ちく + ださい should stay 待ち + ください.
+      // Only the ださ onset identifies that auxiliary. A bare だ after the く is
+      // the copula opening its own predicate (届く + だろう), and treating it as
+      // evidence for ください suppressed the k-row terminal of every kanji verb
+      // that a copula follows.
       {
         size_t hira_size = hiragana_part.size();
         if (hira_size >= core::kJapaneseCharBytes) {
           std::string_view last_char_view(hiragana_part.data() + hira_size - core::kJapaneseCharBytes,
                                           core::kJapaneseCharBytes);
           if (last_char_view == "く" && end_pos < codepoints.size()) {
-            // Check if followed by だ or ださ or ださい
             std::string remaining = extractSubstring(codepoints, end_pos, std::min(end_pos + 3, codepoints.size()));
-            if (remaining.compare(0, 6, "ださ") == 0 || remaining.compare(0, 3, "だ") == 0) {
+            if (remaining.compare(0, 6, "ださ") == 0) {
               continue;  // Skip - likely part of ください pattern
             }
           }

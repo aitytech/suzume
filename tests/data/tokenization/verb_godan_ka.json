@@ -788,6 +788,263 @@
       ],
       "id": "ga_ku",
       "input": "星が輝く"
+    },
+    {
+      "description": "届くだろう。 - regression test",
+      "expected": [
+        {
+          "lemma": "届く",
+          "pos": "Verb",
+          "surface": "届く"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "kudarou",
+      "input": "届くだろう。"
+    },
+    {
+      "description": "働くだろう。 - regression test",
+      "expected": [
+        {
+          "lemma": "働く",
+          "pos": "Verb",
+          "surface": "働く"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "kudarou_2",
+      "input": "働くだろう。"
+    },
+    {
+      "description": "続くだろう。 - regression test",
+      "expected": [
+        {
+          "lemma": "続く",
+          "pos": "Verb",
+          "surface": "続く"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "kudarou_3",
+      "input": "続くだろう。"
+    },
+    {
+      "description": "開くだろう。 - regression test",
+      "expected": [
+        {
+          "lemma": "開く",
+          "pos": "Verb",
+          "surface": "開く"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "kudarou_4",
+      "input": "開くだろう。"
+    },
+    {
+      "description": "置くだろう。 - regression test",
+      "expected": [
+        {
+          "lemma": "置く",
+          "pos": "Verb",
+          "surface": "置く"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "kudarou_5",
+      "input": "置くだろう。"
+    },
+    {
+      "description": "動くだろう。 - regression test",
+      "expected": [
+        {
+          "lemma": "動く",
+          "pos": "Verb",
+          "surface": "動く"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "kudarou_6",
+      "input": "動くだろう。"
+    },
+    {
+      "description": "引くだろう。 - regression test",
+      "expected": [
+        {
+          "lemma": "引く",
+          "pos": "Verb",
+          "surface": "引く"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "kudarou_7",
+      "input": "引くだろう。"
+    },
+    {
+      "description": "咲くだろう。 - regression test",
+      "expected": [
+        {
+          "lemma": "咲く",
+          "pos": "Verb",
+          "surface": "咲く"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "kudarou_8",
+      "input": "咲くだろう。"
+    },
+    {
+      "description": "本が届くだろうか。 - regression test",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "届く",
+          "pos": "Verb",
+          "surface": "届く"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        }
+      ],
+      "id": "ga_kudarouka",
+      "input": "本が届くだろうか。"
+    },
+    {
+      "description": "書くだろう。 - regression test",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書く"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "kudarou_9",
+      "input": "書くだろう。"
+    },
+    {
+      "description": "聞くだろう。 - regression test",
+      "expected": [
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞く"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だろ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        }
+      ],
+      "id": "kudarou_10",
+      "input": "聞くだろう。"
     }
   ],
   "description": "Godan Ka-row verbs (五段カ行動詞) - verbs ending in く",
