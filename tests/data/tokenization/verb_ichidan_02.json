@@ -1433,6 +1433,50 @@
       ],
       "id": "ha_binai",
       "input": "本は錆びない。"
+    },
+    {
+      "description": "ことばをたしかめる。 - regression test",
+      "expected": [
+        {
+          "lemma": "ことば",
+          "pos": "Noun",
+          "surface": "ことば"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "たしかめる",
+          "pos": "Verb",
+          "surface": "たしかめる"
+        }
+      ],
+      "id": "kotobawotashikameru",
+      "input": "ことばをたしかめる。"
+    },
+    {
+      "description": "しごとをすすめる。 - regression test",
+      "expected": [
+        {
+          "lemma": "しごと",
+          "pos": "Noun",
+          "surface": "しごと"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "すすめる",
+          "pos": "Verb",
+          "surface": "すすめる"
+        }
+      ],
+      "id": "shigotowosusumeru",
+      "input": "しごとをすすめる。"
     }
   ],
   "description": "Ichidan verbs (一段動詞) (part 2/2)",

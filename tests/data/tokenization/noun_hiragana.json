@@ -156,6 +156,92 @@
       ],
       "id": "nokotobahayasashii",
       "input": "私のことばはやさしい。"
+    },
+    {
+      "description": "このすなはしろい。 - regression test",
+      "expected": [
+        {
+          "lemma": "この",
+          "pos": "Determiner",
+          "surface": "この"
+        },
+        {
+          "lemma": "すな",
+          "pos": "Noun",
+          "surface": "すな"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "しろい",
+          "pos": "Adjective",
+          "surface": "しろい"
+        }
+      ],
+      "id": "konosunahashiroi",
+      "input": "このすなはしろい。"
+    },
+    {
+      "description": "ひとごとではない。 - regression test",
+      "expected": [
+        {
+          "lemma": "ひとごと",
+          "pos": "Noun",
+          "surface": "ひとごと"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "hitogotodehanai",
+      "input": "ひとごとではない。"
+    },
+    {
+      "description": "それはやさしいことばだ。 - regression test",
+      "expected": [
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "やさしい",
+          "pos": "Adjective",
+          "surface": "やさしい"
+        },
+        {
+          "lemma": "ことば",
+          "pos": "Noun",
+          "surface": "ことば"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "sorehayasashiikotobada",
+      "input": "それはやさしいことばだ。"
     }
   ],
   "description": "noun_hiragana tests",

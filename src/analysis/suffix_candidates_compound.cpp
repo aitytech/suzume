@@ -425,6 +425,23 @@ bool hasFunctionWordChainDecomposition(const std::vector<char32_t>& codepoints, 
       return true;
     }
   }
+
+  // A determiner only ever stands in front of a nominal, never inside one, so a
+  // run that opens with one is two words however the rest reads. Requiring the
+  // remainder to be attested keeps this to runs that actually have a
+  // decomposition (この+すな) rather than any run that starts with those morae.
+  constexpr PartOfSpeechMask kAttestedTailMask = kLexicalMask | kFunctionMask |
+                                                 partOfSpeechMask(core::PartOfSpeech::Pronoun) |
+                                                 partOfSpeechMask(core::PartOfSpeech::Determiner);
+  for (size_t split = start_pos + 1; split < end_pos; ++split) {
+    if (!hasExactPartOfSpeech(*dict_manager, extractSubstring(codepoints, start_pos, split),
+                              partOfSpeechMask(core::PartOfSpeech::Determiner))) {
+      continue;
+    }
+    if (hasExactPartOfSpeech(*dict_manager, extractSubstring(codepoints, split, end_pos), kAttestedTailMask)) {
+      return true;
+    }
+  }
   return false;
 }
 

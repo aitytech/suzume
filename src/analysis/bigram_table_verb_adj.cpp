@@ -157,6 +157,12 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // predicate in the irrealis cannot follow it (できっこない is not で+きっ+こ).
       {EPOS::VerbOnbinkei, EPOS::VerbMizenkei, cost::kSevere},
 
+      // A terminal form closes its clause, so a second one cannot follow it
+      // without a particle or a conjunction in between. Two of them in a row is
+      // what a hiragana run collapses into when it is cut at a mora that also
+      // spells a short verb (す+すめる).
+      {EPOS::VerbShuushikei, EPOS::VerbShuushikei, cost::kStrong},
+
       // VerbOnbinkei → contracted progressive auxiliary (行っ+て+た).
       {EPOS::VerbOnbinkei, EPOS::AuxAspectIru, cost::kVeryStrongBonus},
 

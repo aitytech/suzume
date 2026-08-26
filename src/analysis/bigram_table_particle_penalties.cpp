@@ -59,6 +59,12 @@ void setParticleAndLexicalPenaltyCosts(BigramMatrix& table) {
       {EPOS::ParticleFinal, EPOS::Other, cost::kRare},
       {EPOS::ParticleConj, EPOS::Other, cost::kUncommon},
 
+      // A case particle marks an argument, so what follows it heads a phrase:
+      // a tense auxiliary has nothing to attach to there. The pair only arises
+      // when a kana run is cut at a mora that also spells the past auxiliary
+      // (を+た+し+かめる for を+たしかめる).
+      {EPOS::ParticleCase, EPOS::AuxTenseTa, cost::kSevere},
+
       // A sentence-final particle cannot serve as an attributive marker for
       // a following nominal.  In X+な+名詞, this blocks the homographic final
       // particle path and lets the copular attributive form compete instead.
