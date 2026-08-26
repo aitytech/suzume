@@ -331,8 +331,12 @@ float computePrefixSymbolBonus(const core::LatticeEdge& prev, const core::Lattic
   // E.g., はなはだ+し should not happen (はなはだしい is an adjective)
   // Valid ADV+verb patterns: ゆっくり+歩く (verb is longer/has kanji)
   // This prevents split like はなはだ+し+い when はなはだしい exists in dict
-  // Exception: dictionary verbs like ね(寝る), み(見る), で(出る) are valid
-  if (prev.pos == core::PartOfSpeech::Adverb && isSingleHiraganaVerbRenyokei(next) && !next.fromDictionary()) {
+  // Exception: dictionary verbs like ね(寝る), み(見る), で(出る) are valid, and
+  // so is the カ変 continuative. Its one mora is a cell of a closed irregular
+  // paradigm rather than a stem hypothesized from the adverb's tail, so it
+  // carries the same lexical weight as a listed entry (ぐっと+き+た).
+  if (prev.pos == core::PartOfSpeech::Adverb && isSingleHiraganaVerbRenyokei(next) && !next.fromDictionary() &&
+      next.conj_type != dictionary::ConjugationType::Kuru) {
     // This rule formerly contributed kVeryRare in two call sites. Preserve
     // that effective magnitude while owning the rule here only.
     SUZUME_CONNECTION_ADD(bonus, cost::kVeryRare + cost::kVeryRare);

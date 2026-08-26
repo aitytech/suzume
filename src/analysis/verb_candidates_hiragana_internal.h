@@ -65,6 +65,7 @@ void appendOnbinContractionCandidates(const std::vector<char32_t>& codepoints, s
 void appendKuruMizenkeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                   std::vector<UnknownCandidate>& candidates);
 void appendKuruRenyokeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                  const dictionary::DictionaryManager* dict_manager,
                                   std::vector<UnknownCandidate>& candidates);
 void appendKkoNominalizerCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                     std::vector<UnknownCandidate>& candidates);

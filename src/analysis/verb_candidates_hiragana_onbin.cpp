@@ -415,7 +415,27 @@ void appendKuruMizenkeiCandidates(const std::vector<char32_t>& codepoints, size_
                                          core::ExtendedPOS::VerbMizenkei));
 }
 
+// A listed adverb closes as firmly as a particle does: it takes no okurigana
+// and hosts no suffix, so the mora after one opens a new word. Without this the
+// irregular stem was absorbed into a fabricated verb spanning the adverb
+// (すぐき, もう+うき instead of すぐ+き, もう+き).
+bool followsListedAdverb(const std::vector<char32_t>& codepoints, size_t start_pos,
+                         const dictionary::DictionaryManager* dict_manager) {
+  constexpr size_t kMaxAdverbMorae = 4;
+  if (dict_manager == nullptr) {
+    return false;
+  }
+  for (size_t len = 1; len <= kMaxAdverbMorae && len <= start_pos; ++len) {
+    if (dict_manager->lookupExact(extractSubstring(codepoints, start_pos - len, start_pos),
+                                  core::PartOfSpeech::Adverb) != nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void appendKuruRenyokeiCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
+                                  const dictionary::DictionaryManager* dict_manager,
                                   std::vector<UnknownCandidate>& candidates) {
   // The one-mora renyokei き is lexical 来る at an ordinary predicate
   // boundary, but becomes the directional/aspectual auxiliary only after a
@@ -445,7 +465,8 @@ void appendKuruRenyokeiCandidates(const std::vector<char32_t>& codepoints, size_
   const bool left_boundary = start_pos == 0 ||
                              normalize::classifyChar(codepoints[start_pos - 1]) == normalize::CharType::Symbol ||
                              (normalize::isExtendedParticle(codepoints[start_pos - 1]) &&
-                              codepoints[start_pos - 1] != U'て' && codepoints[start_pos - 1] != U'で');
+                              codepoints[start_pos - 1] != U'て' && codepoints[start_pos - 1] != U'で') ||
+                             followsListedAdverb(codepoints, start_pos, dict_manager);
   if (!left_boundary) {
     return;
   }

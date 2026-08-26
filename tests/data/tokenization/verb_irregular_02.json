@@ -80,6 +80,72 @@
       ],
       "id": "gakuru",
       "input": "友達がくる"
+    },
+    {
+      "description": "irregular kuru continuative after a mimetic adverb",
+      "expected": [
+        {
+          "lemma": "ぐっと",
+          "pos": "Adverb",
+          "surface": "ぐっと"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Verb",
+          "surface": "き"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "gutttokita",
+      "input": "ぐっときた"
+    },
+    {
+      "description": "listed adverb closes the word before an irregular kuru continuative",
+      "expected": [
+        {
+          "lemma": "すぐ",
+          "pos": "Adverb",
+          "surface": "すぐ"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Verb",
+          "surface": "き"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "sugukita",
+      "input": "すぐきた"
+    },
+    {
+      "description": "listed adverb before an irregular kuru continuative and the te particle",
+      "expected": [
+        {
+          "lemma": "もう",
+          "pos": "Adverb",
+          "surface": "もう"
+        },
+        {
+          "lemma": "くる",
+          "pos": "Verb",
+          "surface": "き"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "moukite",
+      "input": "もうきて"
     }
   ],
   "description": "Irregular verbs (する、くる) (part 2/2)",

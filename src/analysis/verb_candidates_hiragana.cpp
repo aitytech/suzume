@@ -510,7 +510,7 @@ std::vector<UnknownCandidate> generateHiraganaVerbCandidates(const std::vector<c
   appendSuruInabilityCandidates(codepoints, start_pos, candidates);
   appendEruObligationCandidates(codepoints, start_pos, candidates);
   appendKuruMizenkeiCandidates(codepoints, start_pos, candidates);
-  appendKuruRenyokeiCandidates(codepoints, start_pos, candidates);
+  appendKuruRenyokeiCandidates(codepoints, start_pos, dict_manager, candidates);
 
   // Context-gated directional いく inflections after a clear te-form.
   appendIkuAuxiliaryCandidates(codepoints, start_pos, candidates);
