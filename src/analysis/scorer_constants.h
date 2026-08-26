@@ -259,11 +259,6 @@ constexpr float kBonusHiraganaAdjPerChar = 0.6F;
 constexpr float kBonusKanjiOkuriganaAdjBase = -1.5F;
 constexpr float kBonusKanjiOkuriganaAdjPerChar = 0.3F;
 constexpr float kBonusDictionaryNaAdjective = -1.0F;
-// A multi-mora pure-hiragana na-adjective is contested the same way its noun,
-// determiner and conjunction peers are: a shorter registered adverb ending
-// inside it takes the head and leaves the tail to a particle (もっと+も).
-// Without a comparable length bonus the whole entry loses that trade.
-constexpr float kBonusLongHiraganaNaAdjective = -2.5F;
 
 // Closed pronouns of three or more morae can otherwise lose to a pronoun plus
 // particle sequence (何かしら, あれこれ). Keep the registered lexical unit.

@@ -64,8 +64,12 @@ float computeAdjectiveDictBonus(const core::LatticeEdge& edge) {
     // fabricated verb/auxiliary or deverbal-noun decomposition before a
     // neutral boundary.  The length evidence belongs to the whole registered
     // adjective, independent of its individual surface.
+    // A multi-mora pure-hiragana entry is contested the way its noun,
+    // determiner and conjunction peers are: a shorter registered adverb ending
+    // inside it takes the head and leaves the tail to a particle (もっと+も).
+    // The minor bonus this once carried lost that trade by two full points.
     if (grammar::isPureHiragana(edge.surface) && normalize::utf8Length(edge.surface) >= 4) {
-      complete_adjective_bonus += sc::kBonusLongHiraganaNaAdjective;
+      complete_adjective_bonus += cost::kExtremeBonus;
     }
   } else if (isCompleteDictionaryAdjective(edge) && grammar::isPureHiragana(edge.surface) &&
              !utf8::endsWith(edge.surface, "ければ") && edge.surface != "ない" && edge.surface != "なく" &&
