@@ -1,0 +1,219 @@
+{
+  "cases": [
+    {
+      "description": "Classical kari cell after a subject noun in the same kanji run",
+      "expected": [
+        {
+          "lemma": "山",
+          "pos": "Noun",
+          "surface": "山"
+        },
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高かり"
+        },
+        {
+          "lemma": "けり",
+          "pos": "Auxiliary",
+          "surface": "けり"
+        }
+      ],
+      "id": "karikeri",
+      "input": "山高かりけり"
+    },
+    {
+      "description": "Kari cell whose stem carries okurigana, after a subject noun",
+      "expected": [
+        {
+          "lemma": "風",
+          "pos": "Noun",
+          "surface": "風"
+        },
+        {
+          "lemma": "冷たい",
+          "pos": "Adjective",
+          "surface": "冷たかり"
+        },
+        {
+          "lemma": "けり",
+          "pos": "Auxiliary",
+          "surface": "けり"
+        }
+      ],
+      "id": "takarikeri",
+      "input": "風冷たかりけり"
+    },
+    {
+      "description": "Irrealis kari cell after a subject noun in the same kanji run",
+      "expected": [
+        {
+          "lemma": "波",
+          "pos": "Noun",
+          "surface": "波"
+        },
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高から"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        }
+      ],
+      "id": "karazu",
+      "input": "波高からず"
+    },
+    {
+      "description": "Compound adjective stem stays whole in the kari cell",
+      "expected": [
+        {
+          "lemma": "心細い",
+          "pos": "Adjective",
+          "surface": "心細かり"
+        },
+        {
+          "lemma": "けり",
+          "pos": "Auxiliary",
+          "surface": "けり"
+        }
+      ],
+      "id": "karikeri_2",
+      "input": "心細かりけり"
+    },
+    {
+      "description": "Ablative kara before a negated verb is not a kari cell",
+      "expected": [
+        {
+          "lemma": "駅",
+          "pos": "Noun",
+          "surface": "駅"
+        },
+        {
+          "lemma": "から",
+          "pos": "Particle",
+          "surface": "から"
+        },
+        {
+          "lemma": "見える",
+          "pos": "Verb",
+          "surface": "見え"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        }
+      ],
+      "id": "kara_ezu",
+      "input": "駅から見えず"
+    },
+    {
+      "description": "Classical nidan terminal cell after a case particle",
+      "expected": [
+        {
+          "lemma": "この",
+          "pos": "Determiner",
+          "surface": "この"
+        },
+        {
+          "lemma": "賞",
+          "pos": "Noun",
+          "surface": "賞"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "受く",
+          "pos": "Verb",
+          "surface": "受く"
+        }
+      ],
+      "id": "kono_wo_ku",
+      "input": "この賞を受く"
+    },
+    {
+      "description": "Nidan terminal cell whose stem the dictionary reads as a verb",
+      "expected": [
+        {
+          "lemma": "朝",
+          "pos": "Noun",
+          "surface": "朝"
+        },
+        {
+          "lemma": "早い",
+          "pos": "Adjective",
+          "surface": "早く"
+        },
+        {
+          "lemma": "起く",
+          "pos": "Verb",
+          "surface": "起く"
+        }
+      ],
+      "id": "ku_ku",
+      "input": "朝早く起く"
+    },
+    {
+      "description": "Negative auxiliary after an inflected stem is not a nidan terminal cell",
+      "expected": [
+        {
+          "lemma": "影",
+          "pos": "Noun",
+          "surface": "影"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ず"
+        }
+      ],
+      "id": "wo_zu",
+      "input": "影を見ず"
+    },
+    {
+      "description": "Kakari particle stays a token of its own after a demonstrative",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "ぞ",
+          "pos": "Particle",
+          "surface": "ぞ"
+        },
+        {
+          "lemma": "という",
+          "pos": "Determiner",
+          "surface": "という"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "物"
+        }
+      ],
+      "id": "korezotoiu",
+      "input": "これぞという物"
+    }
+  ],
+  "description": "classical tests",
+  "version": "1.0"
+}

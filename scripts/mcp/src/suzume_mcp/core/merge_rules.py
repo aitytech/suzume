@@ -44,12 +44,14 @@ from .merge_postprocessors import (
     _postprocess_ha_row_godan,
     _postprocess_honorific_split,
     _postprocess_izenkei_concessive,
+    _postprocess_kakari_pronoun_split,
     _postprocess_kamo,
     _postprocess_kanji_merge,
     _postprocess_ku_nominalization,
     _postprocess_kuruwa,
     _postprocess_nde_split,
     _postprocess_nickname_merge,
+    _postprocess_nidan_cell,
     _postprocess_nominal_zukeru,
     _postprocess_noni,
     _postprocess_onomatopoeia_tto_merge,
@@ -75,25 +77,40 @@ _CLASSICAL_ADJECTIVE_CELLS: tuple[tuple[str, str, str], ...] = (
 _CLASSICAL_AUXILIARY_LEMMAS: dict[str, str] = {"ず": "ぬ", "し": "き"}
 
 
-def _classical_adjective_cells(remaining: str) -> tuple[dict, dict] | None:
-    """Split a classical kanji i-adjective cell from the function word it hosts."""
+def _classical_adjective_cells(remaining: str) -> list[dict] | None:
+    """Split a classical i-adjective cell from the function word it hosts.
+
+    The stem is the longest suffix of the leading kanji run that the reference
+    dictionary conjugates, not the whole run: a subject noun stands in the same
+    run as the adjective it heads (山|高かりけり, 波|高からず), and a stem with
+    okurigana carries hiragana of its own (冷た|かり).  Taking the run whole
+    builds a non-word out of the noun and leaves the cell to fall back on an
+    unrelated verb.
+    """
     for inflection, tails, tail_pos in _CLASSICAL_ADJECTIVE_CELLS:
         match = regex.match(
-            rf"^(\p{{Han}}+)({inflection})({tails})(?=$|[^\p{{Hiragana}}])",
+            rf"^(\p{{Han}}+\p{{Hiragana}}*?)({inflection})({tails})(?=$|[^\p{{Hiragana}}])",
             remaining,
         )
         if match is None:
             continue
-        stem, cell, tail = match.groups()
-        # Every cell of the paradigm shares the adjective's stem, so swapping the
-        # matched ending for the 未然形 one gives the probe the dictionary knows.
-        lemma = classical_adjective_lemma(stem + cell[: -len(KARI_MIZENKEI_CELL)] + KARI_MIZENKEI_CELL)
-        if lemma is None:
-            return None
-        return (
-            {"surface": stem + cell, "pos": "形容詞", "lemma": lemma},
-            {"surface": tail, "pos": tail_pos, "lemma": _CLASSICAL_AUXILIARY_LEMMAS.get(tail, tail)},
-        )
+        run, cell, tail = match.groups()
+        for offset in range(len(run)):
+            stem = run[offset:]
+            if not regex.match(r"^\p{Han}", stem):
+                break
+            # Every cell of the paradigm shares the adjective's stem, so swapping the
+            # matched ending for the 未然形 one gives the probe the dictionary knows.
+            lemma = classical_adjective_lemma(stem + cell[: -len(KARI_MIZENKEI_CELL)] + KARI_MIZENKEI_CELL)
+            if lemma is None:
+                continue
+            host = run[:offset]
+            return [
+                *([{"surface": host, "pos": "名詞", "lemma": host}] if host else []),
+                {"surface": stem + cell, "pos": "形容詞", "lemma": lemma},
+                {"surface": tail, "pos": tail_pos, "lemma": _CLASSICAL_AUXILIARY_LEMMAS.get(tail, tail)},
+            ]
+        return None
     return None
 
 
@@ -342,15 +359,14 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
         if not merged:
             cells = _classical_adjective_cells(remaining)
             if cells is not None:
-                adjective, function_word = cells
-                source_span = adjective["surface"] + function_word["surface"]
+                source_span = "".join(cell["surface"] for cell in cells)
                 consumed = ""
                 j = i
                 while j < len(tokens) and len(consumed) < len(source_span):
                     consumed += tokens[j].get("surface", "")
                     j += 1
                 if consumed == source_span:
-                    result.extend((adjective, function_word))
+                    result.extend(cells)
                     i = j
                     merged = True
                     if applied_rule is None:
@@ -1735,6 +1751,8 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
     result, applied_rule = _postprocess_adj_bungo(result, applied_rule)
     result, applied_rule = _postprocess_adj_kari(result, applied_rule)
     result, applied_rule = _postprocess_ha_row_godan(result, applied_rule)
+    result, applied_rule = _postprocess_nidan_cell(result, applied_rule)
+    result, applied_rule = _postprocess_kakari_pronoun_split(result, applied_rule)
     result, applied_rule = _postprocess_classical_mu(result, applied_rule)
     result, applied_rule = _postprocess_ku_nominalization(result, applied_rule)
     result, applied_rule = _postprocess_classical_shimu(result, applied_rule)

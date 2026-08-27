@@ -1,5 +1,7 @@
 """Focused post-processing passes used by the MeCab merge pipeline."""
 
+from functools import cache
+
 import regex
 
 from .constants import (
@@ -12,6 +14,7 @@ from .constants import (
     PREFIX_EXCEPTIONS,
     SEARCH_UNIT_COMPOUNDS,
 )
+from .mecab import is_single_token_of_pos, mecab_analyze
 
 _IDEOGRAPHIC_SEQUENCE = regex.compile(r"^[\p{Han}\uFE00-\uFE0F\U000E0100-\U000E01EF]+$")
 
@@ -847,6 +850,117 @@ def _postprocess_ha_row_godan(result: list[dict], applied_rule: str | None) -> t
         merged.append(token)
         idx += 1
     return merged, applied_rule
+
+
+# The 終止形 of a classical 二段 verb is its kanji stem plus one U-row kana.  The
+# modern descendant is 一段, so the same stem takes the row's E-row or I-row kana
+# plus る, and that headword is what the reference dictionary does carry.
+_NIDAN_TERMINAL_ROWS: dict[str, tuple[str, str]] = {
+    "う": ("え", "い"),
+    "く": ("け", "き"),
+    "ぐ": ("げ", "ぎ"),
+    "す": ("せ", "し"),
+    "つ": ("て", "ち"),
+    "づ": ("で", "じ"),
+    "ぬ": ("ね", "に"),
+    "ふ": ("え", "い"),
+    "ぶ": ("べ", "び"),
+    "む": ("め", "み"),
+    "ゆ": ("え", "い"),
+    "る": ("れ", "り"),
+}
+# Those same kana also spell classical auxiliaries that attach to a 未然形 or a
+# 連用形 (見|つ, 見|ぬ, 見|む).  After an inflected verb the kana is the auxiliary,
+# so only a stem the dictionary did not inflect can head a 二段 terminal cell.
+_NIDAN_AUXILIARY_HOMOGRAPHS = frozenset({"す", "つ", "ぬ", "ふ", "む", "る"})
+_NIDAN_INFLECTED_STEM_FORMS = frozenset({"未然形", "連用形"})
+
+
+_NIDAN_CELL = regex.compile(rf"^(\p{{Han}}+)([{''.join(_NIDAN_TERMINAL_ROWS)}])(る?)$")
+
+
+@cache
+def _nidan_terminal_lemma(stem: str, terminal: str) -> str | None:
+    """Return the 終止形 when a kanji stem plus a U-row kana is a classical 二段 verb."""
+    for vowel in _NIDAN_TERMINAL_ROWS[terminal]:
+        if is_single_token_of_pos(stem + vowel + "る", "動詞"):
+            return stem + terminal
+    return None
+
+
+def _postprocess_nidan_cell(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Rebuild the finite cells of a classical 二段 verb (受く, 越ゆ, 求むる, 流るる).
+
+    終止形 is the kanji stem plus one U-row kana and 連体形 adds る, but the
+    reference dictionary carries only the modern 一段 headword, so the kana falls
+    out as whatever else it can spell — an adjective stem (受+く as くい), a bare
+    noun (越+ゆ), the カ変 くる, or the 完了 つ — and the kanji is left as a noun
+    that is not a word on its own.  Asking the dictionary for the modern headword
+    the same stem builds decides whether the pair is a verb, without listing the
+    classical paradigm.  Where the two tokens fall is not fixed (求む|る but
+    見|ゆる), so the window is matched on its combined surface.
+    """
+    merged: list[dict] = []
+    idx = 0
+    while idx < len(result):
+        token = result[idx]
+        following = result[idx + 1] if idx + 1 < len(result) else None
+        cell = _NIDAN_CELL.match(token.get("surface", "") + following.get("surface", "")) if following else None
+        if cell is not None:
+            stem, terminal, attributive = cell.groups()
+            # The same kana spell classical auxiliaries that attach to a 未然形 or
+            # a 連用形 (見|つ, 見|ぬ, 見|つる).  After a stem the dictionary
+            # inflected, the kana is that auxiliary and not part of the verb.
+            homograph = (
+                terminal in _NIDAN_AUXILIARY_HOMOGRAPHS
+                and token.get("pos") == "動詞"
+                and token.get("conj_form") in _NIDAN_INFLECTED_STEM_FORMS
+            )
+            lemma = None if homograph else _nidan_terminal_lemma(stem, terminal)
+            if lemma is not None:
+                merged.append({"surface": lemma + attributive, "pos": "動詞", "lemma": lemma})
+                idx += 2
+                if applied_rule is None:
+                    applied_rule = "classical-nidan-cell"
+                continue
+        merged.append(token)
+        idx += 1
+    return merged, applied_rule
+
+
+# The closed set of 係助詞 a 係り結び opens with.  The reference dictionary
+# lexicalizes one demonstrative + 係助詞 pair as an adverb, which buries the
+# particle that governs the clause's final form.
+_KAKARI_PARTICLES = ("ぞ", "こそ", "なむ", "や")
+
+
+@cache
+def _reads_as_pronoun(surface: str) -> bool:
+    """Whether the reference dictionary reads a surface as exactly one pronoun."""
+    tokens = mecab_analyze(surface)
+    return len(tokens) == 1 and tokens[0].get("pos_sub1") == "代名詞" and tokens[0].get("surface") == surface
+
+
+def _postprocess_kakari_pronoun_split(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Split a demonstrative that the dictionary fused with its 係助詞 (これぞ).
+
+    A 係助詞 governs the form its clause ends in, so burying it inside a
+    lexicalized adverb loses the only token that explains the 結び.  The
+    demonstrative in front of it is a pronoun the dictionary carries on its own.
+    """
+    split: list[dict] = []
+    for token in result:
+        surface = token.get("surface", "")
+        particle = next((p for p in _KAKARI_PARTICLES if surface.endswith(p)), None)
+        head = surface[: -len(particle)] if particle else ""
+        if token.get("pos") == "副詞" and head and _reads_as_pronoun(head):
+            split.append({"surface": head, "pos": "名詞", "pos_sub1": "代名詞", "lemma": head})
+            split.append({"surface": particle, "pos": "助詞", "pos_sub1": "係助詞", "lemma": particle})
+            if applied_rule is None:
+                applied_rule = "kakari-pronoun-split"
+            continue
+        split.append(token)
+    return split, applied_rule
 
 
 def _postprocess_nickname_merge(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
