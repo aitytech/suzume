@@ -1,0 +1,53 @@
+{
+  "cases": [
+    {
+      "description": "Single-kanji ichidan stem keeps its te-form boundary before a clause comma",
+      "expected": [
+        {
+          "lemma": "手続",
+          "pos": "Noun",
+          "surface": "手続"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "経る",
+          "pos": "Verb",
+          "surface": "経"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "正式",
+          "pos": "Adjective",
+          "surface": "正式"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "決定",
+          "pos": "Noun",
+          "surface": "決定"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "wo_te_ni_suru",
+      "input": "手続を経て、正式に決定する"
+    }
+  ],
+  "description": "literary tests",
+  "version": "1.0"
+}

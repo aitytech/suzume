@@ -200,7 +200,6 @@ enum class GuardOrigin {
   HiraganaDerived,
   KanjiFinalization,
   KanjiMizenkei,
-  CompoundVerbEmit,
   KanjiAdjective,
   KanjiCompoundAdjective,
 };
@@ -211,11 +210,10 @@ struct GuardWiring {
   std::string_view origin_name;
 };
 
-inline constexpr std::array<GuardWiring, 9> kGuardWiring = {{
+inline constexpr std::array<GuardWiring, 8> kGuardWiring = {{
     {GuardMember::EmbedTeAuxiliary, GuardOrigin::HiraganaInflection, "hiragana_inflection"},
     {GuardMember::EmbedTeAuxiliary, GuardOrigin::KanjiFinalization, "kanji_finalization"},
     {GuardMember::EmbedTeAuxiliary, GuardOrigin::KanjiMizenkei, "kanji_mizenkei"},
-    {GuardMember::EmbedTeAuxiliary, GuardOrigin::CompoundVerbEmit, "compound_verb_emit"},
     {GuardMember::EmbedTeMiruAuxiliary, GuardOrigin::HiraganaInflection, "hiragana_inflection"},
     {GuardMember::EmbedTeMiruAuxiliary, GuardOrigin::HiraganaDerived, "hiragana_derived"},
     {GuardMember::EmbedTeMiruAuxiliary, GuardOrigin::KanjiFinalization, "kanji_finalization"},

@@ -842,6 +842,60 @@
       ],
       "id": "wo_keta",
       "input": "荷物を片付けた"
+    },
+    {
+      "description": "Conjunctive te between two verbs is not a lexical compound boundary",
+      "expected": [
+        {
+          "lemma": "家",
+          "pos": "Noun",
+          "surface": "家"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "出る",
+          "pos": "Verb",
+          "surface": "出"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "歩く",
+          "pos": "Verb",
+          "surface": "歩く"
+        }
+      ],
+      "id": "wo_te_ku",
+      "input": "家を出て歩く"
+    },
+    {
+      "description": "Ichidan continuative ending in te still heads a lexical compound",
+      "expected": [
+        {
+          "lemma": "ゴミ",
+          "pos": "Noun",
+          "surface": "ゴミ"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "捨て去る",
+          "pos": "Verb",
+          "surface": "捨て去る"
+        }
+      ],
+      "id": "wo_te_ru",
+      "input": "ゴミを捨て去る"
     }
   ],
   "description": "Compound verbs (part 5/5)",

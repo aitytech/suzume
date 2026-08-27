@@ -148,12 +148,12 @@ void appendIchidanRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
         // not 感じ(NOUN) + さ + せる); standalone 感じ stays NOUN.
         bool verb_aux_follows = continuation == U'た' || continuation == U'て' ||
                                 vh::masuAuxFollowsAt(codepoints, renyokei_end) || causative_follows || passive_follows;
-        // A dictionary-verified single-kanji Ichidan base followed by て and
-        // a contracted progressive or past marker is a te-form boundary
-        // (見+てる, 見+て+ん, 見+て+た), not a fabricated verb such as 見てる.
-        const bool single_kanji_te_form = is_single_kanji && first_hira == U'て' &&
-                                          (continuation == U'た' || continuation == U'る' || continuation == U'ん') &&
-                                          vh::isSingleKanjiIchidan(codepoints[start_pos]);
+        // A single-kanji Ichidan base followed by て is a te-form boundary
+        // (見+て+る, 見+て+た, 経+て). No member of that closed class heads a
+        // lexical verb whose own base ends in てる, so the mora is the
+        // conjunctive particle and never the stem of a fabricated 見てる/経てる.
+        const bool single_kanji_te_form =
+            is_single_kanji && first_hira == U'て' && vh::isSingleKanjiIchidan(codepoints[start_pos]);
         // An Ichidan verb uses the same stem before the classical negative
         // auxiliaries ぬ/ず/ざる/ざれ as it does before ない.  In this
         // environment the candidate surface is the full stem, so recover its

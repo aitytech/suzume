@@ -30,6 +30,25 @@ bool followsClosedSuffix(const std::vector<char32_t>& codepoints, size_t start_p
                                                    core::PartOfSpeech::Suffix) != nullptr;
 }
 
+// Whether the て/で in front of V2 is the conjunctive particle rather than the
+// okurigana of an Ichidan V1 whose own base ends in てる.
+bool hasConjunctiveTeBeforeV2(const std::vector<char32_t>& codepoints, size_t start_pos, size_t v2_start) {
+  if (v2_start <= start_pos + 1 || v2_start > codepoints.size()) {
+    return false;
+  }
+  if (codepoints[v2_start - 1] != core::hiragana::kTe && codepoints[v2_start - 1] != U'で') {
+    return false;
+  }
+  // Okurigana attaches to a kanji stem; inflection kana in front of the mora
+  // mean the verb reached it by conjugating (食べ+て, 持っ+て, 読ん+で).
+  if (normalize::classifyChar(codepoints[v2_start - 2]) != normalize::CharType::Kanji) {
+    return true;
+  }
+  // A bare single kanji of the closed Ichidan class is the continuative itself,
+  // so the mora behind it is the particle (出+て, 着+て) rather than okurigana.
+  return v2_start == start_pos + 2 && verb_helpers::isSingleKanjiIchidan(codepoints[start_pos]);
+}
+
 bool consumesSahenConditional(const std::vector<char32_t>& codepoints, size_t start_pos, size_t compound_end_pos,
                               const dictionary::DictionaryManager& dict_manager) {
   if (compound_end_pos <= start_pos + 2 || compound_end_pos + 1 >= codepoints.size() ||
@@ -139,13 +158,15 @@ void emitCompoundVerbCandidates(core::Lattice& lattice, std::string_view text, c
       return;
     }
 
-    // An internal te-form followed by a benefactive or request auxiliary is
-    // compositional (見+て+あげる), not a lexical V1+V2 compound. The helper
-    // preserves ordinary compounds such as 取り上げる, which have no te-form.
-    if (verb_helpers::guardIsWired(verb_helpers::GuardMember::EmbedTeAuxiliary,
-                                   verb_helpers::GuardOrigin::CompoundVerbEmit) &&
-        verb_helpers::embedsTeFormAuxiliary(compound_surface)) {
-      SUZUME_DEBUG_LOG_VERBOSE("[COMPOUND_EMIT] rejected embedded te auxiliary\n");
+    // A lexical compound joins V1's continuative to V2, and て is a conjunctive
+    // particle rather than a continuative ending. The two readings are told
+    // apart by what the mora attaches to: an Ichidan verb whose base ends in
+    // てる spells the て as okurigana straight after its kanji stem (捨て去る,
+    // 立て直す), while a te-form reaches the mora through inflection kana
+    // (食べ+て, 持っ+て, 読ん+で) or through the bare stem of the closed
+    // single-kanji Ichidan class (出+て+歩く, 着+て+出かける).
+    if (hasConjunctiveTeBeforeV2(codepoints, start_pos, v2_start)) {
+      SUZUME_DEBUG_LOG_VERBOSE("[COMPOUND_EMIT] rejected conjunctive te before V2\n");
       return;
     }
 
