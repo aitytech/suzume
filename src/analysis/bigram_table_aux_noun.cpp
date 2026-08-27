@@ -742,7 +742,9 @@ void setAuxiliaryAndNounCosts(BigramMatrix& table) {
       // The volitional/conjectural auxiliary attaches to an irrealis form, so
       // it cannot follow a bare nominal either. Without this a run of kanji
       // absorbs a following verb stem and leaves its ending behind
-      // (本読む → 本読 + む).
+      // (本読む → 本読 + む). The literary register does host the conjectural
+      // on a nominal predicate with an elided copula (確認+らむ), which is why
+      // this stays a penalty rather than a prohibition.
       {EPOS::Noun, EPOS::AuxVolitional, cost::kStrong},
 
       // A verb irrealis form cannot directly precede an independent onbin

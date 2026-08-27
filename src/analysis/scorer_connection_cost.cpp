@@ -69,9 +69,16 @@ float computeLateLexicalBoundaryBonus(const core::LatticeEdge& prev, const core:
   const bool emphatic_adverb_before_past = prev.pos == core::PartOfSpeech::Adverb &&
                                            utf8::endsWith(prev.surface, "っ") &&
                                            next.extended_pos == core::ExtendedPOS::AuxTenseTa;
+  // The literary register hosts the conjectural on a nominal predicate whose
+  // copula is elided (確認+らむ), but a single unregistered kanji is not that
+  // nominal: it is what is left when a terminal verb is cut at its own final
+  // mora and the mora reads as the volitional (言うとも as 言+う+とも).
+  const bool volitional_after_stray_kanji = next.extended_pos == core::ExtendedPOS::AuxVolitional &&
+                                            prev.pos == core::PartOfSpeech::Noun && !prev.fromDictionary() &&
+                                            normalize::utf8Length(prev.surface) == 1;
   if (invalid_aspect_iru_attachment || invalid_aspect_iku_attachment || incomplete_potential_before_symbol ||
       terminal_verb_before_nominative_case || nonterminal_predicate_before_assertive_copula ||
-      emphatic_adverb_before_past) {
+      emphatic_adverb_before_past || volitional_after_stray_kanji) {
     SUZUME_CONNECTION_ADD(bonus, cost::kAlmostNever);
   }
   if ((prev.extended_pos == core::ExtendedPOS::VerbRenyokei || prev.extended_pos == core::ExtendedPOS::VerbOnbinkei) &&

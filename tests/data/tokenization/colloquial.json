@@ -261,6 +261,40 @@
       ],
       "id": "sorosoroyannaki",
       "input": "そろそろやんなきゃ"
+    },
+    {
+      "description": "Terminal verb is not cut at its own final mora before the concessive",
+      "expected": [
+        {
+          "lemma": "言う",
+          "pos": "Verb",
+          "surface": "言う"
+        },
+        {
+          "lemma": "とも",
+          "pos": "Particle",
+          "surface": "とも"
+        }
+      ],
+      "id": "utomo",
+      "input": "言うとも"
+    },
+    {
+      "description": "Same boundary on another wa-row godan terminal",
+      "expected": [
+        {
+          "lemma": "思う",
+          "pos": "Verb",
+          "surface": "思う"
+        },
+        {
+          "lemma": "とも",
+          "pos": "Particle",
+          "surface": "とも"
+        }
+      ],
+      "id": "utomo_2",
+      "input": "思うとも"
     }
   ],
   "description": "colloquial tests",

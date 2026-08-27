@@ -150,6 +150,10 @@ constexpr float kBonusFormalParticleBinding = scale::kStrongBonus;
 constexpr float kPenaltyAmbiguousSuffixBoundary = scale::kStrong;
 constexpr float kPenaltyConjunctionInternalNoun = scale::kMinor;
 constexpr float kBonusHonorificGeneratedRenyokei = scale::kMinorBonus;
+// Behind a verb's terminal form the concessive とも competes with the quotative
+// と plus the focus も, among the most productive sequences in the language, so
+// the closed particle needs more than the preference its other hosts give it.
+constexpr float kBonusConcessiveTomoAfterTerminal = scale::kDoubleVeryStrongBonus;
 // The 連用形→意志 bigram cell is a penalty because the modern volitional
 // selects the irrealis. The classical past conjecture けむ is the one member of
 // that category which does take the continuative, so its rule both cancels the
