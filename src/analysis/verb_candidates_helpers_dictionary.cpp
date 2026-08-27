@@ -131,6 +131,31 @@ bool followsCaseParticle(const dictionary::DictionaryManager* dict_manager, cons
   return false;
 }
 
+bool followsCaseMarkedArgument(const dictionary::DictionaryManager* dict_manager,
+                               const std::vector<char32_t>& codepoints, size_t pos) {
+  // A focus particle stacks on top of the case marking without changing the
+  // argument structure, and more than one may stack (半数に+も, 東京に+は+も…).
+  constexpr size_t kMaxStackedFocusParticles = 2;
+  size_t argument_end = pos;
+  for (size_t stacked = 0; stacked <= kMaxStackedFocusParticles; ++stacked) {
+    if (followsCaseParticle(dict_manager, codepoints, argument_end)) {
+      return true;
+    }
+    if (dict_manager == nullptr || argument_end == 0) {
+      return false;
+    }
+    const auto* particle = dict_manager->lookupExact(extractSubstring(codepoints, argument_end - 1, argument_end),
+                                                     core::PartOfSpeech::Particle);
+    if (particle == nullptr || (particle->extended_pos != core::ExtendedPOS::ParticleBinding &&
+                                particle->extended_pos != core::ExtendedPOS::ParticleTopic &&
+                                particle->extended_pos != core::ExtendedPOS::ParticleAdverbial)) {
+      return false;
+    }
+    --argument_end;
+  }
+  return false;
+}
+
 bool isCommaClauseChainingRenyokei(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
                                    const dictionary::DictionaryManager* dict_manager) {
   if (dict_manager == nullptr || start_pos == 0 || end_pos >= codepoints.size() || codepoints[end_pos] != U'、') {

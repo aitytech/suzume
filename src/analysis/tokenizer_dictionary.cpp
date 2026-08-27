@@ -48,12 +48,6 @@ bool isKanjiRunFollowedByAttributiveNa(const std::vector<char32_t>& codepoints, 
   return pos > start_pos && pos < codepoints.size() && codepoints[pos] == U'な';
 }
 
-// The passive される may follow a productive Sahen nominal, but an arbitrary
-// one-kanji unknown noun is not enough evidence for that omitted する. A
-// dictionary noun can establish the lexical exception (愛+さ+れる), while an
-// unregistered multi-kanji Sino-Japanese run remains a productive Sahen host
-// (反映+さ+れる). This leaves a one-kanji verb's own irrealis candidate to
-// own the boundary in 許さ+れる.
 // Whether a dictionary verb ends exactly at @p end_pos while starting before
 // @p start_pos, i.e. the span in question is the tail of a longer headword.
 bool endsDictionaryVerbSpanningBack(const dictionary::DictionaryManager& dict_manager,
@@ -70,6 +64,12 @@ bool endsDictionaryVerbSpanningBack(const dictionary::DictionaryManager& dict_ma
   return false;
 }
 
+// The passive される may follow a productive Sahen nominal, but an arbitrary
+// one-kanji unknown noun is not enough evidence for that omitted する. A
+// dictionary noun can establish the lexical exception (愛+さ+れる), while an
+// unregistered multi-kanji Sino-Japanese run remains a productive Sahen host
+// (反映+さ+れる). This leaves a one-kanji verb's own irrealis candidate to
+// own the boundary in 許さ+れる.
 bool hasPrecedingSahenNominal(const core::Lattice& lattice, size_t end_pos) {
   return core::anyEdgeEndingAt(lattice, end_pos, [](const core::LatticeEdge& edge) {
     // Sahen is productive over both nominal scripts: a kanji compound and a

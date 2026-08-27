@@ -1,0 +1,102 @@
+{
+  "cases": [
+    {
+      "description": "Focus particle stacked on a case particle still licenses the predicate reading",
+      "expected": [
+        {
+          "lemma": "半数",
+          "pos": "Noun",
+          "surface": "半数"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "達す",
+          "pos": "Verb",
+          "surface": "達し"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "nimo_shita_2",
+      "input": "半数にも達した"
+    },
+    {
+      "description": "One-kanji sahen continuative after a stacked focus particle",
+      "expected": [
+        {
+          "lemma": "南",
+          "pos": "Noun",
+          "surface": "南"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "も",
+          "pos": "Particle",
+          "surface": "も"
+        },
+        {
+          "lemma": "面す",
+          "pos": "Verb",
+          "surface": "面し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "いる",
+          "pos": "Auxiliary",
+          "surface": "いる"
+        }
+      ],
+      "id": "nimo_shiteiru",
+      "input": "南にも面している"
+    },
+    {
+      "description": "Bare noun plus suru chain keeps its boundary without a case-marked argument",
+      "expected": [
+        {
+          "lemma": "心",
+          "pos": "Noun",
+          "surface": "心"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "聞く",
+          "pos": "Verb",
+          "surface": "聞く"
+        }
+      ],
+      "id": "shite_ku",
+      "input": "心して聞く"
+    }
+  ],
+  "description": "sino tests",
+  "version": "1.0"
+}

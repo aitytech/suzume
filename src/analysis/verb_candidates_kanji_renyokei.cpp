@@ -591,14 +591,10 @@ void appendGodanSaRenyokeiCandidates(const std::vector<char32_t>& codepoints, si
             continue;
           }
           if (hira_chars <= 1) {
-            const std::string preceding_surface =
-                start_pos > 0 ? extractSubstring(codepoints, start_pos - 1, start_pos) : std::string();
-            const auto* preceding_particle =
-                dict_manager != nullptr && !preceding_surface.empty()
-                    ? dict_manager->lookupExact(preceding_surface, core::PartOfSpeech::Particle)
-                    : nullptr;
-            const bool follows_case_particle =
-                preceding_particle != nullptr && preceding_particle->extended_pos == core::ExtendedPOS::ParticleCase;
+            // A focus particle stacks on the case marking without changing the
+            // argument structure, so 半数に+も+達した carries the same evidence
+            // for a predicate reading as 半数に+達した does.
+            const bool follows_case_particle = vh::followsCaseMarkedArgument(dict_manager, codepoints, start_pos);
             const bool sahen_past_after_ichidan_stem =
                 hira_chars == 1 && codepoints[kanji_end] == U'し' && renyokei_end < codepoints.size() &&
                 codepoints[renyokei_end] == U'た' && vh::isSingleKanjiIchidan(codepoints[start_pos]) &&

@@ -154,6 +154,16 @@ bool hasConjunctiveParticleDictionaryEntry(const dictionary::DictionaryManager* 
 bool followsCaseParticle(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
                          size_t pos);
 
+/**
+ * @brief Whether a case-marked argument ends at @p pos, through any focus particles
+ *
+ * A focus particle stacks on top of the case marking without changing the
+ * argument structure, so the predicate evidence a case particle supplies
+ * survives it (半数に+も+達した reads like 半数に+達した).
+ */
+bool followsCaseMarkedArgument(const dictionary::DictionaryManager* dict_manager,
+                               const std::vector<char32_t>& codepoints, size_t pos);
+
 // A bare continuative can chain clauses before the literal Japanese comma
 // when a non-quotative case particle or quantified focus phrase licenses a
 // predicate on its left.
