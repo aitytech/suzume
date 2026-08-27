@@ -291,7 +291,16 @@ bool isDurationPredicateKakaru(std::string_view surface);
  * @param second Surface of the following final particle
  * @return True for productive final-particle sequences
  */
-bool isFinalParticleStack(std::string_view first, std::string_view second);
+bool isFinalParticleStackTail(std::string_view surface);
+
+/**
+ * @brief Whether a final particle also has a non-final reading of its own
+ *
+ * か, よ and わ are the members whose other class (focus particle, binding
+ * particle) the lattice may have selected, so in a stack they need retagging;
+ * the remaining members have no such homograph.
+ */
+bool isAmbiguousFinalParticleStackHead(std::string_view surface);
 
 /**
  * @brief Whether a noun surface ends with an administrative suffix

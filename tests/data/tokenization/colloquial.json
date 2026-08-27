@@ -295,6 +295,60 @@
       ],
       "id": "utomo_2",
       "input": "思うとも"
+    },
+    {
+      "description": "Kana adverb containing a sokuon stays one token",
+      "expected": [
+        {
+          "lemma": "けっこう",
+          "pos": "Adverb",
+          "surface": "けっこう"
+        },
+        {
+          "lemma": "遠い",
+          "pos": "Adjective",
+          "surface": "遠い"
+        },
+        {
+          "lemma": "場所",
+          "pos": "Noun",
+          "surface": "場所"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        }
+      ],
+      "id": "kettkou_i_da",
+      "input": "けっこう遠い場所だ"
+    },
+    {
+      "description": "Final particle stack licensed by its confirmation-seeking tail",
+      "expected": [
+        {
+          "lemma": "そう",
+          "pos": "Adjective",
+          "surface": "そう"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "だ"
+        },
+        {
+          "lemma": "っけ",
+          "pos": "Particle",
+          "surface": "っけ"
+        },
+        {
+          "lemma": "ね",
+          "pos": "Particle",
+          "surface": "ね"
+        }
+      ],
+      "id": "soudattkene",
+      "input": "そうだっけね"
     }
   ],
   "description": "colloquial tests",

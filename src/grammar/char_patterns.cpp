@@ -325,10 +325,12 @@ bool isDurationPredicateKakaru(std::string_view surface) {
   return surface == "かかる";
 }
 
-bool isFinalParticleStack(std::string_view first, std::string_view second) {
-  return (first == "か" && (second == "な" || second == "ね")) ||
-         (first == "よ" && (second == "ね" || second == "な")) || (first == "わ" && second == "ね") ||
-         (first == "ぜ" && second == "よ");
+bool isFinalParticleStackTail(std::string_view surface) {
+  return utf8::equalsAny(surface, {"ね", "な", "よ"});
+}
+
+bool isAmbiguousFinalParticleStackHead(std::string_view surface) {
+  return utf8::equalsAny(surface, {"か", "よ", "わ"});
 }
 
 bool endsWithAdministrativeSuffix(std::string_view surface) {

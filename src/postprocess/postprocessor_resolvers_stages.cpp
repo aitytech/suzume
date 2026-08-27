@@ -545,10 +545,10 @@ void resolveFinalMorphemeRoles(std::vector<core::Morpheme>& result, const dictio
   if (result.size() >= 2 && result.back().surface == "ね") {
     auto& previous = result[result.size() - 2];
     auto& final_ne = result.back();
-    const bool stacked_particles = grammar::isFinalParticleStack(previous.surface, final_ne.surface);
     // An irrealis stem is not a completed predicate: it exists only to carry an
     // auxiliary, so a trailing ね behind one is that auxiliary (飲ま+ね) rather
     // than the final particle it would be after a finite form (飲む+ね).
+    const bool stacked_particles = grammar::isAmbiguousFinalParticleStackHead(previous.surface);
     const bool irrealis_host = previous.extended_pos == core::ExtendedPOS::VerbMizenkei ||
                                previous.extended_pos == core::ExtendedPOS::AdjMizenkei;
     const bool final_context =

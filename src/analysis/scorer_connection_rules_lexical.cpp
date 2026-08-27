@@ -90,11 +90,13 @@ float computeParticleQuoteBonus(const core::LatticeEdge& prev, const core::Latti
     SUZUME_CONNECTION_ADD(bonus, cost::kStrongBonus);
   }
 
-  // A small closed set of sentence-final particles stacks productively
-  // (か+な, よ+ね, わ+ね, ぜ+よ). Restore these grammatical sequences against
-  // the general final-particle-to-final-particle penalty.
+  // A stack of sentence-final particles is licensed by its second member:
+  // only the confirmation-seeking ね/な/よ take another final particle in
+  // front of them (か+な, よ+ね, わ+ね, っけ+ね, ぜ+よ), while what stands
+  // first is unrestricted. Grant those the exemption from the general
+  // final-particle-to-final-particle penalty.
   if (prev.extended_pos == core::ExtendedPOS::ParticleFinal && next.extended_pos == core::ExtendedPOS::ParticleFinal &&
-      grammar::isFinalParticleStack(prev.surface, next.surface)) {
+      grammar::isFinalParticleStackTail(next.surface)) {
     SUZUME_CONNECTION_ADD(bonus, cost::kExtremeBonus);
   }
 
