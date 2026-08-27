@@ -355,6 +355,13 @@ void setVerbAndAdjectiveCosts(BigramMatrix& table) {
       // grammatical boundary over an unknown noun that absorbs the ending.
       {EPOS::VerbShuushikei, EPOS::NounFormal, cost::kVeryStrongBonus},
 
+      // The classical attributive is the cell that construction is built on;
+      // the modern paradigm reaches the same boundary through its terminal only
+      // because the two forms merged (見ゆる+時, 求むる+物). Without the pair the
+      // terminal outbids the attributive of the very verb it modifies with.
+      {EPOS::VerbRentaikei, EPOS::NounFormal, cost::kVeryStrongBonus},
+      {EPOS::VerbRentaikei, EPOS::Noun, cost::kVeryStrongBonus},
+
       // Verb renyokei → formal noun (読み+よう, 書き+方). This productive
       // construction must outrank the homographic volitional 〜よう path.
       {EPOS::VerbRenyokei, EPOS::NounFormal, cost::kVeryStrongBonus},

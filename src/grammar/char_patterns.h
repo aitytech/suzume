@@ -125,6 +125,23 @@ bool isHonorificPrefix(std::string_view surface);
  */
 bool isBoundVerbPrefix(std::string_view surface);
 
+/**
+ * @brief Whether a kana ends the 終止形 of a classical bigrade verb
+ *
+ * The bigrade paradigm closes on the U-row kana of its own row (受く, 過ぐ,
+ * 捨つ, 述ぶ, 求む, 越ゆ, 流る), which is also what its 連体形 adds る to.
+ */
+bool isBigradeTerminalKana(char32_t code);
+
+/**
+ * @brief Whether a U-row kana also spells a classical auxiliary
+ *
+ * つ, ぬ, む, る, ふ and す open auxiliaries that attach to a 未然形 or a
+ * 連用形, so behind an inflected stem the kana is the auxiliary rather than a
+ * verb's own ending.
+ */
+bool isClassicalAuxiliaryHomographKana(char32_t code);
+
 /** @brief Whether a surface is a one-character kanji honorific title. */
 bool isKanjiHonorificTitle(std::string_view surface);
 

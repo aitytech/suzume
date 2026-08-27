@@ -176,6 +176,19 @@ bool isBoundVerbPrefix(std::string_view surface) {
   return byte_pos == surface.size() && (prefix == U'仕' || prefix == U'片');
 }
 
+bool isBigradeTerminalKana(char32_t code) {
+  // す is left out: サ行 bigrade is marginal, while する is the light verb every
+  // sahen nominal takes, so the row would claim that construction instead.
+  constexpr std::array<char32_t, 11> kBigradeTerminals = {U'う', U'く', U'ぐ', U'つ', U'づ', U'ぬ',
+                                                          U'ふ', U'ぶ', U'む', U'ゆ', U'る'};
+  return std::find(kBigradeTerminals.begin(), kBigradeTerminals.end(), code) != kBigradeTerminals.end();
+}
+
+bool isClassicalAuxiliaryHomographKana(char32_t code) {
+  constexpr std::array<char32_t, 6> kAuxiliaryHomographs = {U'す', U'つ', U'ぬ', U'ふ', U'む', U'る'};
+  return std::find(kAuxiliaryHomographs.begin(), kAuxiliaryHomographs.end(), code) != kAuxiliaryHomographs.end();
+}
+
 bool isKanjiHonorificTitle(std::string_view surface) {
   return surface == "様" || surface == "氏";
 }

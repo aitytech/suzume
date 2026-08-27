@@ -456,6 +456,104 @@
       ],
       "id": "kanarikeru",
       "input": "静かなりける夜"
+    },
+    {
+      "description": "Ya-row bigrade terminal in a predicate slot",
+      "expected": [
+        {
+          "lemma": "山",
+          "pos": "Noun",
+          "surface": "山"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "越ゆ",
+          "pos": "Verb",
+          "surface": "越ゆ"
+        }
+      ],
+      "id": "wo_yu",
+      "input": "山を越ゆ"
+    },
+    {
+      "description": "Ya-row bigrade terminal after a nominative argument",
+      "expected": [
+        {
+          "lemma": "影",
+          "pos": "Noun",
+          "surface": "影"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "見ゆ",
+          "pos": "Verb",
+          "surface": "見ゆ"
+        }
+      ],
+      "id": "ga_yu",
+      "input": "影が見ゆ"
+    },
+    {
+      "description": "Bigrade attributive keeps the terminal as its lemma",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "流る",
+          "pos": "Verb",
+          "surface": "流るる"
+        },
+        {
+          "lemma": "音",
+          "pos": "Noun",
+          "surface": "音"
+        }
+      ],
+      "id": "no_ruru",
+      "input": "水の流るる音"
+    },
+    {
+      "description": "Ya-row attributive in front of the nominal it modifies",
+      "expected": [
+        {
+          "lemma": "影",
+          "pos": "Noun",
+          "surface": "影"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "見ゆ",
+          "pos": "Verb",
+          "surface": "見ゆる"
+        },
+        {
+          "lemma": "時",
+          "pos": "Noun",
+          "surface": "時"
+        }
+      ],
+      "id": "no_yuru",
+      "input": "影の見ゆる時"
     }
   ],
   "description": "classical tests",

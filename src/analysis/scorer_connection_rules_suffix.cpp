@@ -281,9 +281,12 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
 
   // A finite verb directly follows the accusative particle を (しびれを切らす),
   // but not every case particle permits that boundary.  In particular, で
-  // must leave the polite copula です intact.
+  // must leave the polite copula です intact.  The classical attributive is
+  // finite in the same sense — the two cells merged in the modern paradigm, so
+  // the boundary is the same one (道を+求むる+物).
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase && grammar::isAccusativeParticleWoSurface(prev.surface) &&
-      next.extended_pos == core::ExtendedPOS::VerbShuushikei) {
+      (next.extended_pos == core::ExtendedPOS::VerbShuushikei ||
+       next.extended_pos == core::ExtendedPOS::VerbRentaikei)) {
     SUZUME_CONNECTION_ADD(bonus, cost::kVeryStrongBonus);
   }
 

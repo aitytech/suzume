@@ -7,8 +7,11 @@
 #include <initializer_list>
 
 #include "analysis/candidate_constants.h"
+#include "analysis/verb_candidates_helpers.h"
 #include "analysis/verb_candidates_kanji_internal.h"
 #include "core/debug.h"
+#include "core/utf8_constants.h"
+#include "grammar/char_patterns.h"
 #include "grammar/conjugation.h"
 #include "grammar/verb_endings.h"
 #include "tokenizer_utils.h"
@@ -16,6 +19,7 @@
 #include "verb_candidates.h"
 
 namespace suzume::analysis::kanji_verb_detail {
+namespace vh = verb_helpers;
 
 namespace {
 
@@ -188,6 +192,62 @@ void appendClassicalShimoNidanCandidates(const std::vector<char32_t>& codepoints
                                          core::ExtendedPOS::VerbRenyokei));
 }
 
+// A predicate slot is opened by the argument in front of it: a case particle,
+// or the genitive の, which marks the subject of a subordinate clause and is
+// interchangeable with が there (影の見ゆる時 for 影が見ゆる時).
+bool opensPredicateSlot(const std::vector<char32_t>& codepoints, size_t start_pos,
+                        const dictionary::DictionaryManager* dict_manager) {
+  if (vh::followsCaseParticle(dict_manager, codepoints, start_pos)) {
+    return true;
+  }
+  if (dict_manager == nullptr || start_pos == 0) {
+    return false;
+  }
+  const auto* particle =
+      dict_manager->lookupExact(extractSubstring(codepoints, start_pos - 1, start_pos), core::PartOfSpeech::Particle);
+  return particle != nullptr && particle->extended_pos == core::ExtendedPOS::ParticleNo;
+}
+
+// A bigrade verb spells its 終止形 as the kanji stem plus the row's U-row kana
+// and its 連体形 by adding る. Only ヤ行 needs a terminal candidate — every other
+// row's kana also ends a Godan verb, so the conjugation table reaches 受く and
+// 過ぐ on its own, while ゆ ends nothing in the modern paradigm and its mora
+// falls out as an unknown fragment. The attributive needs one for every row:
+// its trailing る otherwise reads as a separate auxiliary, or the whole span
+// fabricates a Godan terminal that is its own lemma (流るる, 見ゆる). The syntax
+// names both cells — a predicate slot opened by its own argument, closing a
+// clause (山を|越ゆ) or standing in front of the nominal it modifies
+// (影の|見ゆる|時) — and both keep the terminal as their lemma.
+void appendClassicalNidanCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
+                                    size_t hiragana_end, const dictionary::DictionaryManager* dict_manager,
+                                    std::vector<UnknownCandidate>& candidates) {
+  if (kanji_end != start_pos + 1 || kanji_end >= hiragana_end ||
+      !opensPredicateSlot(codepoints, start_pos, dict_manager)) {
+    return;
+  }
+  const char32_t terminal = codepoints[kanji_end];
+  const bool is_attributive = kanji_end + 1 < hiragana_end && codepoints[kanji_end + 1] == core::hiragana::kRu;
+  // The same kana spell classical auxiliaries that take a 未然形 or a 連用形
+  // (見+つる, 見+ぬる). Behind a stem that is a verb on its own, the kana is that
+  // auxiliary and not the row's ending.
+  if (grammar::isClassicalAuxiliaryHomographKana(terminal) && vh::isSingleKanjiIchidan(codepoints[start_pos])) {
+    return;
+  }
+  if (!is_attributive && terminal != U'ゆ') {
+    return;
+  }
+  if (is_attributive ? !grammar::isBigradeTerminalKana(terminal) : !clauseEndsAt(codepoints, kanji_end + 1)) {
+    return;
+  }
+  const std::string lemma = extractSubstring(codepoints, start_pos, kanji_end + 1);
+  const size_t end_pos = is_attributive ? kanji_end + 2 : kanji_end + 1;
+  candidates.push_back(
+      makeVerbCandidate(extractSubstring(codepoints, start_pos, end_pos), start_pos, end_pos,
+                        candidate::verb_cost::kClassicalHaRowLicensedCost, lemma, dictionary::ConjugationType::Ichidan,
+                        true, CandidateOrigin::VerbKanji, candidate::kNoConfidence, "classical_nidan_cell",
+                        is_attributive ? core::ExtendedPOS::VerbRentaikei : core::ExtendedPOS::VerbShuushikei));
+}
+
 }  // namespace
 
 void appendClassicalHaRowCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
@@ -225,6 +285,7 @@ void appendClassicalHaRowCandidates(const std::vector<char32_t>& codepoints, siz
     SUZUME_DEBUG_LOG_VERBOSE("[VERB_CAND] " << surface << " classical_ha_row lemma=" << lemma << "\n");
   }
   appendClassicalShimoNidanCandidates(codepoints, start_pos, kanji_end, hiragana_end, dict_manager, candidates);
+  appendClassicalNidanCandidates(codepoints, start_pos, kanji_end, hiragana_end, dict_manager, candidates);
 }
 
 size_t appendKuNominalizationCandidates(const std::vector<char32_t>& codepoints, size_t start_pos, size_t kanji_end,
