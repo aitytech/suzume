@@ -125,9 +125,21 @@ HaRowLicense haRowCellLicense(core::ExtendedPOS cell, const std::vector<char32_t
   license.cell = cell;
   switch (cell) {
     case core::ExtendedPOS::VerbMizenkei:
-      // 未然形 exists only under a classical irrealis auxiliary (思は+ず).
-      license.closed_class_tail = dictionaryTailFollowsAt(
-          codepoints, end_pos, dict_manager, core::PartOfSpeech::Auxiliary, {core::ExtendedPOS::AuxNegativeNu});
+      // 未然形 exists only under a cell that selects an irrealis: the classical
+      // negatives (思は+ず), the conjectural む, the causative しむ, the passive
+      // る, or the conditional particle ば (言は+ば). The cell kana is also the
+      // topic particle, so nothing weaker may license it.
+      // Those cells are frequent behind an ordinary nominal too (確認+は+する,
+      // 彼+は+とも…), so the stem itself must name a verb. The row is the
+      // historical-kana spelling of the modern ワ行五段 one, and that headword
+      // is the form the dictionary carries.
+      license.closed_class_tail =
+          vh::isVerbInDictionary(dict_manager, extractSubstring(codepoints, start_pos, end_pos - 1) + "う") &&
+          (dictionaryTailFollowsAt(codepoints, end_pos, dict_manager, core::PartOfSpeech::Auxiliary,
+                                   {core::ExtendedPOS::AuxNegativeNu, core::ExtendedPOS::AuxVolitional,
+                                    core::ExtendedPOS::AuxCausative, core::ExtendedPOS::AuxPassive}) ||
+           dictionaryTailFollowsAt(codepoints, end_pos, dict_manager, core::PartOfSpeech::Particle,
+                                   {core::ExtendedPOS::ParticleConj}));
       break;
     case core::ExtendedPOS::VerbRenyokei:
       // 連用形 heads a classical predicate chain or closes a clause.

@@ -24,7 +24,7 @@ from .constants import (
     TEMPORAL_PREFIX_KANJI,
 )
 from .core_lexicon import core_headwords_by_length
-from .mecab import mecab_analyze
+from .mecab import is_single_token_of_pos, mecab_analyze
 from .merge_postprocessors import (
     KARI_MIZENKEI_CELL,
     _postprocess_adj_bungo,
@@ -75,6 +75,52 @@ _CLASSICAL_ADJECTIVE_CELLS: tuple[tuple[str, str, str], ...] = (
     (r"(?:し)?けれ|(?:し)?かれ", r"ど", "助詞"),
 )
 _CLASSICAL_AUXILIARY_LEMMAS: dict[str, str] = {"ず": "ぬ", "し": "き"}
+
+
+# Cells that select an irrealis, paired with the reading each one keeps once the
+# ハ行四段 未然形 in front of it is restored. は is also the topic particle, so
+# the row's irrealis is visible only where one of these follows it, and the
+# reference dictionary carries the row for the few verbs it happens to list
+# (思ふ) while reading the kana as the particle everywhere else.
+_HA_ROW_IRREALIS_CELLS: dict[str, tuple[str, str]] = {
+    "しむ": ("助動詞", "しむ"),
+    "まし": ("助動詞", "まし"),
+    "ず": ("助動詞", "ぬ"),
+    "む": ("助動詞", "む"),
+    "じ": ("助動詞", "じ"),
+    "れ": ("助動詞", "れる"),
+    "ば": ("助詞", "ば"),
+    "く": ("動詞", "くる"),
+}
+_HA_ROW_IRREALIS_TAILS = "|".join(sorted(_HA_ROW_IRREALIS_CELLS, key=len, reverse=True))
+
+
+def _ha_row_irrealis_cells(remaining: str) -> list[dict] | None:
+    """Split the ハ行四段 未然形 from the cell that selects it (言|は|しむ).
+
+    The row's terminal ふ is its headword, and the modern ワ行五段 spelling of the
+    same verb is what the dictionary does carry, so asking it for stem + う tells
+    a real irrealis from a nominal that happens to end in the topic particle.
+    """
+    match = regex.match(
+        rf"^(\p{{Han}}+)(は)({_HA_ROW_IRREALIS_TAILS})(?=$|[^\p{{Hiragana}}])",
+        remaining,
+    )
+    if match is None:
+        return None
+    run, cell, tail = match.groups()
+    for offset in range(len(run)):
+        stem = run[offset:]
+        if not is_single_token_of_pos(stem + "う", "動詞"):
+            continue
+        host = run[:offset]
+        tail_pos, tail_lemma = _HA_ROW_IRREALIS_CELLS[tail]
+        return [
+            *([{"surface": host, "pos": "名詞", "lemma": host}] if host else []),
+            {"surface": stem + cell, "pos": "動詞", "lemma": stem + "ふ"},
+            {"surface": tail, "pos": tail_pos, "lemma": tail_lemma},
+        ]
+    return None
 
 
 def _classical_adjective_cells(remaining: str) -> list[dict] | None:
@@ -371,6 +417,25 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
                     merged = True
                     if applied_rule is None:
                         applied_rule = "classical-adjective-kari"
+
+        # The ハ行四段 irrealis needs the same protection, and for the same
+        # reason: its cell kana is the topic particle, so generic noun recovery
+        # takes the stem in front of it as a word of its own (言|は|しむ).
+        if not merged:
+            cells = _ha_row_irrealis_cells(remaining)
+            if cells is not None:
+                source_span = "".join(cell["surface"] for cell in cells)
+                consumed = ""
+                j = i
+                while j < len(tokens) and len(consumed) < len(source_span):
+                    consumed += tokens[j].get("surface", "")
+                    j += 1
+                if consumed == source_span:
+                    result.extend(cells)
+                    i = j
+                    merged = True
+                    if applied_rule is None:
+                        applied_rule = "classical-ha-row-irrealis"
 
         # The parallel particle とか is a closed unit after a predicate or
         # copula.  The reference lattice can split its final occurrence into

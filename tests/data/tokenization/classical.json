@@ -554,6 +554,60 @@
       ],
       "id": "no_yuru",
       "input": "影の見ゆる時"
+    },
+    {
+      "description": "Ha-row irrealis in front of the classical causative",
+      "expected": [
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "言ふ",
+          "pos": "Verb",
+          "surface": "言は"
+        },
+        {
+          "lemma": "しむ",
+          "pos": "Auxiliary",
+          "surface": "しむ"
+        }
+      ],
+      "id": "ni_hashimu",
+      "input": "人に言はしむ"
+    },
+    {
+      "description": "Ha-row irrealis in front of the conditional particle",
+      "expected": [
+        {
+          "lemma": "言ふ",
+          "pos": "Verb",
+          "surface": "言は"
+        },
+        {
+          "lemma": "ば",
+          "pos": "Particle",
+          "surface": "ば"
+        },
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知ら"
+        },
+        {
+          "lemma": "む",
+          "pos": "Auxiliary",
+          "surface": "む"
+        }
+      ],
+      "id": "haba_ramu",
+      "input": "言はば知らむ"
     }
   ],
   "description": "classical tests",
