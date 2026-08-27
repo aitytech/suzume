@@ -78,6 +78,38 @@
       ],
       "id": "ninotttori_suru",
       "input": "規定にのっとり処理する"
+    },
+    {
+      "description": "Literary kana adverb stays one token",
+      "expected": [
+        {
+          "lemma": "すべからく",
+          "pos": "Adverb",
+          "surface": "すべからく"
+        },
+        {
+          "lemma": "対応",
+          "pos": "Noun",
+          "surface": "対応"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "開始",
+          "pos": "Noun",
+          "surface": "開始"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "subekaraku_wo_suru",
+      "input": "すべからく対応を開始する"
     }
   ],
   "description": "literary tests",
