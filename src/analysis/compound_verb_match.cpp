@@ -590,7 +590,12 @@ CompoundVerbMatch findCompoundVerbMatch(
     if (starts_inside_kanji_run && startsInsideRegisteredNoun(dict_manager, text, byte_offsets, start_pos)) {
       continue;
     }
-    if (starts_inside_kanji_run && !v1.dict_verified && !dict_compound_v1) {
+    // A numeral plus its counter is a closed quantity phrase, so the kanji run
+    // it ends does close before the predicate (3回|見直す, 5〜6回|繰り返す).
+    // There the adjacency carries no evidence about the compound's own V1.
+    const bool follows_counter = start_pos >= 2 && normalize::isCounterKanji(codepoints[start_pos - 1]) &&
+                                 normalize::isNumeralCodepoint(codepoints[start_pos - 2]);
+    if (starts_inside_kanji_run && !follows_counter && !v1.dict_verified && !dict_compound_v1) {
       continue;
     }
 

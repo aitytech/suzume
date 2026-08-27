@@ -940,6 +940,72 @@
       ],
       "id": "deshika_kenai",
       "input": "窓口でしか受付けない"
+    },
+    {
+      "description": "Lexicalized compound verb whose second element is not productive",
+      "expected": [
+        {
+          "lemma": "言う",
+          "pos": "Verb",
+          "surface": "言わ"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "もの"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "推し量る",
+          "pos": "Verb",
+          "surface": "推し量る"
+        }
+      ],
+      "id": "wanaimonowo_shi_ru",
+      "input": "言わないものを推し量る"
+    },
+    {
+      "description": "Numeral plus counter closes before a compound verb",
+      "expected": [
+        {
+          "lemma": "3回",
+          "pos": "Noun",
+          "surface": "3回"
+        },
+        {
+          "lemma": "見直す",
+          "pos": "Verb",
+          "surface": "見直す"
+        }
+      ],
+      "id": "3_su",
+      "input": "3回見直す"
+    },
+    {
+      "description": "Kanji noun adjacency still blocks an inflection-only compound V1",
+      "expected": [
+        {
+          "lemma": "生涯",
+          "pos": "Noun",
+          "surface": "生涯"
+        },
+        {
+          "lemma": "忘れる",
+          "pos": "Verb",
+          "surface": "忘れる"
+        }
+      ],
+      "id": "reru_2",
+      "input": "生涯忘れる"
     }
   ],
   "description": "Compound verbs (part 5/5)",
