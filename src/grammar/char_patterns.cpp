@@ -167,6 +167,11 @@ bool isHonorificPrefix(std::string_view surface) {
   return surface == "お" || surface == "ご";
 }
 
+bool isSinoHonorificPrefix(std::string_view surface) {
+  size_t byte_pos = 0;
+  return normalize::decodeUtf8(surface, byte_pos) == U'ご' && byte_pos == surface.size();
+}
+
 bool isBoundVerbPrefix(std::string_view surface) {
   // Kanji that only ever open a compound verb. They have no standalone nominal
   // use that could stand as the verb's argument, so the split a free noun would

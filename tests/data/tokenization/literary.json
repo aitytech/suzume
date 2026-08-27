@@ -110,6 +110,134 @@
       ],
       "id": "subekaraku_wo_suru",
       "input": "すべからく対応を開始する"
+    },
+    {
+      "description": "Kanji adverb does not join the sahen nominal after it",
+      "expected": [
+        {
+          "lemma": "なお",
+          "pos": "Conjunction",
+          "surface": "なお"
+        },
+        {
+          "lemma": "詳細",
+          "pos": "Adjective",
+          "surface": "詳細"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "別途",
+          "pos": "Adverb",
+          "surface": "別途"
+        },
+        {
+          "lemma": "通知",
+          "pos": "Noun",
+          "surface": "通知"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "nao_ha_suru",
+      "input": "なお、詳細は別途通知する"
+    },
+    {
+      "description": "Same boundary on another administrative kanji adverb",
+      "expected": [
+        {
+          "lemma": "逐次",
+          "pos": "Adverb",
+          "surface": "逐次"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "suru_20",
+      "input": "逐次確認する"
+    },
+    {
+      "description": "Classical comparison keeps its unit against the honorific prefix reading",
+      "expected": [
+        {
+          "lemma": "氷",
+          "pos": "Noun",
+          "surface": "氷"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "ごとし",
+          "pos": "Auxiliary",
+          "surface": "ごとき"
+        },
+        {
+          "lemma": "冷たい",
+          "pos": "Adjective",
+          "surface": "冷た"
+        },
+        {
+          "lemma": "さ",
+          "pos": "Suffix",
+          "surface": "さ"
+        },
+        {
+          "lemma": "で",
+          "pos": "Particle",
+          "surface": "で"
+        },
+        {
+          "lemma": "ある",
+          "pos": "Verb",
+          "surface": "あっ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        }
+      ],
+      "id": "nogotoki_tasadeattta",
+      "input": "氷のごとき冷たさであった"
+    },
+    {
+      "description": "Classical comparison after the nominalizer",
+      "expected": [
+        {
+          "lemma": "かく",
+          "pos": "Adverb",
+          "surface": "かく"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "ごとし",
+          "pos": "Auxiliary",
+          "surface": "ごとき"
+        }
+      ],
+      "id": "kakunogotoki",
+      "input": "かくのごとき"
     }
   ],
   "description": "literary tests",

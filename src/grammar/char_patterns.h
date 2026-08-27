@@ -118,6 +118,14 @@ bool isDemonstrativeUAdverb(std::string_view surface);
 bool isHonorificPrefix(std::string_view surface);
 
 /**
+ * @brief Whether a prefix is the Sino-Japanese member of the honorific pair
+ *
+ * ご takes a Sino-Japanese nominal and お a native one, so the two select
+ * different hosts even though they fill the same slot.
+ */
+bool isSinoHonorificPrefix(std::string_view surface);
+
+/**
  * @brief Whether a surface is a bound prefix that forms a lexical verb with V2
  *
  * Unlike a verb continuative, this closed-class prefix has no independent

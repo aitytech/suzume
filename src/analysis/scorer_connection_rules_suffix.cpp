@@ -263,6 +263,15 @@ float computeSuffixShortVerbBonus(const core::LatticeEdge& prev, const core::Lat
     SUZUME_CONNECTION_ADD(bonus, cost::kMinorBonus);
   }
 
+  // The Sino-Japanese honorific ご takes a Sino-Japanese nominal, which is
+  // written in kanji (ご確認, ご案内). A pure-hiragana host after it is a
+  // native word, which takes お instead, so the pair is an accidental split of
+  // a longer kana word (ごとき as ご+とき).
+  if (prev.extended_pos == core::ExtendedPOS::Prefix && grammar::isSinoHonorificPrefix(prev.surface) &&
+      next.pos == core::PartOfSpeech::Noun && grammar::isPureHiragana(next.surface)) {
+    SUZUME_CONNECTION_ADD(bonus, sc::kPenaltyClosedClassBoundary);
+  }
+
   // The parallel compound particle とともに must remain whole instead of
   // being reanalyzed as a quotative particle followed by the adverb ともに.
   if (prev.extended_pos == core::ExtendedPOS::ParticleCase && next.pos == core::PartOfSpeech::Adverb &&
