@@ -331,7 +331,25 @@ bool isDurationPredicateKakaru(std::string_view surface) {
 }
 
 bool isFinalParticleStackTail(std::string_view surface) {
-  return utf8::equalsAny(surface, {"ね", "な", "よ"});
+  // A final particle lengthens by repeating its own vowel, and the lengthened
+  // form fills the same slot (かな/かなあ, よね/よねえ). Reading the tail off
+  // the first mora covers both without listing the variants.
+  size_t byte_pos = 0;
+  const char32_t head = normalize::decodeUtf8(surface, byte_pos);
+  if (head != U'ね' && head != U'な' && head != U'よ') {
+    return false;
+  }
+  while (byte_pos < surface.size()) {
+    const char32_t lengthening = normalize::decodeUtf8(surface, byte_pos);
+    // The vowel that lengthens a mora is the one its own row carries.
+    const bool matches_row = (kana::isARowCodepoint(head) && lengthening == U'あ') ||
+                             (kana::isERowCodepoint(head) && lengthening == U'え') ||
+                             (kana::isORowCodepoint(head) && lengthening == U'お');
+    if (lengthening != U'ー' && !matches_row) {
+      return false;
+    }
+  }
+  return true;
 }
 
 bool isAmbiguousFinalParticleStackHead(std::string_view surface) {

@@ -409,14 +409,32 @@ bool hasFunctionWordChainDecomposition(const std::vector<char32_t>& codepoints, 
     }
   }
 
+  // A stack of sentence-final particles is closed on both sides, so no unknown
+  // noun is hiding in it however short its members are (かなあ for か+なあ).
+  // Requiring both halves to be final particles keeps this away from the runs a
+  // one-mora head would otherwise claim (よそう, かばん).
+  for (size_t split = start_pos + 1; split < end_pos; ++split) {
+    const auto* stack_head =
+        dict_manager->lookupExact(extractSubstring(codepoints, start_pos, split), core::PartOfSpeech::Particle);
+    const auto* stack_tail =
+        dict_manager->lookupExact(extractSubstring(codepoints, split, end_pos), core::PartOfSpeech::Particle);
+    if (stack_head != nullptr && stack_tail != nullptr &&
+        stack_head->extended_pos == core::ExtendedPOS::ParticleFinal &&
+        stack_tail->extended_pos == core::ExtendedPOS::ParticleFinal) {
+      return true;
+    }
+  }
+
   for (size_t split = start_pos + 2; split < end_pos; ++split) {
     const std::string head_surface = extractSubstring(codepoints, start_pos, split);
-    // A focus particle, or a pronoun — the one nominal that is itself closed
-    // class, so a run opening with one has no unknown noun to recover either
-    // (なにが for なに+が, これから, それでも).
+    // A focus particle, a sentence-final particle, or a pronoun — the one
+    // nominal that is itself closed class, so a run opening with one has no
+    // unknown noun to recover either (なにが for なに+が, これから, それでも,
+    // かなあ for か+なあ).
     const auto* head = dict_manager->lookupExact(head_surface, core::PartOfSpeech::Particle);
     const bool focus_particle_head = head != nullptr && (head->extended_pos == core::ExtendedPOS::ParticleAdverbial ||
-                                                         head->extended_pos == core::ExtendedPOS::ParticleBinding);
+                                                         head->extended_pos == core::ExtendedPOS::ParticleBinding ||
+                                                         head->extended_pos == core::ExtendedPOS::ParticleFinal);
     if (!focus_particle_head &&
         !hasExactPartOfSpeech(*dict_manager, head_surface, partOfSpeechMask(core::PartOfSpeech::Pronoun))) {
       continue;

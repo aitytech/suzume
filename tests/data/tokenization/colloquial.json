@@ -349,6 +349,70 @@
       ],
       "id": "soudattkene",
       "input": "そうだっけね"
+    },
+    {
+      "description": "Lengthened final particle in a stack after the nominalizer",
+      "expected": [
+        {
+          "lemma": "それで",
+          "pos": "Conjunction",
+          "surface": "それで"
+        },
+        {
+          "lemma": "いい",
+          "pos": "Adjective",
+          "surface": "いい"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "か",
+          "pos": "Particle",
+          "surface": "か"
+        },
+        {
+          "lemma": "なあ",
+          "pos": "Particle",
+          "surface": "なあ"
+        }
+      ],
+      "id": "soredeiinokanaa",
+      "input": "それでいいのかなあ"
+    },
+    {
+      "description": "Lengthened final particle after a terminal verb",
+      "expected": [
+        {
+          "lemma": "それ",
+          "pos": "Pronoun",
+          "surface": "それ"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "違う",
+          "pos": "Verb",
+          "surface": "違う"
+        },
+        {
+          "lemma": "よ",
+          "pos": "Particle",
+          "surface": "よ"
+        },
+        {
+          "lemma": "なあ",
+          "pos": "Particle",
+          "surface": "なあ"
+        }
+      ],
+      "id": "soreha_uyonaa",
+      "input": "それは違うよなあ"
     }
   ],
   "description": "colloquial tests",
