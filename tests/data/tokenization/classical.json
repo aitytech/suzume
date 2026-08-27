@@ -392,6 +392,70 @@
       ],
       "id": "ga_shi",
       "input": "道が険し"
+    },
+    {
+      "description": "Godan irrealis plus classical passive keeps its own boundary",
+      "expected": [
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "知る",
+          "pos": "Verb",
+          "surface": "知ら"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "ぬ",
+          "pos": "Auxiliary",
+          "surface": "ざり"
+        },
+        {
+          "lemma": "き",
+          "pos": "Auxiliary",
+          "surface": "き"
+        }
+      ],
+      "id": "ni_rarezariki",
+      "input": "人に知られざりき"
+    },
+    {
+      "description": "Adnominal keri after the classical copula keeps its own boundary",
+      "expected": [
+        {
+          "lemma": "静か",
+          "pos": "Adjective",
+          "surface": "静か"
+        },
+        {
+          "lemma": "なり",
+          "pos": "Auxiliary",
+          "surface": "なり"
+        },
+        {
+          "lemma": "けり",
+          "pos": "Auxiliary",
+          "surface": "ける"
+        },
+        {
+          "lemma": "夜",
+          "pos": "Noun",
+          "surface": "夜"
+        }
+      ],
+      "id": "kanarikeru",
+      "input": "静かなりける夜"
     }
   ],
   "description": "classical tests",

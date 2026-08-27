@@ -117,6 +117,80 @@
       ],
       "id": "ttte_shii",
       "input": "テストって難しい"
+    },
+    {
+      "description": "Loanword sahen nominal keeps the passive boundary its kanji counterpart has",
+      "expected": [
+        {
+          "lemma": "キャンセル",
+          "pos": "Noun",
+          "surface": "キャンセル"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "予約",
+          "pos": "Noun",
+          "surface": "予約"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "確認",
+          "pos": "Noun",
+          "surface": "確認"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "sareta_wo_suru",
+      "input": "キャンセルされた予約を確認する"
+    },
+    {
+      "description": "Loanword sahen passive before the polite auxiliary",
+      "expected": [
+        {
+          "lemma": "リセット",
+          "pos": "Noun",
+          "surface": "リセット"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "さ"
+        },
+        {
+          "lemma": "れる",
+          "pos": "Auxiliary",
+          "surface": "れ"
+        },
+        {
+          "lemma": "ます",
+          "pos": "Auxiliary",
+          "surface": "ます"
+        }
+      ],
+      "id": "saremasu",
+      "input": "リセットされます"
     }
   ],
   "description": "katakana tests",

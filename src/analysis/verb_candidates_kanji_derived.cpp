@@ -45,9 +45,7 @@ bool classicalPredicateTailFollowsAt(const std::vector<char32_t>& codepoints, si
   for (size_t end = pos + 1; end <= probe_end; ++end) {
     const std::string tail = extractSubstring(codepoints, pos, end);
     const auto* auxiliary = dict_manager->lookupExact(tail, core::PartOfSpeech::Auxiliary);
-    if (auxiliary != nullptr && (auxiliary->extended_pos == core::ExtendedPOS::AuxClassicalKeri ||
-                                 auxiliary->extended_pos == core::ExtendedPOS::AuxClassicalPerfect ||
-                                 auxiliary->extended_pos == core::ExtendedPOS::AuxClassicalNari)) {
+    if (auxiliary != nullptr && core::isClassicalAuxiliaryType(auxiliary->extended_pos)) {
       return true;
     }
     const auto* particle = dict_manager->lookupExact(tail, core::PartOfSpeech::Particle);

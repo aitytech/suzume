@@ -56,8 +56,15 @@ bool isKanjiRunFollowedByAttributiveNa(const std::vector<char32_t>& codepoints, 
 // own the boundary in 許さ+れる.
 bool hasPrecedingSahenNominal(const core::Lattice& lattice, size_t end_pos) {
   return core::anyEdgeEndingAt(lattice, end_pos, [](const core::LatticeEdge& edge) {
+    // Sahen is productive over both nominal scripts: a kanji compound and a
+    // loanword take する alike (実施する, キャンセルする), so an unregistered
+    // katakana run heads the construction just as an unregistered kanji run
+    // does. Requiring kanji made the passive boundary depend on the host's
+    // script rather than on its class.
+    constexpr size_t kMinSahenNominalLength = 2;
     return edge.pos == core::PartOfSpeech::Noun &&
-           (edge.fromDictionary() || (grammar::isAllKanji(edge.surface) && normalize::utf8Length(edge.surface) >= 2));
+           (edge.fromDictionary() || ((grammar::isAllKanji(edge.surface) || normalize::isAllKatakana(edge.surface)) &&
+                                      normalize::utf8Length(edge.surface) >= kMinSahenNominalLength));
   });
 }
 
