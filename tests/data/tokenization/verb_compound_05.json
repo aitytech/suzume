@@ -896,6 +896,50 @@
       ],
       "id": "wo_te_ru",
       "input": "ゴミを捨て去る"
+    },
+    {
+      "description": "Compound verb written without the medial okurigana stays one token",
+      "expected": [
+        {
+          "lemma": "受付ける",
+          "pos": "Verb",
+          "surface": "受付ける"
+        }
+      ],
+      "id": "keru",
+      "input": "受付ける"
+    },
+    {
+      "description": "Negated cell of an okurigana-omitted compound verb",
+      "expected": [
+        {
+          "lemma": "窓口",
+          "pos": "Noun",
+          "surface": "窓口"
+        },
+        {
+          "lemma": "だ",
+          "pos": "Auxiliary",
+          "surface": "で"
+        },
+        {
+          "lemma": "しか",
+          "pos": "Particle",
+          "surface": "しか"
+        },
+        {
+          "lemma": "受付ける",
+          "pos": "Verb",
+          "surface": "受付け"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "ない"
+        }
+      ],
+      "id": "deshika_kenai",
+      "input": "窓口でしか受付けない"
     }
   ],
   "description": "Compound verbs (part 5/5)",
