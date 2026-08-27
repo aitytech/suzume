@@ -239,6 +239,28 @@
       ],
       "id": "ga_meri_ii_2",
       "input": "本が読めりゃいい"
+    },
+    {
+      "description": "Nasal contraction of a godan irrealis before the contracted negative conditional",
+      "expected": [
+        {
+          "lemma": "そろそろ",
+          "pos": "Adverb",
+          "surface": "そろそろ"
+        },
+        {
+          "lemma": "やる",
+          "pos": "Verb",
+          "surface": "やん"
+        },
+        {
+          "lemma": "ない",
+          "pos": "Auxiliary",
+          "surface": "なきゃ"
+        }
+      ],
+      "id": "sorosoroyannaki",
+      "input": "そろそろやんなきゃ"
     }
   ],
   "description": "colloquial tests",

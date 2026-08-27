@@ -913,6 +913,38 @@
       ],
       "id": "d1_suffix_negative_control",
       "input": "彼がたたずむ"
+    },
+    {
+      "description": "Parallel particle keeps its reading between two nouns",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "や",
+          "pos": "Particle",
+          "surface": "や"
+        },
+        {
+          "lemma": "紙",
+          "pos": "Noun",
+          "surface": "紙"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "買う",
+          "pos": "Verb",
+          "surface": "買う"
+        }
+      ],
+      "id": "ya_wo_u",
+      "input": "本や紙を買う"
     }
   ],
   "description": "Case particles (が、を、に、で)",

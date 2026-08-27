@@ -394,10 +394,11 @@ void appendNOnbinNaiCandidates(const std::vector<char32_t>& codepoints, size_t s
     if (codepoints[n_pos] != U'ん')
       continue;
 
-    // Check if followed by ない
-    if (n_pos + 2 >= codepoints.size())
-      continue;
-    if (codepoints[n_pos + 1] != U'な' || codepoints[n_pos + 2] != U'い')
+    // The contraction is licensed by the negative that selects the irrealis,
+    // and every cell of that paradigm selects the same one (わかん+ない,
+    // やん+なきゃ, やん+なかっ+た). Reading only the dictionary form left the
+    // remaining cells to fall back on a particle sequence.
+    if (!vh::naiNegativeFollowsAt(codepoints, n_pos + 1))
       continue;
 
     // Get stem (part before ん) — need at least 1 char
