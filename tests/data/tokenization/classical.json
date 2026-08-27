@@ -630,6 +630,107 @@
       ],
       "id": "idureya_ru",
       "input": "いづれや勝る"
+    },
+    {
+      "description": "Classical copula after a formal noun, and the ku nominalization in historical kana",
+      "expected": [
+        {
+          "lemma": "言はく",
+          "pos": "Noun",
+          "surface": "言はく"
+        },
+        {
+          "lemma": "花",
+          "pos": "Noun",
+          "surface": "花"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "美しい",
+          "pos": "Adjective",
+          "surface": "美しき"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "物"
+        },
+        {
+          "lemma": "なり",
+          "pos": "Auxiliary",
+          "surface": "なり"
+        }
+      ],
+      "id": "haku_ha_shiki_nari",
+      "input": "言はく、花は美しき物なり"
+    },
+    {
+      "description": "Kakari particle, attributive nidan cell and the classical copula in one clause",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "ぞ",
+          "pos": "Particle",
+          "surface": "ぞ"
+        },
+        {
+          "lemma": "求む",
+          "pos": "Verb",
+          "surface": "求むる"
+        },
+        {
+          "lemma": "もの",
+          "pos": "Noun",
+          "surface": "物"
+        },
+        {
+          "lemma": "なり",
+          "pos": "Auxiliary",
+          "surface": "なる"
+        }
+      ],
+      "id": "korezo_muru_naru",
+      "input": "これぞ求むる物なる"
+    },
+    {
+      "description": "Attributive nidan cell after a different kakari particle",
+      "expected": [
+        {
+          "lemma": "これ",
+          "pos": "Pronoun",
+          "surface": "これ"
+        },
+        {
+          "lemma": "なむ",
+          "pos": "Particle",
+          "surface": "なむ"
+        },
+        {
+          "lemma": "求む",
+          "pos": "Verb",
+          "surface": "求むる"
+        },
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        },
+        {
+          "lemma": "なり",
+          "pos": "Auxiliary",
+          "surface": "なる"
+        }
+      ],
+      "id": "korenamu_muru_naru",
+      "input": "これなむ求むる道なる"
     }
   ],
   "description": "classical tests",

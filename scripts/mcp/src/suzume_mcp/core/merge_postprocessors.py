@@ -950,8 +950,22 @@ def _postprocess_kakari_pronoun_split(result: list[dict], applied_rule: str | No
     demonstrative in front of it is a pronoun the dictionary carries on its own.
     """
     split: list[dict] = []
-    for token in result:
+    for index, token in enumerate(result):
         surface = token.get("surface", "")
+        # The same particles are read as interjections where the dictionary has
+        # no entry for their 係助詞 use. A nominal in front of one is the phrase
+        # it marks, which is the position an interjection never fills.
+        previous = result[index - 1] if index > 0 else None
+        if (
+            token.get("pos") == "感動詞"
+            and surface in _KAKARI_PARTICLES
+            and previous is not None
+            and previous.get("pos") == "名詞"
+        ):
+            split.append({"surface": surface, "pos": "助詞", "pos_sub1": "係助詞", "lemma": surface})
+            if applied_rule is None:
+                applied_rule = "kakari-pronoun-split"
+            continue
         particle = next((p for p in _KAKARI_PARTICLES if surface.endswith(p)), None)
         head = surface[: -len(particle)] if particle else ""
         if token.get("pos") == "副詞" and head and _reads_as_pronoun(head):
@@ -996,6 +1010,33 @@ def _postprocess_historical_kana_word(result: list[dict], applied_rule: str | No
         if applied_rule is None:
             applied_rule = "historical-kana-word"
     return retagged, applied_rule
+
+
+def _postprocess_nominal_classical_copula(
+    result: list[dict], applied_rule: str | None
+) -> tuple[list[dict], str | None]:
+    """Tag なる/なり directly after a nominal as the classical copula (道なる).
+
+    Modern なる needs the case particle に in front of it, so a bare nominal
+    host leaves only the literary copula. The reference dictionary carries the
+    lexical verb for that spelling and reaches for it whenever its own headword
+    list happens to miss the auxiliary reading.
+    """
+    tagged: list[dict] = []
+    for index, token in enumerate(result):
+        previous = result[index - 1] if index > 0 else None
+        if (
+            token.get("pos") == "動詞"
+            and token.get("lemma") == "なる"
+            and previous is not None
+            and previous.get("pos") == "名詞"
+        ):
+            tagged.append({**token, "pos": "助動詞", "conj_type": "文語・ナリ", "lemma": "なり"})
+            if applied_rule is None:
+                applied_rule = "nominal-classical-copula"
+            continue
+        tagged.append(token)
+    return tagged, applied_rule
 
 
 def _postprocess_nickname_merge(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:

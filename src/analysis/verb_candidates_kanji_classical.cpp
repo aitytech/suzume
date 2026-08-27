@@ -215,9 +215,22 @@ bool opensPredicateSlot(const std::vector<char32_t>& codepoints, size_t start_po
   if (dict_manager == nullptr || start_pos == 0) {
     return false;
   }
-  const auto* particle =
-      dict_manager->lookupExact(extractSubstring(codepoints, start_pos - 1, start_pos), core::PartOfSpeech::Particle);
-  return particle != nullptr && particle->extended_pos == core::ExtendedPOS::ParticleNo;
+  // A focus particle opens a 係り結び whose 結び is the attributive cell, so it
+  // marks the same predicate slot the case particles do (これ+ぞ+求むる+物,
+  // これ+なむ+求むる+道). Its members run to two morae, so probe back that far.
+  constexpr size_t kFocusParticleChars = 2;
+  const size_t scan_start = start_pos > kFocusParticleChars ? start_pos - kFocusParticleChars : 0;
+  for (size_t particle_start = scan_start; particle_start < start_pos; ++particle_start) {
+    const auto* particle = dict_manager->lookupExact(extractSubstring(codepoints, particle_start, start_pos),
+                                                     core::PartOfSpeech::Particle);
+    if (particle != nullptr && (particle->extended_pos == core::ExtendedPOS::ParticleNo ||
+                                particle->extended_pos == core::ExtendedPOS::ParticleBinding ||
+                                particle->extended_pos == core::ExtendedPOS::ParticleTopic ||
+                                particle->extended_pos == core::ExtendedPOS::ParticleFinal)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // A bigrade verb spells its 終止形 as the kanji stem plus the row's U-row kana
@@ -317,8 +330,16 @@ size_t appendKuNominalizationCandidates(const std::vector<char32_t>& codepoints,
   // kana run belongs to a word that is already complete.
   const std::string stem = extractSubstring(codepoints, start_pos, kanji_end);
   const std::string cell_kana = extractSubstring(codepoints, kanji_end, kanji_end + 1);
+  // The historical ハ行四段 irrealis fills the same cell as the modern ワ行五段
+  // one it is the older spelling of, and the paradigm table carries only the
+  // modern row. Reaching the same headword through it keeps the derivation
+  // available in historical kana (言はく beside 言わく).
+  const bool is_historical_ha_row_cell = codepoints[kanji_end] == U'は';
   for (const grammar::VerbEnding& ending : grammar::getVerbEndingsByForm(grammar::ConjForm::Mizenkei)) {
-    if (ending.suffix != cell_kana || ending.base_suffix.empty()) {
+    if ((ending.suffix != cell_kana && !is_historical_ha_row_cell) || ending.base_suffix.empty()) {
+      continue;
+    }
+    if (is_historical_ha_row_cell && ending.base_suffix != "う") {
       continue;
     }
     if (dict_manager->lookupExact(stem + ending.base_suffix, core::PartOfSpeech::Verb) == nullptr) {

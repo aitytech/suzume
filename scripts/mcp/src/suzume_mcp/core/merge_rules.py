@@ -53,6 +53,7 @@ from .merge_postprocessors import (
     _postprocess_nde_split,
     _postprocess_nickname_merge,
     _postprocess_nidan_cell,
+    _postprocess_nominal_classical_copula,
     _postprocess_nominal_zukeru,
     _postprocess_noni,
     _postprocess_onomatopoeia_tto_merge,
@@ -93,6 +94,7 @@ _HA_ROW_IRREALIS_CELLS: dict[str, tuple[str, str]] = {
     "ば": ("助詞", "ば"),
     "く": ("動詞", "くる"),
 }
+KU_NOMINALIZER = "く"
 _HA_ROW_IRREALIS_TAILS = "|".join(sorted(_HA_ROW_IRREALIS_CELLS, key=len, reverse=True))
 
 
@@ -115,9 +117,16 @@ def _ha_row_irrealis_cells(remaining: str) -> list[dict] | None:
         if not is_single_token_of_pos(stem + "う", "動詞"):
             continue
         host = run[:offset]
+        host_token = [{"surface": host, "pos": "名詞", "lemma": host}] if host else []
+        # ク語法 names the predicate rather than continuing it, so the cell and
+        # the nominalizer are one nominal (言はく, 思はく) — which is how the
+        # dictionary already reads the modern spelling of the same word.
+        if tail == KU_NOMINALIZER:
+            nominal = stem + cell + tail
+            return [*host_token, {"surface": nominal, "pos": "名詞", "lemma": nominal}]
         tail_pos, tail_lemma = _HA_ROW_IRREALIS_CELLS[tail]
         return [
-            *([{"surface": host, "pos": "名詞", "lemma": host}] if host else []),
+            *host_token,
             {"surface": stem + cell, "pos": "動詞", "lemma": stem + "ふ"},
             {"surface": tail, "pos": tail_pos, "lemma": tail_lemma},
         ]
@@ -1818,6 +1827,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
     result, applied_rule = _postprocess_adj_kari(result, applied_rule)
     result, applied_rule = _postprocess_ha_row_godan(result, applied_rule)
     result, applied_rule = _postprocess_nidan_cell(result, applied_rule)
+    result, applied_rule = _postprocess_nominal_classical_copula(result, applied_rule)
     result, applied_rule = _postprocess_historical_kana_word(result, applied_rule)
     result, applied_rule = _postprocess_kakari_pronoun_split(result, applied_rule)
     result, applied_rule = _postprocess_classical_mu(result, applied_rule)

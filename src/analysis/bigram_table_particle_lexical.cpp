@@ -659,7 +659,11 @@ void setParticleAndLexicalCosts(BigramMatrix& table) {
       // The classical copula attaches to a nominal predicate before the past
       // auxiliary (春+なり+けり). This preserves the closed auxiliary chain
       // over an unknown kanji-hiragana verb candidate.
+      // A formal noun heads a nominal predicate as readily as a lexical one
+      // (美しき+物+なり), so it takes the copula at the same rate. Without the
+      // pair the copula loses its class to the homographic listing particle.
       {EPOS::Noun, EPOS::AuxClassicalNari, cost::kVeryStrongBonus},
+      {EPOS::NounFormal, EPOS::AuxClassicalNari, cost::kVeryStrongBonus},
 
       // The classical past auxiliary follows a verb's renyokei and its
       // 已然形 licenses the conditional particle (見+けれ+ば). These two
