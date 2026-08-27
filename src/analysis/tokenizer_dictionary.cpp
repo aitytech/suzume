@@ -54,6 +54,22 @@ bool isKanjiRunFollowedByAttributiveNa(const std::vector<char32_t>& codepoints, 
 // unregistered multi-kanji Sino-Japanese run remains a productive Sahen host
 // (反映+さ+れる). This leaves a one-kanji verb's own irrealis candidate to
 // own the boundary in 許さ+れる.
+// Whether a dictionary verb ends exactly at @p end_pos while starting before
+// @p start_pos, i.e. the span in question is the tail of a longer headword.
+bool endsDictionaryVerbSpanningBack(const dictionary::DictionaryManager& dict_manager,
+                                    const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos) {
+  // A headword reaching back further than this is not a contraction host.
+  constexpr size_t kMaxHostChars = 4;
+  const size_t scan_start = start_pos > kMaxHostChars ? start_pos - kMaxHostChars : 0;
+  for (size_t host_start = scan_start; host_start < start_pos; ++host_start) {
+    if (dict_manager.lookupExact(extractSubstring(codepoints, host_start, end_pos), core::PartOfSpeech::Verb) !=
+        nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool hasPrecedingSahenNominal(const core::Lattice& lattice, size_t end_pos) {
   return core::anyEdgeEndingAt(lattice, end_pos, [](const core::LatticeEdge& edge) {
     // Sahen is productive over both nominal scripts: a kanji compound and a
@@ -1017,6 +1033,17 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
     // directly rather than relying on lattice insertion order.
     if ((result.entry->pos == core::PartOfSpeech::Verb || result.entry->pos == core::PartOfSpeech::Auxiliary) &&
         verb_helpers::startsInsideDictionaryAuxiliary(codepoints, start_pos, &dict_manager_)) {
+      continue;
+    }
+
+    // A regional aspect contraction does not span a word the dictionary
+    // carries. 〜とる after an onbin is the ておる contraction (知っ+とる), but
+    // the same two morae also close ordinary lexical verbs (のっとる, もどる),
+    // and there the contraction is a coincidence of spelling that the
+    // productive chain would otherwise win on connection bonuses alone.
+    if (result.entry->extended_pos == core::ExtendedPOS::AuxAspectIru &&
+        grammar::isDialectalOruContractionLemma(result.entry->lemma) &&
+        endsDictionaryVerbSpanningBack(dict_manager_, codepoints, start_pos, end_pos)) {
       continue;
     }
 

@@ -46,6 +46,38 @@
       ],
       "id": "wo_te_ni_suru",
       "input": "手続を経て、正式に決定する"
+    },
+    {
+      "description": "Sokuon-onbin stem of a lexical verb is not the regional aspect contraction",
+      "expected": [
+        {
+          "lemma": "規定",
+          "pos": "Noun",
+          "surface": "規定"
+        },
+        {
+          "lemma": "に",
+          "pos": "Particle",
+          "surface": "に"
+        },
+        {
+          "lemma": "のっとる",
+          "pos": "Verb",
+          "surface": "のっとり"
+        },
+        {
+          "lemma": "処理",
+          "pos": "Noun",
+          "surface": "処理"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "ninotttori_suru",
+      "input": "規定にのっとり処理する"
     }
   ],
   "description": "literary tests",

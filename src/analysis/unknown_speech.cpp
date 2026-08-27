@@ -54,6 +54,23 @@ bool closesContractedVolitional(const std::vector<char32_t>& codepoints, size_t 
   return false;
 }
 
+// Whether the dictionary carries a word that opens where a shape-derived
+// candidate does and reaches past its end.
+bool startsLongerDictionaryWord(const std::vector<char32_t>& codepoints, size_t start_pos, size_t end_pos,
+                                const dictionary::DictionaryManager* dict_manager) {
+  constexpr size_t kMaxTrailingChars = 3;
+  if (dict_manager == nullptr) {
+    return false;
+  }
+  const size_t probe_end = std::min(codepoints.size(), end_pos + kMaxTrailingChars);
+  for (size_t word_end = end_pos + 1; word_end <= probe_end; ++word_end) {
+    if (dict_manager->lookupExact(extractSubstring(codepoints, start_pos, word_end)) != nullptr) {
+      return true;
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
 void UnknownWordGenerator::generateCharacterSpeechCandidates(std::string_view /*text*/,
@@ -648,6 +665,12 @@ void UnknownWordGenerator::generateOnomatopoeiaCandidates(const std::vector<char
             break;
           }
           if (closesContractedVolitional(codepoints, tto_pos, dict_manager_)) {
+            break;
+          }
+          // A mimetic is read off the shape of the run, so it must not carve
+          // into a word the dictionary carries: the same っと closes the stem
+          // of ordinary lexical verbs (のっと+る against のっとる).
+          if (startsLongerDictionaryWord(codepoints, start_pos, adv_end, dict_manager_)) {
             break;
           }
           std::string surface = extractSubstring(codepoints, start_pos, adv_end);
