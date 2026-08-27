@@ -840,6 +840,38 @@
       ],
       "id": "sugiru_2",
       "input": "眠すぎる。"
+    },
+    {
+      "description": "Lexicalized kanji-head adjective compounds keep their unit in every cell",
+      "expected": [
+        {
+          "lemma": "根深い",
+          "pos": "Adjective",
+          "surface": "根深い"
+        },
+        {
+          "lemma": "問題",
+          "pos": "Noun",
+          "surface": "問題"
+        },
+        {
+          "lemma": "を",
+          "pos": "Particle",
+          "surface": "を"
+        },
+        {
+          "lemma": "注意深い",
+          "pos": "Adjective",
+          "surface": "注意深く"
+        },
+        {
+          "lemma": "見る",
+          "pos": "Verb",
+          "surface": "見る"
+        }
+      ],
+      "id": "i_wo_ku_ru",
+      "input": "根深い問題を注意深く見る"
     }
   ],
   "description": "Compound adjectives (〜やすい、〜にくい、〜すぎる)",

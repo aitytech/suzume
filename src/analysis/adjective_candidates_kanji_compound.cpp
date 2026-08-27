@@ -232,15 +232,21 @@ void adj_detail::appendKanjiCompoundIAdjCandidates(const std::vector<char32_t>& 
               if (tail_res.verb_type != grammar::VerbType::IAdjective) {
                 continue;
               }
-              if (adj_detail::isCompoundFormingAdjective(tail_res.base_form)) {
+              if (adj_detail::isCompoundFormingAdjective(tail_res.base_form) && productive_tail_base.empty()) {
                 productive_tail_base = tail_res.base_form;
                 productive_tail_confidence = tail_res.confidence;
-                break;
               }
               if (verb_helpers::isAdjectiveInDictionary(dict_manager, tail_res.base_form)) {
                 tail_is_independent_adjective = true;
               }
             }
+            // A derivational tail that is also a headword in its own right
+            // (深い, 強い) only derives from a host the grammar can point at —
+            // a continuative, not a bare kanji run. Over a bare run the default
+            // reading is the noun and the adjective predicating over it
+            // (谷 深く, 知識 深く), and the lexicalized compounds that contradict
+            // it are lexical facts the dictionary carries, the same way it
+            // already carries 名高い and 薄暗い for the tails not on the list.
             if (tail_is_independent_adjective) {
               SUZUME_DEBUG_LOG_VERBOSE("[ADJ_SKIP] \"" << surface << "\" tail \"" << adjective_tail
                                                        << "\" is a dictionary adjective\n");
