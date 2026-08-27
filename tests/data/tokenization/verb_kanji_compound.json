@@ -1,0 +1,50 @@
+{
+  "cases": [
+    {
+      "description": "Lexicalized one-kanji prefix compound with a GodanTa tail keeps its unit",
+      "expected": [
+        {
+          "lemma": "泡立つ",
+          "pos": "Verb",
+          "surface": "泡立っ"
+        },
+        {
+          "lemma": "た",
+          "pos": "Auxiliary",
+          "surface": "た"
+        },
+        {
+          "lemma": "海",
+          "pos": "Noun",
+          "surface": "海"
+        }
+      ],
+      "id": "ttta_7",
+      "input": "泡立った海"
+    },
+    {
+      "description": "Unlexicalized kanji prefix stays a subject in front of the tail verb",
+      "expected": [
+        {
+          "lemma": "音",
+          "pos": "Noun",
+          "surface": "音"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "立つ",
+          "pos": "Verb",
+          "surface": "立つ"
+        }
+      ],
+      "id": "ga_tsu",
+      "input": "音が立つ"
+    }
+  ],
+  "description": "verb_kanji_compound tests",
+  "version": "1.0"
+}

@@ -52,6 +52,11 @@ bool isFormalNounSurface(std::string_view surface);
 // Check if a codepoint is a case/binding particle
 bool isParticleCodepoint(char32_t ch);
 
+// The comma that chains clauses (読点). Unlike sentence-final punctuation it
+// marks a juncture inside one sentence, so the predicate in front of it is
+// continuative rather than terminal.
+bool isClauseChainingComma(char32_t code);
+
 }  // namespace suzume::normalize
 
 #endif  // SUZUME_NORMALIZE_EXCEPTIONS_H_

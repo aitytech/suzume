@@ -151,9 +151,14 @@ bool startsLightVerb(const std::vector<char32_t>& codepoints, size_t pos) {
 // and the light verb する all require a nominal, while the auxiliaries that
 // take a continuative (ます, たい, ながら) never follow one. Anything that is
 // not hiragana — kanji, katakana, punctuation, end of text — is a nominal
-// position as well, since no auxiliary can begin there.
+// position as well, since no auxiliary can begin there. The clause comma is the
+// exception: it joins predicates rather than closing a phrase, so a continuative
+// standing in front of it carries the clause on instead of heading a noun.
 bool selectsNominalHost(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
                         const std::vector<normalize::CharType>& char_types, size_t pos) {
+  if (pos < codepoints.size() && normalize::isClauseChainingComma(codepoints[pos])) {
+    return false;
+  }
   if (pos >= char_types.size() || char_types[pos] != normalize::CharType::Hiragana) {
     return true;
   }
@@ -521,6 +526,7 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
       if (kanji_count >= 3) {
         nom1_cost += static_cast<float>(kanji_count - 2) * 0.5F;
       }
+      const float base_nom1_cost = nom1_cost;
       // A following particle makes the renyokei a nominalized search unit:
       // 答えは, 始まりは, 決まりを.  Prefer that productive noun reading over
       // a finite-verb candidate whose continuation is grammatically absent.
@@ -573,6 +579,17 @@ void generateNominalizedNounCandidates(const std::vector<char32_t>& codepoints, 
                                                 extractSubstring(codepoints, start_pos, kanji_end) + "い");
       if (is_classical_iadjective_terminal) {
         nom1_cost += candidate::kClassicalIAdjectiveTerminalNounBonus;
+      }
+      // Each bonus above is evidence from the frame that the span is nominal.
+      // With none of them a multi-kanji candidate is only a guess about an
+      // open-class word, while the same span also reads as a noun heading a
+      // continuative the grammar derives from a verb it knows (水|流れ). Price
+      // the guess above that split so a fabricated compound cannot undercut its
+      // own constituents.
+      const bool has_nominal_evidence = nom1_cost < base_nom1_cost || has_particle_continuation || nominal_compound ||
+                                        is_classical_iadjective_terminal;
+      if (!has_nominal_evidence && kanji_count >= 2) {
+        nom1_cost += candidate::kUnselectedNominalizationPenalty;
       }
       // Single kanji + し followed by sentence punctuation (、。) is almost
       // always 一字漢語サ変動詞 renyokei in formal/literary text (呈し、訴し、),

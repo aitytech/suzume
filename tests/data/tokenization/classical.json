@@ -212,6 +212,127 @@
       ],
       "id": "korezotoiu",
       "input": "これぞという物"
+    },
+    {
+      "description": "Subject noun plus continuative predicate in a clause-chaining sequence",
+      "expected": [
+        {
+          "lemma": "水",
+          "pos": "Noun",
+          "surface": "水"
+        },
+        {
+          "lemma": "流れる",
+          "pos": "Verb",
+          "surface": "流れ"
+        },
+        {
+          "lemma": "石",
+          "pos": "Noun",
+          "surface": "石"
+        },
+        {
+          "lemma": "転ぶ",
+          "pos": "Verb",
+          "surface": "転び"
+        },
+        {
+          "lemma": "音",
+          "pos": "Noun",
+          "surface": "音"
+        },
+        {
+          "lemma": "立つ",
+          "pos": "Verb",
+          "surface": "立つ"
+        }
+      ],
+      "id": "re_bi_tsu",
+      "input": "水流れ、石転び、音立つ"
+    },
+    {
+      "description": "Bare kanji noun keeps its boundary before an adjective that heads compounds",
+      "expected": [
+        {
+          "lemma": "山",
+          "pos": "Noun",
+          "surface": "山"
+        },
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高く"
+        },
+        {
+          "lemma": "谷",
+          "pos": "Noun",
+          "surface": "谷"
+        },
+        {
+          "lemma": "深い",
+          "pos": "Adjective",
+          "surface": "深く"
+        },
+        {
+          "lemma": "雲",
+          "pos": "Noun",
+          "surface": "雲"
+        },
+        {
+          "lemma": "かかる",
+          "pos": "Verb",
+          "surface": "かかれ"
+        },
+        {
+          "lemma": "り",
+          "pos": "Auxiliary",
+          "surface": "り"
+        }
+      ],
+      "id": "ku_ku_kakareri",
+      "input": "山高く、谷深く、雲かかれり"
+    },
+    {
+      "description": "Two-kanji noun keeps its boundary in a clause-chaining sequence",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "多い",
+          "pos": "Adjective",
+          "surface": "多く"
+        },
+        {
+          "lemma": "知識",
+          "pos": "Noun",
+          "surface": "知識"
+        },
+        {
+          "lemma": "深い",
+          "pos": "Adjective",
+          "surface": "深く"
+        },
+        {
+          "lemma": "心",
+          "pos": "Noun",
+          "surface": "心"
+        },
+        {
+          "lemma": "豊か",
+          "pos": "Adjective",
+          "surface": "豊か"
+        },
+        {
+          "lemma": "なり",
+          "pos": "Auxiliary",
+          "surface": "なり"
+        }
+      ],
+      "id": "ku_ku_kanari",
+      "input": "本多く、知識深く、心豊かなり"
     }
   ],
   "description": "classical tests",

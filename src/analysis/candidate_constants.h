@@ -720,6 +720,12 @@ constexpr float kNominalizedNounParticleBonus = -1.5F;
 // the particle-selected bonus above is larger because it has that marker.
 constexpr float kDeverbalCompoundNounBonus = verb_cost::kStandardBonus;
 
+// A multi-kanji nominalization that no frame selects and no dictionary verb
+// backs is a guess about an open-class word. The same span always reads as a
+// noun plus a continuative the grammar derives, so the guess must not undercut
+// that split (水|流れ, 石|転び).
+constexpr float kUnselectedNominalizationPenalty = -verb_cost::kStandardBonus;
+
 // Base candidate cost for a verified verb continuative used as a deverbal
 // noun before a case particle (鳴らしを、書きを).
 constexpr float kVerifiedRenyokeiNominalCandidateCost = 0.8F;

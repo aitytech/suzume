@@ -41,21 +41,19 @@ bool followsQuantityHead(const std::vector<char32_t>& codepoints, size_t start_p
 void appendVerifiedTailGodanTaCompoundCandidates(const std::vector<char32_t>& codepoints, size_t start_pos,
                                                  size_t kanji_end, const dictionary::DictionaryManager* dict_manager,
                                                  std::vector<UnknownCandidate>& candidates) {
-  // A non-nominal kanji prefix can productively compound with a known one-kanji
-  // GodanTa verb (先立つ, 先立ち, 先立って). The verified tail fixes the conjugation
-  // class, while rejecting a dictionary non-verb prefix preserves an existing
-  // lexical or grammatical boundary (本|立つ, 三日+間|待つ). A productive
-  // compound prefix has no independent non-verb evidence at this position.
+  // A kanji prefix binding to a known one-kanji GodanTa verb carries every cell
+  // of the compound's paradigm (先立つ, 先立ち, 先立って) off the tail's
+  // conjugation class. Whether the prefix binds at all is lexical, though:
+  // 波立つ is a word and 音立つ is a subject plus its predicate, and the two
+  // prefixes are ordinary nouns with no grammatical difference at this position.
+  // Without lexical evidence for the compound itself the pair is a subject and
+  // a predicate, so a base form the dictionary does not carry stays split.
   if (dict_manager == nullptr || kanji_end != start_pos + 2 || kanji_end >= codepoints.size()) {
-    return;
-  }
-  std::string prefix = extractSubstring(codepoints, start_pos, start_pos + 1);
-  if (vh::hasNonVerbDictionaryEntry(dict_manager, prefix)) {
     return;
   }
   std::string stem = extractSubstring(codepoints, start_pos, kanji_end);
   std::string tail_base = extractSubstring(codepoints, kanji_end - 1, kanji_end) + "つ";
-  if (!vh::isVerbInDictionary(dict_manager, tail_base)) {
+  if (!vh::isVerbInDictionary(dict_manager, tail_base) || !vh::isVerbInDictionary(dict_manager, stem + "つ")) {
     return;
   }
 

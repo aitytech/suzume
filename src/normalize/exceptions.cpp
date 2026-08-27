@@ -93,4 +93,8 @@ bool isParticleCodepoint(char32_t ch) {
   }
 }
 
+bool isClauseChainingComma(char32_t code) {
+  return code == U'、' || code == U'，' || code == U',';
+}
+
 }  // namespace suzume::normalize
