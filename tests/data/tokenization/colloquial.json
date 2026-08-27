@@ -185,6 +185,60 @@
       ],
       "id": "emokattkoii",
       "input": "答えもかっこいい"
+    },
+    {
+      "description": "Nominative particle bounds a contracted hypothetical candidate",
+      "expected": [
+        {
+          "lemma": "人",
+          "pos": "Noun",
+          "surface": "人"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "めちゃめちゃ",
+          "pos": "Adjective",
+          "surface": "めちゃめちゃ"
+        },
+        {
+          "lemma": "多い",
+          "pos": "Adjective",
+          "surface": "多い"
+        }
+      ],
+      "id": "gamechi_mechi_i",
+      "input": "人がめちゃめちゃ多い"
+    },
+    {
+      "description": "Genuine contracted hypothetical keeps its own boundary after a case particle",
+      "expected": [
+        {
+          "lemma": "本",
+          "pos": "Noun",
+          "surface": "本"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "読める",
+          "pos": "Verb",
+          "surface": "読めりゃ"
+        },
+        {
+          "lemma": "いい",
+          "pos": "Adjective",
+          "surface": "いい"
+        }
+      ],
+      "id": "ga_meri_ii_2",
+      "input": "本が読めりゃいい"
     }
   ],
   "description": "colloquial tests",

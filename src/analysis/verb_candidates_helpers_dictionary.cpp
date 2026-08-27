@@ -4,6 +4,7 @@
  */
 
 #include <algorithm>
+#include <array>
 
 #include "analysis/candidate_constants.h"
 #include "analysis/dictionary_probe.h"
@@ -335,6 +336,22 @@ bool startsWithFocusParticleHead(const dictionary::DictionaryManager* dict_manag
   return false;
 }
 
+namespace {
+
+// Whether the mora at @p pos continues one of the derivational suffixes that
+// open on が. がる conjugates through its own ra row (欲しがら/がり/がる/がれ/がろ)
+// and its onbin form (欲しがって); がたい and がまし〜 take the remaining two.
+bool opensDerivationalGaSuffix(const std::vector<char32_t>& codepoints, size_t pos) {
+  if (pos >= codepoints.size()) {
+    return false;
+  }
+  constexpr std::array<char32_t, 8> kGaSuffixSecondMorae = {U'ら', U'り', U'る', U'れ', U'ろ', U'っ', U'た', U'ま'};
+  return std::find(kGaSuffixSecondMorae.begin(), kGaSuffixSecondMorae.end(), codepoints[pos]) !=
+         kGaSuffixSecondMorae.end();
+}
+
+}  // namespace
+
 bool embedsCaseParticle(const dictionary::DictionaryManager* dict_manager, const std::vector<char32_t>& codepoints,
                         size_t start_pos, size_t end_pos) {
   if (dict_manager == nullptr || end_pos < start_pos + 3 || end_pos > codepoints.size()) {
@@ -345,10 +362,11 @@ bool embedsCaseParticle(const dictionary::DictionaryManager* dict_manager, const
   for (size_t particle_start = start_pos + 1; particle_start + 1 < end_pos; ++particle_start) {
     // が opens the productive derivational suffixes がまし〜 / がる / がたい, which
     // attach straight to a nominal or a continuative and so put the same mora
-    // inside a single derived word (未練がましい, 恩着せがましさ, 欲しがる). Its
-    // ambiguity is lexical rather than structural, so it is left to the
-    // confidence model instead of being rejected outright here.
-    if (codepoints[particle_start] == U'が') {
+    // inside a single derived word (未練がましい, 恩着せがましさ, 欲しがる). Their
+    // ambiguity is lexical rather than structural, so those spellings are left
+    // to the confidence model. Elsewhere が is the nominative particle and marks
+    // an argument boundary like any other case particle (人 が めちゃめちゃ).
+    if (codepoints[particle_start] == U'が' && opensDerivationalGaSuffix(codepoints, particle_start + 1)) {
       continue;
     }
     const size_t max_len = std::min(kMaxParticleLen, end_pos - particle_start - 1);

@@ -392,7 +392,11 @@ void UnknownWordGenerator::generateOnomatopoeiaCandidates(const std::vector<char
       // (small kana should be part of previous mora, not start a unit)
       if (!isSmallKanaAt(start_pos) && !isSmallKanaAt(start_pos + half_len)) {
         std::string surface = extractSubstring(codepoints, start_pos, mimetic_end);
-        if (!surface.empty()) {
+        // Reduplication is a shape, not evidence about the word class. A run the
+        // dictionary already carries has a lexical reading of its own, and a
+        // mimetic adverb invented over the same span would outbid it on shape
+        // alone (めちゃめちゃ is the na-adjective the dictionary lists).
+        if (!surface.empty() && (dict_manager_ == nullptr || dict_manager_->lookupExact(surface) == nullptr)) {
           auto cand =
               makeCandidate(surface, start_pos, mimetic_end, core::PartOfSpeech::Adverb,
                             candidate::kMimeticExactReduplicationAdverbCost, true, CandidateOrigin::Onomatopoeia);
