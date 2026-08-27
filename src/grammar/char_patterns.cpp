@@ -5,6 +5,7 @@
 
 #include "char_patterns.h"
 
+#include <algorithm>
 #include <array>
 
 #include "core/kana_constants.h"
