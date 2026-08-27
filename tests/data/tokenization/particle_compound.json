@@ -651,6 +651,80 @@
       ],
       "id": "toshite_u",
       "input": "参考として使う"
+    },
+    {
+      "description": "Compound case particle survives a formal noun whose tail also reads as the literary volitional",
+      "expected": [
+        {
+          "lemma": "条件",
+          "pos": "Noun",
+          "surface": "条件"
+        },
+        {
+          "lemma": "の",
+          "pos": "Particle",
+          "surface": "の"
+        },
+        {
+          "lemma": "いかん",
+          "pos": "Noun",
+          "surface": "いかん"
+        },
+        {
+          "lemma": "によって",
+          "pos": "Particle",
+          "surface": "によって"
+        },
+        {
+          "lemma": "は",
+          "pos": "Particle",
+          "surface": "は"
+        },
+        {
+          "lemma": "変更",
+          "pos": "Noun",
+          "surface": "変更"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "する"
+        }
+      ],
+      "id": "noikanniyottteha_suru",
+      "input": "条件のいかんによっては変更する"
+    },
+    {
+      "description": "Quotative plus suru keeps its boundary after the volitional",
+      "expected": [
+        {
+          "lemma": "書く",
+          "pos": "Verb",
+          "surface": "書こ"
+        },
+        {
+          "lemma": "う",
+          "pos": "Auxiliary",
+          "surface": "う"
+        },
+        {
+          "lemma": "と",
+          "pos": "Particle",
+          "surface": "と"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        }
+      ],
+      "id": "koutoshite",
+      "input": "書こうとして"
     }
   ],
   "description": "particle_compound tests",

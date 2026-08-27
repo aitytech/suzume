@@ -1406,8 +1406,12 @@ void Tokenizer::addDictionaryCandidates(core::Lattice& lattice, std::string_view
       // After an explicit volitional auxiliary, a multi-mora case particle
       // would hide the productive quotative + suru sequence
       // (書こ+う+と+し+て). Keep the one-mora quotative candidate even when a
-      // longer case-particle entry shares its prefix.
-      if (follows_volitional && result.entry->extended_pos == core::ExtendedPOS::ParticleCase && result.length > 1) {
+      // longer case-particle entry shares its prefix. Only an entry opening on
+      // that same quotative mora can hide it; a compound particle beginning
+      // anywhere else shares nothing with the sequence and stays available
+      // (いかん+によって, where the ん also reads as the literary volitional).
+      if (follows_volitional && result.entry->extended_pos == core::ExtendedPOS::ParticleCase && result.length > 1 &&
+          utf8::decodeFirstChar(result.entry->surface) == core::hiragana::kTo) {
         continue;
       }
       const bool has_longer_same_class =
