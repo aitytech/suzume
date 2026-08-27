@@ -7,6 +7,7 @@ import regex
 from .constants import (
     BOUND_SUFFIX_VERB_NOUN_CELLS,
     CLASSICAL_ADJECTIVE_LEMMA_OVERRIDES,
+    HISTORICAL_KANA_RESPELLING,
     HONORIFIC_EXCEPTIONS,
     HONORIFIC_FRAME_TAILS,
     HONORIFIC_SUFFIXES,
@@ -961,6 +962,40 @@ def _postprocess_kakari_pronoun_split(result: list[dict], applied_rule: str | No
             continue
         split.append(token)
     return split, applied_rule
+
+
+@cache
+def _modern_kana_word(surface: str) -> dict | None:
+    """Return the modern-spelling reading of a historical-kana surface, if it is one word."""
+    modern = surface.translate(HISTORICAL_KANA_RESPELLING)
+    if modern == surface:
+        return None
+    tokens = mecab_analyze(modern)
+    if len(tokens) != 1 or tokens[0].get("surface") != modern or tokens[0].get("pos") == "動詞":
+        return None
+    return tokens[0]
+
+
+def _postprocess_historical_kana_word(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:
+    """Read a historical-kana word through its modern spelling (いづれ, まづ).
+
+    The reference dictionary carries the modern orthography, so a word written
+    with づ/ぢ/ゐ/ゑ falls back on whatever inflected cell those kana happen to
+    complete — いづれ becomes the 已然形 of 出づ rather than the pronoun it
+    spells. Respelling is a one-for-one substitution, so asking the dictionary
+    for the modern form recovers the word's own class. A modern form that is
+    itself a verb is left alone: there the fallback and the word coincide.
+    """
+    retagged: list[dict] = []
+    for token in result:
+        modern = _modern_kana_word(token.get("surface", "")) if token.get("pos") == "動詞" else None
+        if modern is None:
+            retagged.append(token)
+            continue
+        retagged.append({**modern, "surface": token["surface"], "lemma": token["surface"]})
+        if applied_rule is None:
+            applied_rule = "historical-kana-word"
+    return retagged, applied_rule
 
 
 def _postprocess_nickname_merge(result: list[dict], applied_rule: str | None) -> tuple[list[dict], str | None]:

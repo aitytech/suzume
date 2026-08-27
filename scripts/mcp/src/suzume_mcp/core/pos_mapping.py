@@ -11,6 +11,7 @@ from .constants import (
     DERIVATIONAL_SUFFIX_VERB_LEMMAS,
     DIALECT_FINAL_PARTICLES,
     FINITE_PREDECESSOR_CONJ_FORM,
+    HISTORICAL_KANA_RESPELLING,
     KEEP_AS_NOUN_NOT_ADJ,
     NA_ADJ_OVERRIDES,
     NOUN_AS_PRONOUN,
@@ -70,8 +71,10 @@ def map_mecab_pos(token: dict | str) -> str:
     pos_sub2 = token.get("pos_sub2", "")
     surface = token.get("surface", "")
 
-    # Surface-based adverb overrides
-    if surface in ADVERB_OVERRIDES:
+    # Surface-based adverb overrides. Historical kana is a one-for-one
+    # respelling of the same word, so the override follows the word rather than
+    # the orthography (いづれ as well as いずれ).
+    if surface in ADVERB_OVERRIDES or surface.translate(HISTORICAL_KANA_RESPELLING) in ADVERB_OVERRIDES:
         return "Adverb"
 
     # よろしく: always Adverb in Suzume

@@ -893,6 +893,11 @@ EMPHATIC_SOKUON: dict[str, str] = {
 # adjective, unlike a verbal auxiliary's, so the two are told apart by surface.
 COPULA_SURFACES: frozenset[str] = frozenset({"だ", "だっ", "で", "です", "でし", "でしょ", "な", "なら"})
 
+# Historical kana that modern orthography respells one-for-one. は and を are
+# left out: their historical use is confined to the particles, which already
+# carry the modern spelling.
+HISTORICAL_KANA_RESPELLING = str.maketrans({"づ": "ず", "ぢ": "じ", "ゐ": "い", "ゑ": "え"})
+
 # Adverb overrides (words MeCab misclassifies)
 ADVERB_OVERRIDES: set[str] = {
     "全く",

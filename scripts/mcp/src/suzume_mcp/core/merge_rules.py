@@ -42,6 +42,7 @@ from .merge_postprocessors import (
     _postprocess_filler_split,
     _postprocess_gamashii,
     _postprocess_ha_row_godan,
+    _postprocess_historical_kana_word,
     _postprocess_honorific_split,
     _postprocess_izenkei_concessive,
     _postprocess_kakari_pronoun_split,
@@ -1817,6 +1818,7 @@ def apply_suzume_merge(tokens: list[dict], text: str) -> tuple[list[dict], str |
     result, applied_rule = _postprocess_adj_kari(result, applied_rule)
     result, applied_rule = _postprocess_ha_row_godan(result, applied_rule)
     result, applied_rule = _postprocess_nidan_cell(result, applied_rule)
+    result, applied_rule = _postprocess_historical_kana_word(result, applied_rule)
     result, applied_rule = _postprocess_kakari_pronoun_split(result, applied_rule)
     result, applied_rule = _postprocess_classical_mu(result, applied_rule)
     result, applied_rule = _postprocess_ku_nominalization(result, applied_rule)

@@ -608,6 +608,28 @@
       ],
       "id": "haba_ramu",
       "input": "言はば知らむ"
+    },
+    {
+      "description": "Historical-kana adverb is not cut into a one-mora verb",
+      "expected": [
+        {
+          "lemma": "いづれ",
+          "pos": "Adverb",
+          "surface": "いづれ"
+        },
+        {
+          "lemma": "や",
+          "pos": "Particle",
+          "surface": "や"
+        },
+        {
+          "lemma": "勝る",
+          "pos": "Verb",
+          "surface": "勝る"
+        }
+      ],
+      "id": "idureya_ru",
+      "input": "いづれや勝る"
     }
   ],
   "description": "classical tests",
