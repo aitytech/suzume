@@ -333,6 +333,65 @@
       ],
       "id": "ku_ku_kanari",
       "input": "本多く、知識深く、心豊かなり"
+    },
+    {
+      "description": "Classical terminal of a shiku adjective after a bare noun",
+      "expected": [
+        {
+          "lemma": "山",
+          "pos": "Noun",
+          "surface": "山"
+        },
+        {
+          "lemma": "高い",
+          "pos": "Adjective",
+          "surface": "高く"
+        },
+        {
+          "lemma": "する",
+          "pos": "Verb",
+          "surface": "し"
+        },
+        {
+          "lemma": "て",
+          "pos": "Particle",
+          "surface": "て"
+        },
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        },
+        {
+          "lemma": "険しい",
+          "pos": "Adjective",
+          "surface": "険し"
+        }
+      ],
+      "id": "kushite_shi",
+      "input": "山高くして道険し"
+    },
+    {
+      "description": "Classical terminal of a shiku adjective after a case particle",
+      "expected": [
+        {
+          "lemma": "道",
+          "pos": "Noun",
+          "surface": "道"
+        },
+        {
+          "lemma": "が",
+          "pos": "Particle",
+          "surface": "が"
+        },
+        {
+          "lemma": "険しい",
+          "pos": "Adjective",
+          "surface": "険し"
+        }
+      ],
+      "id": "ga_shi",
+      "input": "道が険し"
     }
   ],
   "description": "classical tests",
