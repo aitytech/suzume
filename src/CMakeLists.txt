@@ -106,6 +106,9 @@ if(BUILD_WASM)
   target_link_libraries(suzume-wasm PRIVATE suzume)
   target_compile_definitions(suzume-wasm PRIVATE ${SUZUME_PRIVATE_DEFS})
   set_target_properties(suzume-wasm PROPERTIES OUTPUT_NAME suzume)
+  # Default build: Node, browser, and generic worker environments. Node/stdio callers rely on
+  # ENVIRONMENT_IS_NODE being compiled in (default locateFile-based loading, fs reads).
+  target_link_options(suzume-wasm PRIVATE "-sENVIRONMENT=['web','worker','node']")
 
   # Copy the Emscripten output to the npm package directory.
   add_custom_command(TARGET suzume-wasm POST_BUILD
@@ -131,6 +134,38 @@ if(BUILD_WASM)
       "$<TARGET_FILE_DIR:suzume-wasm>/suzume.wasm"
       "${WASM_OUTPUT_DIR}/suzume.wasm"
     COMMENT "Copying WASM files to dist/"
+  )
+
+  # AITYTECH addition: a second build, `worker`-environment ONLY, for Cloudflare Workers.
+  # Same source, same instantiateWasm support -- the only difference is -sENVIRONMENT, which
+  # controls which environment-detection branches Emscripten compiles into the glue at all.
+  # Workers with the nodejs_compat flag exposes a Node-look-alike `process.versions.node`,
+  # which fools the DEFAULT build's ENVIRONMENT_IS_NODE check into taking a real-Node-only
+  # code path (`createRequire(import.meta.url)`, undefined in a bundled Workers context) --
+  # confirmed by direct repro, not assumed. Compiling that branch out entirely, rather than
+  # trying to out-guess Emscripten's own environment detection at runtime, is the robust fix.
+  add_executable(suzume-wasm-worker suzume_c.cpp)
+  target_link_libraries(suzume-wasm-worker PRIVATE suzume)
+  target_compile_definitions(suzume-wasm-worker PRIVATE ${SUZUME_PRIVATE_DEFS})
+  set_target_properties(suzume-wasm-worker PROPERTIES OUTPUT_NAME suzume-worker)
+  target_link_options(suzume-wasm-worker PRIVATE "-sENVIRONMENT=['worker']")
+
+  add_custom_command(TARGET suzume-wasm-worker POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${WASM_OUTPUT_DIR}"
+    COMMAND "${WASM_OPT}"
+      "$<TARGET_FILE_DIR:suzume-wasm-worker>/suzume-worker.wasm"
+      -Oz --enable-bulk-memory --enable-nontrapping-float-to-int
+      -o "$<TARGET_FILE_DIR:suzume-wasm-worker>/suzume-worker.optimized.wasm"
+    COMMAND ${CMAKE_COMMAND} -E rename
+      "$<TARGET_FILE_DIR:suzume-wasm-worker>/suzume-worker.optimized.wasm"
+      "$<TARGET_FILE_DIR:suzume-wasm-worker>/suzume-worker.wasm"
+    COMMAND ${CMAKE_COMMAND} -E copy
+      "$<TARGET_FILE_DIR:suzume-wasm-worker>/suzume-worker.js"
+      "${WASM_OUTPUT_DIR}/suzume-worker.js"
+    COMMAND ${CMAKE_COMMAND} -E copy
+      "$<TARGET_FILE_DIR:suzume-wasm-worker>/suzume-worker.wasm"
+      "${WASM_OUTPUT_DIR}/suzume-worker.wasm"
+    COMMENT "Copying Workers-only WASM build to dist/"
   )
 endif()
 

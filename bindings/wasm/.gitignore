@@ -6,6 +6,8 @@
 dist/*
 !dist/suzume.wasm
 !dist/suzume.js
+!dist/suzume-worker.wasm
+!dist/suzume-worker.js
 !dist/README-aitytech.md
 
 # Dependencies

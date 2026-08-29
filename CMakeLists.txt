@@ -182,12 +182,20 @@ if(BUILD_WASM)
   # Both option-struct initializers are exported: the wrapper calls them to seed
   # freshly malloc'd memory with the C defaults, and the supported low-level
   # cwrap API and its layout tests call them directly.
+  # -sENVIRONMENT is deliberately NOT here -- it differs between the two WASM targets
+  # (suzume-wasm vs suzume-wasm-worker, both defined in src/CMakeLists.txt) and is set there
+  # via target_link_options instead. See that file for why: Cloudflare Workers with the
+  # nodejs_compat flag exposes a Node-look-alike `process.versions.node`, which fools
+  # Emscripten's own ENVIRONMENT_IS_NODE detection (compiled in whenever 'node' is in this
+  # list) into taking a real-Node-only code path that calls `createRequire(import.meta.url)`
+  # -- undefined in a bundled Workers context, confirmed by direct repro. AITYTECH's
+  # instantiateWasm addition (see INCOMING_MODULE_JS_API below) never even gets reached
+  # because that crash happens earlier, at environment setup, not at WASM instantiation.
   add_link_options(
     -sWASM=1
     -sMODULARIZE=1
     -sEXPORT_ES6=1
     "-sINCOMING_MODULE_JS_API=['locateFile','instantiateWasm']"
-    "-sENVIRONMENT=['web','worker','node']"
     "-sEXPORTED_FUNCTIONS=['_malloc','_free','_suzume_create','_suzume_init_extended_options','_suzume_create_with_extended_options','_suzume_destroy','_suzume_set_mode','_suzume_mode','_suzume_analyze','_suzume_analyze_n','_suzume_result_free','_suzume_generate_tags','_suzume_generate_tags_n','_suzume_init_tag_options','_suzume_generate_tags_with_options','_suzume_generate_tags_with_options_n','_suzume_tags_free','_suzume_load_user_dict','_suzume_load_user_dict_count','_suzume_load_binary_dict','_suzume_clear_user_dictionaries','_suzume_has_core_dictionary','_suzume_version','_suzume_last_error','_suzume_last_error_code','_suzume_conjugation_type_label','_suzume_extended_pos_label','_suzume_conjugation_form_label','_suzume_pos_label','_suzume_dictionary_warning_count','_suzume_dictionary_warning','_suzume_sizeof_result','_suzume_sizeof_morpheme','_suzume_sizeof_tags','_suzume_sizeof_tag_options','_suzume_sizeof_extended_options','_suzume_offsetof_result','_suzume_offsetof_morpheme','_suzume_offsetof_tags','_suzume_offsetof_tag_options','_suzume_offsetof_extended_options']"
     "-sEXPORTED_RUNTIME_METHODS=['UTF8ToString','stringToUTF8','lengthBytesUTF8','HEAPU32']"
     -sALLOW_MEMORY_GROWTH=1

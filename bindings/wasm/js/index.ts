@@ -67,7 +67,15 @@ async function instantiateModule(
   freshWasmModule: boolean,
   wasmModule?: WebAssembly.Module,
 ): Promise<EmscriptenModule> {
-  const createModule = await import('./suzume.js');
+  // Two separate Emscripten builds (see CMakeLists.txt / src/CMakeLists.txt), not one glue
+  // file used two ways: the default build compiles in ENVIRONMENT_IS_NODE detection, which
+  // Cloudflare Workers' nodejs_compat flag falsely triggers (a Node-look-alike
+  // `process.versions.node` fools it into calling `createRequire(import.meta.url)`, which is
+  // undefined in a bundled Workers context and throws -- confirmed by direct repro). Passing
+  // wasmModule is already the caller's explicit "I'm on a runtime that needs a precompiled
+  // module" signal (see instantiateWasmFrom above), so it doubles as the signal to load the
+  // worker-only glue build that has that whole code path compiled out instead.
+  const createModule = wasmModule ? await import('./suzume-worker.js') : await import('./suzume.js');
   const moduleOptions: Record<string, unknown> = {};
   if (wasmModule) {
     moduleOptions.instantiateWasm = instantiateWasmFrom(wasmModule);
