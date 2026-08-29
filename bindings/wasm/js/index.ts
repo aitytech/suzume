@@ -38,20 +38,47 @@ export class SuzumeError extends Error {
 
 const modulePromises = new Map<string, Promise<EmscriptenModule>>();
 
+/**
+ * Builds an Emscripten `instantiateWasm` hook from an already-compiled `WebAssembly.Module`.
+ * AITYTECH addition: some runtimes (Cloudflare Workers is the one we hit) disallow compiling
+ * WebAssembly from raw bytes at request time -- `new WebAssembly.Module(bytes)` and the
+ * buffer-source overload of `WebAssembly.instantiate` both throw
+ * "Wasm code generation disallowed by embedder" there, confirmed by direct repro against a
+ * real Workers instance. Those runtimes DO allow *instantiating* an already-compiled module
+ * (compiled at deploy time via `import mod from "./file.wasm"`, which Workers' bundler
+ * precompiles), so this bypasses fetch/compile entirely and only instantiates.
+ */
+function instantiateWasmFrom(wasmModule: WebAssembly.Module) {
+  return (
+    imports: WebAssembly.Imports,
+    successCallback: (instance: WebAssembly.Instance, module: WebAssembly.Module) => void,
+  ) => {
+    WebAssembly.instantiate(wasmModule, imports).then((instance) => {
+      successCallback(instance, wasmModule);
+    });
+    // Returning {} (not the exports object) tells Emscripten this is async and it should
+    // wait for successCallback -- the documented Emscripten instantiateWasm contract.
+    return {};
+  };
+}
+
 async function instantiateModule(
   wasmPath: string | undefined,
   freshWasmModule: boolean,
+  wasmModule?: WebAssembly.Module,
 ): Promise<EmscriptenModule> {
   const createModule = await import('./suzume.js');
   const moduleOptions: Record<string, unknown> = {};
-  if (wasmPath) {
+  if (wasmModule) {
+    moduleOptions.instantiateWasm = instantiateWasmFrom(wasmModule);
+  } else if (wasmPath) {
     moduleOptions.locateFile = (path: string) => (path.endsWith('.wasm') ? wasmPath : path);
   }
   if (freshWasmModule) {
     return createModule.default(moduleOptions);
   }
 
-  const key = wasmPath ?? '';
+  const key = wasmModule ? 'precompiled' : (wasmPath ?? '');
   const cached = modulePromises.get(key);
   if (cached) {
     return cached;
@@ -352,9 +379,11 @@ export class Suzume {
    * @param options - Optional configuration options
    * @returns Promise resolving to Suzume instance
    */
-  static async create(options?: SuzumeOptions & { wasmPath?: string }): Promise<Suzume> {
+  static async create(
+    options?: SuzumeOptions & { wasmPath?: string; wasmModule?: WebAssembly.Module },
+  ): Promise<Suzume> {
     const wasmPath = options?.wasmPath;
-    const module = await instantiateModule(wasmPath, options?.freshWasmModule === true);
+    const module = await instantiateModule(wasmPath, options?.freshWasmModule === true, options?.wasmModule);
 
     let handle: number;
 
@@ -821,7 +850,8 @@ export default Suzume;
 export async function version(options?: {
   wasmPath?: string;
   freshWasmModule?: boolean;
+  wasmModule?: WebAssembly.Module;
 }): Promise<string> {
-  const module = await instantiateModule(options?.wasmPath, options?.freshWasmModule === true);
+  const module = await instantiateModule(options?.wasmPath, options?.freshWasmModule === true, options?.wasmModule);
   return module.UTF8ToString(module._suzume_version());
 }

@@ -19,7 +19,7 @@
     "dist"
   ],
   "scripts": {
-    "prepare": "simple-git-hooks || true",
+    "prepare": "tsc || true",
     "build": "yarn build:wasm && yarn build:js",
     "build:wasm": "emcmake cmake -B ../../build-wasm -DBUILD_WASM=ON -DENABLE_DEBUG_INFO=OFF -DCMAKE_BUILD_TYPE=Release ../.. && cmake --build ../../build-wasm",
     "build:js": "tsc && yarn typecheck:examples",

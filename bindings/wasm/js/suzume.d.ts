@@ -7,6 +7,14 @@ export interface EmscriptenModuleOptions {
   onRuntimeInitialized?: () => void;
   print?: (text: string) => void;
   printErr?: (text: string) => void;
+  /** Standard Emscripten hook: supply your own compiled/instantiated module instead of
+   * letting the runtime fetch+compile from locateFile. AITYTECH addition -- lets callers on
+   * runtimes that disallow runtime WASM compilation (e.g. Cloudflare Workers) hand in a
+   * module precompiled at deploy time. */
+  instantiateWasm?: (
+    imports: WebAssembly.Imports,
+    successCallback: (instance: WebAssembly.Instance, module: WebAssembly.Module) => void,
+  ) => WebAssembly.Exports | Record<string, never>;
 }
 
 export interface EmscriptenModule {

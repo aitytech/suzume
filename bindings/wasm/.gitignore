@@ -1,5 +1,12 @@
-# Build output
-dist/
+# Build output. Exception: the compiled WASM binary + its Emscripten glue are committed
+# (see dist/README-aitytech.md) -- building them requires the full Emscripten SDK, which is
+# not a reasonable thing to expect of every consumer's `npm install`. Everything else in
+# dist/ (the TS-compiled wrapper: index.js, decode.js, abi_*.js) rebuilds fine from source
+# with a plain `tsc`, via this package's own prepare script.
+dist/*
+!dist/suzume.wasm
+!dist/suzume.js
+!dist/README-aitytech.md
 
 # Dependencies
 node_modules/

@@ -171,8 +171,14 @@ if(BUILD_WASM)
   add_link_options(-Oz -flto)
 
   # Emscripten link options
-  # The TypeScript wrapper only supplies locateFile to the generated module;
-  # accepting Emscripten's full Module option surface retained ~1.9 KB of JS.
+  # The TypeScript wrapper supplies locateFile and instantiateWasm to the
+  # generated module; accepting Emscripten's full Module option surface
+  # retained ~1.9 KB of JS, so this list stays as narrow as the wrapper's
+  # actual usage. instantiateWasm (AITYTECH addition) lets callers on
+  # runtimes that disallow compiling WebAssembly from raw bytes at request
+  # time (Cloudflare Workers: "Wasm code generation disallowed by embedder",
+  # confirmed by direct repro) hand in a module precompiled at deploy time
+  # instead, bypassing the fetch/compile path entirely.
   # Both option-struct initializers are exported: the wrapper calls them to seed
   # freshly malloc'd memory with the C defaults, and the supported low-level
   # cwrap API and its layout tests call them directly.
@@ -180,7 +186,7 @@ if(BUILD_WASM)
     -sWASM=1
     -sMODULARIZE=1
     -sEXPORT_ES6=1
-    "-sINCOMING_MODULE_JS_API=['locateFile']"
+    "-sINCOMING_MODULE_JS_API=['locateFile','instantiateWasm']"
     "-sENVIRONMENT=['web','worker','node']"
     "-sEXPORTED_FUNCTIONS=['_malloc','_free','_suzume_create','_suzume_init_extended_options','_suzume_create_with_extended_options','_suzume_destroy','_suzume_set_mode','_suzume_mode','_suzume_analyze','_suzume_analyze_n','_suzume_result_free','_suzume_generate_tags','_suzume_generate_tags_n','_suzume_init_tag_options','_suzume_generate_tags_with_options','_suzume_generate_tags_with_options_n','_suzume_tags_free','_suzume_load_user_dict','_suzume_load_user_dict_count','_suzume_load_binary_dict','_suzume_clear_user_dictionaries','_suzume_has_core_dictionary','_suzume_version','_suzume_last_error','_suzume_last_error_code','_suzume_conjugation_type_label','_suzume_extended_pos_label','_suzume_conjugation_form_label','_suzume_pos_label','_suzume_dictionary_warning_count','_suzume_dictionary_warning','_suzume_sizeof_result','_suzume_sizeof_morpheme','_suzume_sizeof_tags','_suzume_sizeof_tag_options','_suzume_sizeof_extended_options','_suzume_offsetof_result','_suzume_offsetof_morpheme','_suzume_offsetof_tags','_suzume_offsetof_tag_options','_suzume_offsetof_extended_options']"
     "-sEXPORTED_RUNTIME_METHODS=['UTF8ToString','stringToUTF8','lengthBytesUTF8','HEAPU32']"
